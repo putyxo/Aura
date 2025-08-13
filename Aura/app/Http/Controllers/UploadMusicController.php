@@ -67,7 +67,7 @@ class UploadMusicController extends Controller
         ]);
 
         return redirect()
-            ->route('busqueda_individual')
+            ->route('musica.subir')
             ->with('ok', "Canción subida: {$cancion->title}")
             ->with('audio_url', $audio['directUrl'])
             ->with('cover_url', $coverUrl);
@@ -144,10 +144,9 @@ class UploadMusicController extends Controller
             }
 
             return redirect()
-                ->route('busqueda_album')
+                ->route('musica.subir')
                 ->with('ok', 'Álbum y canciones subidos correctamente.')
                 ->with('cover_url', $albumCoverUrl)
-                
                 ->with('album_id', $album->id);
         });
     }

@@ -40,22 +40,3 @@ Route::get('/phpinfo', function () {
     dd(PHP_BINARY, php_ini_loaded_file());
 });
 
-
-use App\Http\Controllers\MiControlador;
-
-Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
-
-
-Route::get('/busqueda_album', function () {
-    return view('busqueda_album'); // resources/views/nombre_de_la_vista.blade.php
-})->name('busqueda_album');
-
-Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual']);
-
-
-Route::get('/busqueda_individual', function () {
-    return view('busqueda_individual'); // resources/views/nombre_de_la_vista.blade.php
-})->name('busqueda_individual');
-
-
-    
