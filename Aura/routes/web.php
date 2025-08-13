@@ -24,6 +24,17 @@ Route::get('/menu', function () {
     return view('menu');
 })->name('menu');
 
+Route::get('/menu_artista', function () {
+    return view('menu_artista');
+})->name('menu_artista');
+
+Route::get('/menu_album', function () {
+    return view('menu_album');
+})->name('menu_album');
+
+Route::get('/ed_perfil', function () {
+    return view('ed_perfil');
+})->name('ed_perfil');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
