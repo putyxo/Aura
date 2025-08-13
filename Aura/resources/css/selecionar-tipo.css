@@ -1,0 +1,377 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: black;
+  overflow: hidden;
+  color: #fff;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* SOLO UN CANVAS con id canvas para el fondo */
+canvas#canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -2;  /* fondo atrás */
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  border: none; /* evita borde blanco */
+  background: transparent;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.1); /* oscurece el fondo */
+  backdrop-filter: blur(6px); /* difumina */
+  z-index: -1; /* encima del canvas */
+}
+/* SOLO ESTE bloque para manejar la visibilidad de secciones */
+
+section {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.98);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: opacity, transform;
+}
+
+section.active {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  pointer-events: auto;
+  position: relative;
+}
+
+
+
+.formulario {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0) scale(0.97);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.formulario.active {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  position: relative;
+  pointer-events: auto;
+  transition-delay: 0.15s; /* Retrasa un poco para cascada */
+}
+
+
+/* Logo */
+.logo-back {
+  position: fixed;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.logo-back svg {
+  width: 32px;
+  height: 32px;
+  stroke: #ff5db1;
+}
+
+.logo-back img {
+  height: 48px;
+}
+
+/* Home */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+  height: 100vh;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  width: 35vw;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(255, 93, 177, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s;
+  cursor: pointer;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 93, 177, 0.2);
+  text-align: center;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 50px rgba(255, 93, 177, 0.6);
+}
+
+.card img {
+  width: 100%;
+  height: 40vh;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.card p {
+  margin-top: 16px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ff5db1;
+}
+
+/* Registro */
+.main-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  gap: 60px;
+  padding: 60px 30px;
+}
+
+.form-section {
+  max-width: 500px;
+  flex: 1;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.back-logo-container {
+display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto 25px;
+  text-decoration: none;
+  width: fit-content;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+.back-logo-container:hover {
+  opacity: 0.58;
+}
+
+.back-logo-container svg {
+  width: 28px;
+  height: 28px;
+  stroke: #ff5db1;
+}
+.back-logo-container img {
+  height: 48px;
+}
+
+.form-container form {
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 16px;
+  padding: 40px 32px;
+  width: 100%;
+}
+
+.form-container h1 {
+  margin-bottom: 24px;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 12px;
+  background: #1c1c1c;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 6px;
+}
+
+.form-group label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  color: #888;
+  pointer-events: none;
+  transition: 0.3s;
+}
+
+.form-group input:focus + label,
+.form-group input:valid + label {
+  top: -12px;
+  left: 10px;
+  background: black;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  color: #ff5db1;
+}
+
+.btn-registrarse {
+  width: 100%;
+  padding: 12px;
+  background: #7e0469;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.btn-registrarse:hover {
+  background: #b90057;
+}
+
+/* Planes */
+.plans-section {
+  max-width: 400px;
+  flex: 1;
+  animation: fadeInRight 0.8s ease forwards;
+}
+
+.plans-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 24px;
+
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.plan-card {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #ffffff22;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+}
+
+.plan-card h3 {
+  color: #ff5db1;
+  margin-bottom: 8px;
+}
+
+.plan-card p {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.plan-card ul {
+  list-style: none;
+  padding-left: 0;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.plan-card.selected {
+  border: 8px solid #5e0077;
+  box-shadow: 0 0 0 3px rgba(94, 0, 119, 0.7), 0 0 12px rgba(94, 0, 119, 0.5);
+  transform: scale(1.02);
+}
+
+
+
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+
+
+
+
+
+.remember {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.remember a {
+  color: #b3b3b3;
+  text-decoration: none;
+}
+
+.remember a:hover {
+  text-decoration: underline;
+}
+
+.signup {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.signup a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.signup a:hover {
+  text-decoration: underline;
+}
+
+.captcha {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.captcha a {
+  color: #00aaff;
+  text-decoration: none;
+}
+
+.captcha a:hover {
+  text-decoration: underline;
+}
+
+

@@ -1,0 +1,353 @@
+/* ================= TOKENS ================= */
+:root{
+  --bg:#0b0b10; --panel:#0f0f17; --panel2:#141428; --line:#24243a;
+  --text:#f6f7fb; --dim:#b6b6c8;
+  --a1:#a855f7; --a2:#ec4899; --a3:#00ffa8;
+  --dur:.25s; --ease:cubic-bezier(.2,.8,.2,1);
+  --shadow: 0 10px 30px rgba(0,0,0,.30);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,.40);
+
+  /* Sidebar */
+  --sb-collapsed:76px;
+  --sb-expanded:268px;
+  --gap-left:20px;
+  :root{ --wall-gap:0px; } /* controla si quieres un micro-gutter; 0 = pegado */
+
+  /* Layout */
+  --shell: 1240px;  /* ancho máximo del contenido */
+  --sb-w: 268px;
+  --sb-w-mini: 76px;
+  --sb-gap: 20px;
+
+    --player-h: 88px;
+    --bg-1:#0e0e11;
+    --bg-2:#141421;
+    --fg:#f5f6fa;
+    --fg-dim:#b7b8c8;
+    --line:#26263a;
+    --accent:#aa029c;
+    --accent-2:#6b3df6;
+    --radius:14px;
+    --dur:.22s;
+    --ease:cubic-bezier(.2,.8,.2,1);
+    color-scheme: dark;
+  }
+
+
+/* ================= BASE ================= */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(168,85,247,.15), transparent 60%),
+    radial-gradient(1000px 700px at 10% 10%, rgba(236,72,153,.13), transparent 60%),
+    radial-gradient(900px 400px at 60% 110%, rgba(0,255,168,.10), transparent 55%),
+    var(--bg);
+  overflow:hidden;
+}
+.app{display:flex;flex-direction:column;height:100vh}
+
+/* Contenedor centrado */
+.shell{max-width:var(--shell); margin:0 auto; padding:0 24px}
+
+:root {
+  --sb-bg-1: #0b0b10; /* fondo inicio */
+  --sb-bg-2: #141428; /* fondo final */
+  --sb-accent: #a855f7; /* morado del player */
+  --sb-line: rgba(168,85,247,.14); /* borde sutil */
+}
+
+.sidebar {
+  position: fixed;
+  inset: 18px auto 18px 0; /* pegado a la izquierda */
+  width: var(--sb-w-mini);
+  display: flex;
+  flex-direction: column;
+    background:
+      radial-gradient(1200px 120px at 20% 120%, color-mix(in oklab, var(--accent) 22%, transparent) 0%, transparent 60%),
+      linear-gradient(90deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--sb-line);
+  border-left: none;
+  border-radius: 0 18px 18px 0;
+  box-shadow: 0 24px 60px rgba(0,0,0,.40);
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+  overflow: hidden;
+  z-index: 60;
+  transition: width var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+/* Glow sutil como el del player */
+.sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 0 18px 18px 0;
+  background: radial-gradient(
+    1000px 300px at 50% 110%,
+    color-mix(in oklab, var(--sb-accent) 10%, transparent) 0%,
+    transparent 60%
+  );
+  opacity: .65;
+}
+
+
+.sidebar:hover{ width:var(--sb-expanded); box-shadow:var(--shadow-lg) }
+
+/* Marca con “recorte inteligente”: colapsado solo muestra la A, expandido AURA */
+.brand{ display:flex; align-items:center; padding:12px }
+.logo-clip{
+  height:38px; width:46px; border-radius:10px; overflow:hidden;
+  transition: width var(--dur) var(--ease);
+}
+.sidebar:hover .logo-clip{ width:140px } /* ajusta si tu PNG necesita más/menos */
+.logo-img{ height:100%; width:auto; object-fit:contain; object-position:left center; display:block }
+
+/* Menú */
+.menu{ display:flex; flex-direction:column; gap:6px; padding:4px 8px 2000px }
+.menu-sep{ height:10px }
+.item{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:12px; width:100%;
+  color:var(--dim); text-decoration:none; border:1px solid transparent;
+  transition: background var(--dur), color var(--dur), border-color var(--dur), transform .08s ease-out;
+}
+.item i{ min-width:22px; text-align:center; font-size:18px; opacity:.95 }
+.item .label{
+  opacity:0; transform:translateX(-6px); white-space:nowrap;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.sidebar:hover .item .label{ opacity:1; transform:none }
+.item:hover{ background:rgba(255,255,255,.08); color:#fff; border-color:var(--line) }
+.item.active{
+  color:#fff;
+  background:linear-gradient(135deg,#1a1a2b,#151527);
+  border-color:var(--line);
+  box-shadow:0 6px 14px rgba(0,0,0,.35);
+}
+
+/* ================= MAIN empujado por sidebar ================= */
+.main-content{
+  margin-left: calc(var(--sb-collapsed) + var(--gap-left));
+  height:100vh; overflow-y:auto;
+  padding-bottom:96px;
+  transition: margin-left var(--dur) var(--ease);
+}
+.sidebar:hover ~ .main-content{
+  margin-left: calc(var(--sb-expanded) + var(--gap-left));
+}
+/* scrollbar suave */
+.main-content::-webkit-scrollbar{ width:10px }
+.main-content::-webkit-scrollbar-thumb{ background:#23233a; border-radius:10px }
+.main-content::-webkit-scrollbar-thumb:hover{ background:#2d2d4a }
+
+/* ================= HEADER ================= */
+.header{ position:sticky; top:18px; z-index:40; margin-bottom:10px }
+.searchbox{
+  display:flex; align-items:center; gap:12px; flex:1;
+  height:50px; padding:0 12px 0 16px;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--line); border-radius:999px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+}
+.searchbox i{ opacity:.85 }
+.searchbox input{
+  flex:1; border:0; background:transparent; outline:0; color:#fff; font-size:15px;
+}
+.chip{
+  display:flex; align-items:center; gap:8px; height:36px; padding:0 14px;
+  border-radius:12px; background:#181826; color:#eaeaea; border:1px solid var(--line);
+}
+.actions{ display:flex; align-items:center; gap:10px }
+.actions .icon{ width:42px; height:42px; border-radius:12px; border:1px solid var(--line); background:#181826; color:#eaeaea }
+.avatar{ width:42px; height:42px; border-radius:12px; border:1px solid var(--line); object-fit:cover }
+
+/* ================= SECTION TITLES ================= */
+.section-title{
+  font-size:20px; font-weight:800; margin:24px 0 14px;
+  position:relative; display:inline-block; padding-bottom:6px;
+}
+.section-title::after{
+  content:""; position:absolute; left:0; right:-6px; bottom:0; height:2px;
+  background:linear-gradient(90deg,var(--a1),var(--a2));
+  border-radius:2px; opacity:.95;
+}
+
+/* ================== PLAYLISTS (Hero) ================== */
+.playlist-section h2{
+  margin-top:70px; font-size:18px; font-weight:800; letter-spacing:.3px; color:#fff;
+  position:relative; display:inline-block; padding-bottom:6px;
+}
+.playlist-section h2::after{
+  content:""; position:absolute; left:0; right:-6px; bottom:0; height:2px;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); border-radius:2px; opacity:.95;
+}
+.playlist-grid{
+  display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; height:260px; align-items:stretch;
+}
+.playlist-card{
+  position:relative; border-radius:22px; padding:32px; min-height:220px; height:100%;
+  display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden; isolation:isolate;
+  border:1px solid rgba(255,255,255,.06);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.playlist-card:hover{ transform:translateY(-3px); box-shadow:0 14px 32px rgba(0,0,0,.35) }
+.playlist-card::after{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background: radial-gradient(120% 120% at 70% 20%, rgba(255,255,255,.12), transparent 55%);
+  mix-blend-mode: overlay; pointer-events:none;
+}
+.playlist-card.green{  background:linear-gradient(135deg,#2e026d 10%,#6d28d9 60%,#00ffa8 130%); color:#fff }
+.playlist-card.pink{   background:linear-gradient(135deg,#9d174d 10%,#db2777 70%); color:#fff }
+.playlist-card.teal{   background:linear-gradient(135deg,#1e3a8a 10%,#3b82f6 70%); color:#fff }
+.playlist-card.purple{ background:linear-gradient(135deg,#312e81 10%,#7c3aed 60%); color:#fff }
+
+.playlist-card img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; opacity:.22 }
+.overlay-text{
+  position:absolute; left:32px; right:32px; bottom:32px;
+  background:rgba(0,0,0,.35); border-radius:16px; padding:16px 24px; color:#fff;
+  display:flex; align-items:center; gap:16px;
+}
+.overlay-text h3{margin:0;font-size:18px;font-weight:700}
+.overlay-text p{margin:0 16px 0 0;font-size:14px;opacity:.9}
+.overlay-text .emoji{font-size:32px;margin-left:auto}
+.likes{position:absolute; bottom:24px; left:24px; font-size:14px; opacity:.9}
+
+/* ================== MUSIC SECTIONS ================== */
+.music-sections{ display:flex; gap:32px; margin-top:40px }
+.selected-album,.tracks,.suggested{ flex:1 }
+.album-info{ display:flex; gap:16px; align-items:center }
+.album-info img{ border-radius:16px }
+.album-info p{ margin:0 0 4px 0; font-size:14px; color:var(--text-dim) }
+.album-info span{ font-size:13px; color:var(--text-dim) }
+
+/* Tracks list */
+.tracks ul{ list-style:none }
+.tracks li{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px;
+  padding:12px 8px; border-bottom:1px solid rgba(255,255,255,.08);
+  min-height:76px; transition: background-color .18s ease;
+}
+.tracks li:last-child{ border-bottom:none }
+.tracks li:hover{ background-color:rgba(255,255,255,.04) }
+.track-cover{ width:60px; height:60px; border-radius:12px; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,.18) }
+
+.track-title{ font-size:16px; font-weight:800; margin-bottom:6px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.track-meta{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-dim) }
+.track-action{
+  margin-left:24px; font-size:20px; color:var(--accent-1);
+  background:none; border:none; cursor:pointer; border-radius:50%;
+  width:38px; height:38px; display:grid; place-items:center;
+  transition: background var(--dur), color var(--dur), transform .08s;
+}
+.track-action:hover{ background:rgba(255,255,255,.06); color:#fff }
+
+/* Suggested pills */
+.suggested .album-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px }
+.album-box{ background:transparent; border:none; border-radius:16px; padding:12px; text-align:center; color:#fff }
+.album-box img{ width:60px; border-radius:12px; margin-bottom:8px }
+
+
+
+/* ================== RESPONSIVE ================== */
+@media (max-width:1200px){
+  .playlist-grid{ grid-template-columns:2fr 1fr; height:180px }
+  .playlist-card{ padding:16px; min-height:140px }
+  .header-search-group{ margin:0 40px }
+  .music-sections{ flex-direction:column }
+}
+@media (max-width:768px){
+  .main-content{ margin-left: calc(var(--sidebar-collapsed) + 14px) }
+  .header-search-group{ margin:0 }
+}
+
+/* ================== Glow decorativo ================== */
+.element-glow{ position:relative; z-index:1 }
+.element-glow::before{
+  content:""; position:absolute; top:-6px; left:-6px; width:calc(100% + 12px); height:calc(100% + 12px);
+  border-radius:16px;
+  background:linear-gradient(45deg,#6d28d9,#ec4899,#6d28d9,#00ffa8);
+  background-size:600%; filter:blur(9px); opacity:0; transition:opacity .3s ease; z-index:-1;
+  animation:glowing 18s linear infinite;
+}
+.element-glow:hover::before{ opacity:.9 }
+@keyframes glowing{0%{background-position:0 0}50%{background-position:400% 0}100%{background-position:0 0}}
+
+
+/* ====== TOPBAR derecho (mantiene alturas y proporciones) ====== */
+.header{
+  position: sticky; top: 18px; z-index: 40;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:6px 0; backdrop-filter: blur(6px);
+}
+
+/* grupo buscador: se deja tal cual, solo pequeño ajuste del icono */
+.header-search-group .icon,
+.filter-btn .icon{ display:none }
+.filter-btn i{ font-size:14px; }
+
+/* contenedor del navbar derecho */
+.topbar{
+  display:flex; align-items:center; gap:10px;
+  height:48px;  /* igual que el buscador */
+}
+
+/* cápsula de iconos */
+.quick-actions{
+  display:flex; align-items:center; gap:8px;
+  height:48px; padding:0 10px;
+  background: rgba(255,255,255,.06);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+/* botón de icono */
+.qa-btn{
+  width:36px; height:36px; display:grid; place-items:center;
+  background:#1a1a1a; border:1px solid var(--line);
+  border-radius:10px; color:#eaeaea; cursor:pointer;
+  transition: background var(--dur), border-color var(--dur), transform .08s;
+}
+.qa-btn:hover{ background:#222; border-color:#2d2d46 }
+.qa-btn i{ font-size:16px }
+
+/* chip de usuario */
+.user-chip{
+  height:48px; display:flex; align-items:center; gap:10px;
+  padding:0 12px; background: rgba(255,255,255,.06);
+  border:1px solid var(--line); border-radius:16px;
+  color:#eaeaea; cursor:pointer;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+  transition: background var(--dur), border-color var(--dur);
+}
+.user-chip:hover{ background: rgba(255,255,255,.08) }
+.chip-avatar{ width:32px; height:32px; border-radius:10px; object-fit:cover; border:1px solid var(--line) }
+.chip-name{ font-weight:600; font-size:14px; white-space:nowrap }
+.user-chip i{ font-size:12px; opacity:.9 }
+
+/* Mantener el margen del buscador como lo tenías */
+.header-search-group{
+  flex:1; display:flex; align-items:center; gap:12px;
+  height:48px; padding:0 12px 0 16px;
+  background: rgba(255,255,255,.06);
+  border:1px solid var(--line); border-radius:28px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+  margin: 0 180px; /* ← igual que antes */
+  transition: border-color var(--dur), box-shadow var(--dur);
+}
+.header-search-group:focus-within{
+  border-color: rgba(168,85,247,.35);
+  box-shadow: 0 0 0 2px rgba(168,85,247,.22);
+}
+.search{ flex:1; background:transparent; border:0; outline:0; color:#fff; font-size:15px; caret-color: var(--a1) }
+.search::placeholder{ color:#bdbdbd; opacity:.85 }
+.filter-btn{
+  display:flex; align-items:center; gap:8px; height:36px; padding:0 14px;
+  border-radius:12px; background:#1a1a1a; border:1px solid var(--line);
+  color:#eaeaea; cursor:pointer;
+}
+.filter-btn:hover{ background:#212121; color:#fff }

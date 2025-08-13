@@ -1,0 +1,479 @@
+@font-face {
+    font-family: 'Circular';
+    src: url('circular-medium.woff2');
+    :root { --fake: 1; }
+  }
+  body {
+      font-family: 'Circular',Helvetica,Arial,sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #222326;
+  }
+ /*menu*/ 
+ a{
+    text-decoration: none;
+    color: white;
+    text-transform: none;
+    transition: 0.25 ease;
+ }
+ ul{
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+ }
+
+ ul li{
+    text-decoration: none;
+    margin: 0 0.75em 0 0.75em;
+ }
+ ul:hover a{
+    color: blueviolet;
+ }
+ ul:hover a:hover{
+    color:#6207e3;
+    box-shadow: 0 2px 0 0 currentColor;
+ }
+  /*logo*/
+  .navbar-logo {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 140px;     /* antes: 200px */
+    height: 42px;     /* antes: 60px */
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    font: 0/0 a;
+    color: transparent;
+    text-shadow: none;
+    background-color: transparent;
+    border: 0;
+    float: left;
+    background-image: url(..//img/Aura\ LOGO.png);
+}
+
+ /*fondo*/ 
+  .bg-main {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(50deg, #3a1b21 0, #19003b 100%);
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: -1;
+  }
+  
+  .bg-main-img {
+      display: block;
+      background-image: url('https://umomag.com/wp-content/uploads/2020/12/reportaje-los-50-discos-del-2020-diciembre-umomag-1024x683.jpg');
+      width: 100%;
+      height: 100%;
+      background-position: center;
+    opacity: 0.1;
+  }
+  /*textos grandes*/
+  .text-white {
+      color: white;
+  }
+  
+  .text-klein-purple {
+      color: #7c25f8;
+  }
+  
+  .text-aquamarine {
+      color: #a544c9;
+  }
+ /*galeria de fotos*/ 
+  body .jumbotron {
+      background: none;
+      padding: 100px 0;
+      text-align: center;
+      margin: 0;
+    position: relative;
+    overflow: hidden;
+    color: white;
+  }
+  
+  .jumbotron.bg-white {
+    background: linear-gradient(135deg, #000000, #0f0116, #110011);
+}
+  
+  .carousel-control.right, .carousel-control.left {
+      background: none;
+  }
+  
+  .btn {
+      padding: 17px 48px;
+      font-size: 14px;
+      line-height: 1;
+      border-radius: 500px;
+      padding: 18px 48px 16px;
+      transition-property: background-color,border-color,color,box-shadow,filter;
+      transition-duration: .3s;
+      border-width: 0;
+      letter-spacing: 2px;
+      min-width: 160px;
+      text-transform: uppercase;
+      white-space: normal;
+  }
+  
+  .jumbotron h1 {
+      font-weight: 900;
+  }
+  
+  .jumbotron .btn {
+      margin: 20px 10px 30px;
+  }
+  
+  .btn.btn-solid {
+      color: #fff;
+      background-color: #7c25f8;
+    border-radius: 500px;
+  }
+  .btn.btn-solid:hover {
+      color: #fff;
+      background-color: #6207e3;
+  }
+  
+  .btn.btn-lg {
+      font-size: 16px;
+      line-height: 1;
+      border-radius: 500px;
+      padding: 21px 56px 19px;
+  }
+
+  .p{
+    color: white;
+  }
+  
+  .item h1 {
+      font-weight: 900;
+  }
+  
+  .text-signup a {
+      color: #fff;
+      text-decoration: underline;
+  }
+  
+  #carousel-tour {
+      margin-top: 50px;
+  }
+  /*center-btn learn about spotify*/
+  a.btn-scroll {
+      color: white;
+      display: block;
+      text-align: center;
+  }
+  
+  a.btn-scroll:hover {
+      color: #9bf0e1;
+    text-decoration: none;
+  }
+  
+  .btn-scroll-text {
+      text-decoration: none;
+      transition: color .3s ease-in-out;
+      display: block;
+      font-weight: 700;
+      letter-spacing: .1em;
+      margin-bottom: 20px;
+  }
+  
+  .container h2 {
+      font-size: 50px;
+      font-weight: 900;
+      line-height: 1;
+      margin: 0 0 .75em;
+  }
+  
+  .container h3 {
+      font-size: 40px;
+      font-weight: 900;
+      line-height: 1.4;
+  }
+  
+  .jumbotron.jumbotron-whats-on {
+      text-align: left;
+      padding: 180px 0;
+  }
+  
+   .jumbotron p {
+      font-weight: 500;
+      font-size: 18px;
+      margin: 1em 0;
+  }
+  
+  .albums .album-img {
+      padding: 0;
+  }
+  /*middle section: iphones*/
+  .iphone {
+      width: 380px;
+      height: 730px;
+      padding: 80px 22px 0;
+      margin-bottom: 30px;
+      background: url('https://raw.githubusercontent.com/iAmCaroly/Spotify-homepage-clone/main/img/iphone-klein-purple.png') no-repeat;
+      background-size: cover;
+  }
+  
+  .iphone-1, .iphone-4 {
+      margin-top: 200px;
+  }
+  .devices-container {
+      margin-top: -300px;
+      margin-bottom: -620px;
+      transform: rotate(30deg) translate3d(0,40px,0);
+  }
+  /*section 4: subscribing*/
+  .grid-overflow {
+      margin-right: -100%;
+      float: left;
+  }
+  .devices-container img {
+      max-width: 85%;
+    border-radius: 20px;
+  }
+  
+  /*section 3: all devices*/
+  body .jumbotron-devices {
+      background: #000000;
+  }
+  
+  .jumbotron-devices img{
+      margin-bottom: 60px;
+  }
+  
+  .jumbotron-devices .device-list {
+      display: inline;
+      padding-left: 0;
+      list-style: none;
+      margin-left: -5px;
+      text-transform: uppercase;
+      font-weight: 700;
+  }
+  
+  .jumbotron-devices .device-list li{
+      display: inline-block;
+      padding-left: 5px;
+      padding-right: 5px;
+      margin: 1em 0;
+  }
+  
+  .jumbotron-devices .device-list li:after {
+      content: '-';
+      padding-left: 14px;
+      color: #7c25f8;
+  }
+  
+  .jumbotron-devices .device-list li:last-child:after {
+      content: '';
+  }
+  
+  .jumbotron-devices.device-list a {
+      color: white;
+      border-bottom: 1px solid white;
+      text-decoration: none;
+  }
+  
+  .jumbotron.jumbotron-subscriptions {
+      padding: 150px 0 0;
+      text-align: left;
+  }
+  
+  .jumbotron.jumbotron-subscriptions .btn {
+      margin-top: 30px;
+      margin-bottom: 70px;
+  }
+  
+  .price-title {
+      float: left;
+      margin: 0;
+  }
+  
+  
+  .price {
+      float: right;
+      margin: 0 0 12px;
+  }
+  
+  .details-subscriptions {
+      border: 1px solid white;
+      border-left: 0;
+      border-right: 0;
+      padding: 16px 0;
+      padding-left: 0;
+      list-style: none;
+      font-weight: 700;
+      margin-bottom: 0;
+  }
+  
+  .details-subscriptions {
+      font-size: 24px;
+  }
+  
+  .tour-variation p:first-child {
+      float: left;
+  }
+  
+  .tour-variation p:last-child {
+      float: right;
+  }
+  
+  .tour-variation a {
+      color: #9bf0e1;
+      text-decoration: none;
+  }
+  
+  .tour-variation a:hover {
+      color: #42e3c6;
+  }
+  
+  p.legal {
+      font-size: 12px;
+      margin-top: 8px;
+  }
+  
+  p.legal a {
+      text-decoration: underline;
+  }
+  p.legal a:hover {
+      color: #42e3c6
+  }
+  
+  .nexus {
+      width: 458px;
+      height: 873px;
+      padding: 60px 24px 0 180px;
+      background: url('https://raw.githubusercontent.com/iAmCaroly/Spotify-homepage-clone/main/img/iphone-klein-purple.png') no-repeat;
+      background-size: cover;
+      margin-bottom: -50%;
+  }
+  .nexus img {
+      width: 375px;
+      height: 770px;
+  margin-left: -138px;
+    border-radius: 20px;
+  }
+  
+  .footer {
+      background-color: black;
+      color: white;
+      padding: 80px 0 50px;
+      text-align: left;
+  }
+  
+  .footer-highlight-aquamarine a {
+      color: white;
+  }
+  
+  .footer-highlight-aquamarine a:hover {
+      color: #9bf0e1;
+  }
+  
+  .footer-logo a {
+      display: block;
+      width: 132px;
+      height: 60px;
+      font: 0/0 a;
+      color: transparent;
+      border: 0;
+      background-image: url(..//img/Aura\ LOGO.png);
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      margin-bottom: 50px;
+  }
+  
+  .footer .nav-title {
+      color: #919496;
+      font-size: 12px;
+      letter-spacing: .08em;
+      margin: 20px 0;
+      text-transform: uppercase;
+  }
+  
+  .footer .nav li a {
+      padding: 3px 0;
+      margin: 0 0 12px;
+  }
+  
+  .col-social {
+      margin-top: 20px;
+  }
+  
+  .footer .col-social ul {
+      float: right;
+  }
+  
+  .footer .col-social li {
+      display: inline-block;
+  }
+  
+  .footer .col-social li a {
+      padding: 15px;
+      margin-bottom: 12px;
+      background-color: #919496;
+      border-radius: 30px;
+  }
+  
+  .footer .col-social a:hover {
+      background-color: white;
+  }
+  
+  .col-social a img {
+      width: 24px;
+      height: 24px;
+  }
+  
+  .footer .nav-small a {
+      color: #919496;
+  }
+  
+  .footer .nav-small li a {
+      float: left;
+      font-size: 12px;
+      font-weight: 400;
+      padding: 12px;
+      margin: 0;
+  }
+  
+  .row-small {
+      margin-top: 100px;
+  }
+  
+  .footer .nav-small li:first-child a {
+      padding-left: 0;
+  }
+  
+  .flag-icon-us {
+      background-image: url(..//img/Flag_of_El_Salvador.svg.webp);
+  }
+  
+  .flag-icon {
+      background-position: 50%;
+      background-repeat: no-repeat;
+      background-size: contain;
+      display: inline-block;
+      font-size: 18px;
+      height: 1em;
+      width: 1.33333333em;
+  }
+  
+  .market, .copyright {
+      color: #919496;
+      font-size: 12px;
+  }
+  
+  a.market {
+      color:#919496;
+      text-decoration: none;
+  }
+
+.nav-btn {
+  color: white !important;      /* Letra blanca */
+  font-weight: 600;             /* Negrita */
+  text-decoration: none !important;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.nav-btn:hover {
+  color: #a544c9 !important;    /* Color lila al pasar el mouse */
+}

@@ -1,0 +1,353 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: black;
+  overflow: hidden;
+  color: #fff;
+  min-height: 100vh;
+  position: relative;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* === LOGO === */
+.logo-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+}
+
+.logo-img {
+  height: 60px;
+  object-fit: contain;
+}
+
+/* === CONTENEDOR PRINCIPAL === */
+.main-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 100px 30px 60px;
+  gap: 60px;
+  position: relative;
+  z-index: 1;
+}
+.back-logo-container:hover {
+  opacity: 0.85;
+}
+
+
+/* === FORMULARIO === */
+.form-section {
+  flex: 1;
+  max-width: 500px;
+  animation: fadeInUp 1s ease forwards;
+}
+
+/* Contenedor nuevo para logo + flecha "volver atrás" encima del formulario */
+.back-logo-container {
+display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto 25px;
+  text-decoration: none;
+  width: fit-content;
+  transition: opacity 0.3s ease;
+}
+
+.back-logo-container:hover {
+  opacity: 0.58;
+}
+
+
+
+.back-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 93, 177, 0.15);
+  transition: background-color 0.3s;
+}
+
+.back-arrow:hover {
+  background-color: rgba(255, 93, 177, 0.4);
+}
+
+.logo-register {
+  height: 40px;
+  object-fit: contain;
+  user-select: none;
+}
+
+.form-container form {
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 40px 32px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 1.2s ease;
+}
+
+.form-container h1 {
+  margin-bottom: 28px;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  color: #fff;
+}
+
+/* Inputs */
+.form-group {
+  position: relative;
+  margin-bottom: 24px;
+  height: 50px;
+}
+
+.form-group input {
+  width: 100%;
+  height: 100%;
+  padding: 16px 20px 0;
+  font-size: 1rem;
+  background-color: #1c1c1c;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #ff5db1;
+}
+
+.form-group label {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  color: #8c8c8c;
+  pointer-events: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-group input:focus ~ label,
+.form-group input:valid ~ label {
+  transform: translateY(-1.2rem);
+  font-size: 0.75rem;
+  color: #ff5db1;
+}
+
+/* Botón */
+.btn-registrarse {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  background-color: #7e0469;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-registrarse:hover {
+  background-color: #b90057;
+}
+
+.remember {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.remember a {
+  color: #b3b3b3;
+  text-decoration: none;
+}
+
+.remember a:hover {
+  text-decoration: underline;
+}
+
+.signup {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.signup a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.signup a:hover {
+  text-decoration: underline;
+}
+
+.captcha {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.captcha a {
+  color: #00aaff;
+  text-decoration: none;
+}
+
+.captcha a:hover {
+  text-decoration: underline;
+}
+
+/* === PLANES === */
+.plans-section {
+  flex: 1;
+  max-width: 450px;
+  animation: fadeInRight 1.3s ease forwards;
+}
+
+.plans-section h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.plan-card {
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #ffffff33;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.plan-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  color: #ff5db1;
+}
+
+.plan-card p {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.plan-card ul {
+  list-style: none;
+  padding-left: 0;
+  color: #ccc;
+}
+
+.plan-card ul li {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+/* Estilos especiales */
+.plan-card.premium {
+  border: 2px solid #e50914;
+}
+
+.plan-card.familia {
+  border: 2px solid #7e0469;
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+    padding-top: 140px;
+  }
+
+  .plans-section {
+    margin-top: 40px;
+  }
+}
+
+#canvas.glslCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  display: block;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+}
+
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.1); /* oscurece el canvas */
+  backdrop-filter: blur(6px); /* difumina lo que está debajo */
+  z-index: -1;
+}

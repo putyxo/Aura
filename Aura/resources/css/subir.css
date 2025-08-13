@@ -1,0 +1,122 @@
+body {
+    background: #181818;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+  }
+  .upload-container {
+    display: flex;
+    gap: 32px;
+    max-width: 700px;
+    margin: 48px auto;
+    background: #222;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    padding: 40px;
+    align-items: flex-start;
+  }
+  .dropzone {
+    flex: 1;
+    background: #181818;
+    border: 2px dashed #1db954;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-right: 0;
+  }
+  .dropzone.dragover {
+    border-color: #fff;
+    background: #232323;
+  }
+  .dropzone input[type="file"] {
+    display: none;
+  }
+  .dropzone-icon {
+    font-size: 48px;
+    color: #1db954;
+    margin-bottom: 12px;
+  }
+  .dropzone-text {
+    color: #aaa;
+    font-size: 16px;
+    text-align: center;
+  }
+  .upload-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .upload-form label {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .upload-form input[type="text"],
+  .upload-form input[type="file"] {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .upload-form input[type="file"] {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #fff;
+  }
+  .upload-form button {
+    background: #1db954;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: 0.2s;
+  }
+  .upload-form button:hover {
+    background: #17a44a;
+    }    
+    
+    /* Estilos para centrar el contenido */
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; /* Altura completa de la ventana */
+        flex-direction: column; /* Alinear en columna */
+      }
+      .card {
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        margin: 10px;
+        display: inline-block;
+        transition: transform 0.2s;
+        width: 150px; /* Ancho fijo para los cuadros */
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+      .upload-container {
+        display: none; /* Ocultar el formulario inicialmente */
+        flex-direction: column;
+        align-items: center;
+      }
+      .hidden {
+        display: none;
+      }
+      .song-input {
+        margin-bottom: 10px;
+      }
