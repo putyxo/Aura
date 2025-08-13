@@ -8,22 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-
-  @if(session('ok'))
+@if(session('ok'))
   <div class="alert alert-success">{{ session('ok') }}</div>
-
-  {{-- Portada del single o álbum --}}
-  @if(session('cover_url'))
-    <img src="{{ session('cover_url') }}" alt="Portada" style="max-width:220px;border-radius:10px;margin-top:8px">
-  @endif
-
-  {{-- Audio del single --}}
-  @if(session('audio_url'))
-    <audio controls preload="none" style="width:100%;max-width:480px;margin-top:8px">
-      <source src="{{ session('audio_url') }}" type="audio/mpeg">
-      Tu navegador no soporta audio HTML5.
-    </audio>
-  @endif
 
   {{-- Lista de canciones del álbum recién creado --}}
   @if(session('album_id'))
@@ -46,8 +32,6 @@
     @endif
   @endif
 @endif
-  @endif
-
   <section class="home active">
     <h2>¿Qué deseas subir?</h2>
     <div class="container">
