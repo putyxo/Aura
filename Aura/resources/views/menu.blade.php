@@ -20,15 +20,23 @@
           <img src="../img/Aura_LOGO.png" alt="AURA Logo" class="logo-img">
         </div>
       </a>
-      <nav class="menu">
-        <a href="#" class="item active"><i class="fas fa-house"></i><span class="label">Home</span></a>
+     <nav class="menu">
+    <a href="#" class="item active"><i class="fas fa-house"></i><span class="label">Home</span></a>
+    <a href="#" class="item"><i class="fas fa-heart"></i><span class="label">Favoritos</span></a>
+    <a href="#" class="item"><i class="fas fa-layer-group"></i><span class="label">Biblioteca</span></a>
 
-        <a href="#" class="item"><i class="fas fa-heart"></i><span class="label">Favoritos</span></a>
+    {{-- Botón "Subir música" solo si es artista --}}
+    @auth
+        @if(auth()->user()->es_artista)
+            <a href="{{ route('musica.subir') }}" class="item">
+                <i class="fas fa-upload"></i>
+                <span class="label">Subir Música</span>
+            </a>
+        @endif
+    @endauth
 
-        <a href="#" class="item"><i class="fas fa-layer-group"></i><span class="label">Biblioteca</span></a>
-                <div class="menu-sep"></div>
-
-      </nav>
+    <div class="menu-sep"></div>
+</nav>
     </aside>
 
     <!-- ===== MAIN ===== -->
@@ -45,6 +53,7 @@
   </div>
 
   <!-- navbar derecho nuevo -->
+  
   <div class="topbar">
     <div class="quick-actions" role="toolbar" aria-label="Acciones rápidas">
       <button class="qa-btn" title="Verificados"><i class="fa-regular fa-circle-check"></i></button>
@@ -53,11 +62,29 @@
       <button class="qa-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
     </div>
 
-    <button class="user-chip" title="Cuenta">
-      <img class="chip-avatar" src="https://i.ibb.co/album-profile.png" alt="Profile">
-      <span class="chip-name">Profil</span>
-      <i class="fa-solid fa-chevron-down"></i>
+<div class="user-menu">
+    <button class="user-chip" id="userMenuBtn" title="Cuenta">
+        <img class="chip-avatar" src="{{ auth()->user()->avatar ?? 'https://i.ibb.co/album-profile.png' }}" alt="Profile">
+        <span class="chip-name">
+            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+        </span>
+        <i class="fa-solid fa-chevron-down"></i>
     </button>
+
+    <div class="dropdown-menu" id="userDropdown" style="display: none;">
+        <a href="{{ route('profile.edit') }}" class="dropdown-item">
+            <i class="fa-solid fa-user"></i> Perfil
+        </a>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="dropdown-item logout">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </button>
+        </form>
+    </div>
+</div>
+
   </div>
 </header>
 
@@ -182,3 +209,19 @@
   </div>
 </body>
 </html>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('userMenuBtn');
+    const menu = document.getElementById('userDropdown');
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', () => {
+        menu.style.display = 'none';
+    });
+});
+</script>
