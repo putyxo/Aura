@@ -19,7 +19,9 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/menu', fn() => view('menu'));
+Route::get('/menu', function () {
+    return view('menu');
+})->name('menu');
 
 
 Route::middleware('auth')->group(function () {
