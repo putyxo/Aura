@@ -4,7 +4,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UploadMusicController;
 use App\Http\Controllers\GoogleDriveController;
 use App\Http\Controllers\AlbumController;
-use App\Http\Controllers\DriveMediaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,6 +40,3 @@ Route::get('/phpinfo', function () {
     dd(PHP_BINARY, php_ini_loaded_file());
 });
 
-Route::get('/media/drive/{id}', [DriveMediaController::class, 'stream'])
-     ->name('media.drive')
-     ->middleware('auth'); // opcional, si quieres protegerlo
