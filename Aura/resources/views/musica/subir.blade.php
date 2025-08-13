@@ -7,43 +7,6 @@
   @vite('resources/css/subir.css')
 </head>
 <body>
-<<<<<<< HEAD
-@if(session('ok'))
-  <div class="alert alert-success">{{ session('ok') }}</div>
-
-  {{-- Lista de canciones del álbum recién creado --}}
-  @if(session('album_id'))
-    @php
-      $album = \App\Models\Album::with('songs')->find(session('album_id'));
-    @endphp
-
-    @if($album && $album->songs->count())
-      <h3 style="margin-top:12px">Pistas del álbum: {{ $album->title }}</h3>
-      <ul style="display:flex;flex-direction:column;gap:10px;padding:0;list-style:none">
-        @foreach($album->songs as $song)
-          <li>
-            <div style="font-weight:600">{{ $song->title }}</div>
-            <audio controls preload="none" style="width:100%;max-width:520px">
-              <source src="{{ $song->audio_path }}" type="audio/mpeg">
-            </audio>
-          </li>
-        @endforeach
-      </ul>
-    @endif
-  @endif
-@endif
-  <section class="home active">
-    <h2>¿Qué deseas subir?</h2>
-    <div class="container">
-      <div class="card" onclick="mostrarRegistro('cancion')">
-        <img src="https://image.shutterstock.com/image-photo/music-note-on-white-background-260nw-1839737693.jpg" alt="Contenido" />
-        <p>Canción individual</p>
-      </div>
-      <div class="card" onclick="mostrarRegistro('album')">
-        <img src="https://image.shutterstock.com/image-photo/music-note-on-white-background-260nw-1839737693.jpg" alt="Contenido" />
-        <p>Álbum</p>
-      </div>
-=======
 
 @php
 use Illuminate\Support\Facades\DB;
@@ -116,7 +79,6 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
         style="width:100%;height:140px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08)"
         onerror="this.onerror=null;this.src='{{ $placeholder }}'">
       <p>Canción individual</p>
->>>>>>> parent of 7a5866c (v1)
     </div>
     <div class="card" onclick="mostrarRegistro('album')">
       <img

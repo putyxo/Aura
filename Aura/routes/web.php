@@ -5,6 +5,7 @@ use App\Http\Controllers\UploadMusicController;
 use App\Http\Controllers\GoogleDriveController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\DriveMediaController;
+use App\Http\Controllers\MiControlador;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,6 +32,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
     Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
     Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
+    Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
+
+
+Route::get('/busqueda_album', function () {
+    return view('busqueda_album'); // resources/views/nombre_de_la_vista.blade.php
+})->name('busqueda_album');
+
+Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual']);
+
+
+Route::get('/busqueda_individual', function () {
+    return view('busqueda_individual'); // resources/views/nombre_de_la_vista.blade.php
+})->name('busqueda_individual');
 });
 
 Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogle']);
