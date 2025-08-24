@@ -1,0 +1,839 @@
+/* ================= TOKENS ================= */
+:root {
+  --bg: #0b0b10;
+  --panel: #0f0f17;
+  --panel2: #141428;
+  --line: #24243a;
+  --text: #f6f7fb;
+  --dim: #b6b6c8;
+
+  --a1: #a855f7;
+  --a2: #ec4899;
+  --a3: #00ffa8;
+  --ring: 0 0 0 3px color-mix(in oklab, var(--a1) 28%, transparent);
+  --ring-err: 0 0 0 3px color-mix(in oklab, #ff4d6d 32%, transparent);
+
+  --r-lg: 18px;
+  --r-md: 14px;
+  --r-sm: 12px;
+  --dur: .22s;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --shadow: 0 10px 30px rgba(0, 0, 0, .30);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, .45);
+}
+
+/* ================= BASE ================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab, var(--a1) 18%, transparent) 0%, transparent 60%),
+              radial-gradient(1000px 700px at 10% 10%, color-mix(in oklab, var(--a2) 15%, transparent) 0%, transparent 60%),
+              radial-gradient(900px 400px at 60% 110%, color-mix(in oklab, var(--a3) 14%, transparent) 0%, transparent 55%),
+              var(--bg);
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ================= HEADER ================= */
+.playlist-header {
+  padding: 40px 40px 20px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.playlist-title {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--a1), var(--a2), var(--a3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  transition: transform 0.3s ease;
+}
+
+.playlist-title:hover {
+  transform: scale(1.05);
+}
+
+.playlist-subtitle {
+  font-size: 1.2rem;
+  color: var(--dim);
+  max-width: 600px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+.playlist-subtitle:hover {
+  color: var(--a1);
+}
+
+/* ================= GRID/TILES ================= */
+.playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 40px;
+  padding: 40px;
+  justify-content: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Tarjeta de playlist */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s var(--ease);
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: none; /* Remove white shadow */
+}
+
+.tile:hover {
+  transform: translateY(-12px) scale(1.05);
+  filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.6));
+}
+
+/* Portada XXL */
+.tile .tile-cover {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1f, #2a2a35);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.4s var(--ease);
+}
+
+.tile:hover .tile-cover {
+  transform: scale(1.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.tile .tile-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s var(--ease);
+}
+
+.tile:hover .tile-cover img {
+  transform: scale(1.1);
+}
+
+/* Botón Play flotante */
+.tile .play-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+  opacity: 0;
+  transform: scale(0.8) rotate(-15deg);
+  transition: all 0.3s var(--ease);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.tile:hover .play-btn {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.tile .play-btn:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* Nombre de playlist */
+.tile .tile-name {
+  margin-top: 18px;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--text); /* Ensure text color consistency */
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s var(--ease);
+}
+
+.tile:hover .tile-name {
+  color: var(--a1);
+}
+
+.tile .tile-count {
+  font-size: 14px;
+  color: var(--dim);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* "Nueva playlist" */
+.tile-create {
+  animation: pulse 2s infinite;
+}
+
+.tile-create .create-cover {
+  width: 280px;
+  height: 280px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  display: grid;
+  place-items: center;
+  font-size: 64px;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.4s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.tile-create .create-cover::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+.tile-create:hover .create-cover {
+  transform: scale(1.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.tile-create .tile-name {
+  font-weight: 900;
+  font-size: 22px;
+  margin-top: 18px;
+  color: var(--a1);
+  transition: color 0.3s var(--ease);
+}
+
+.tile-create:hover .tile-name {
+  color: var(--a2);
+}
+
+/* ================= MODAL ================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 4, 8, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: fadeIn 0.3s var(--ease);
+}
+
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: min(520px, 92vw);
+  color: #fff;
+  z-index: 1001;
+  border-radius: var(--r-lg);
+  padding: 32px;
+  background: radial-gradient(1000px 400px at 80% -20%, color-mix(in oklab, var(--a1) 15%, transparent), transparent 60%),
+              radial-gradient(800px 300px at 0% 120%, color-mix(in oklab, var(--a2) 12%, transparent), transparent 60%),
+              linear-gradient(180deg, color-mix(in oklab, #1a1b26 90%, transparent), color-mix(in oklab, #13141e 94%, transparent));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  animation: modalIn 0.4s var(--ease) forwards;
+}
+
+.modal-title {
+  margin: 0 0 24px;
+  font-size: 28px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.3s var(--ease);
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* ====== Layout del formulario ====== */
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-areas: "name cover" "desc cover";
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.field {
+  grid-area: name;
+}
+
+.cover-field {
+  grid-area: cover;
+}
+
+.field-span2 {
+  grid-area: desc;
+}
+
+@media (max-width: 768px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "name" "desc" "cover";
+    gap: 20px;
+  }
+}
+
+/* ====== Campos ====== */
+.label {
+  font-size: 14px;
+  color: var(--dim);
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: block;
+  letter-spacing: 0.5px;
+}
+
+.field-msg {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-msg.msg-error {
+  color: #ff8ba4;
+}
+
+.field-msg.msg-ok {
+  color: #74f1c3;
+}
+
+.input, .textarea {
+  width: 100%;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(180deg, #262644, #1e1e35);
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s var(--ease);
+  font-family: inherit;
+}
+
+.input::placeholder, .textarea::placeholder {
+  color: #eae3ff;
+  opacity: 0.8;
+  font-weight: 700;
+}
+
+.input:focus, .textarea:focus {
+  box-shadow: var(--ring);
+  outline-color: color-mix(in oklab, var(--a1) 50%, transparent);
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #2a2a4a, #22223d);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 140px;
+  line-height: 1.6;
+}
+
+/* ====== Cover Uploader ====== */
+.cover-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.cover-uploader {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(180deg, #221e45, #1b1836);
+  outline: 2px dashed rgba(255, 255, 255, 0.25);
+  transition: all 0.3s var(--ease);
+}
+
+.cover-uploader:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+  outline-color: color-mix(in oklab, var(--a1) 40%, transparent);
+}
+
+.cover-uploader:focus-visible {
+  box-shadow: var(--ring);
+}
+
+.cover-uploader.is-dragover {
+  outline-color: color-mix(in oklab, var(--a3) 60%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--a3) 35%, transparent), 0 20px 50px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+}
+
+/* Instrucciones */
+.uploader-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  color: #efe9ff;
+  padding: 20px;
+}
+
+.uploader-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(180px 140px at 60% -30%, color-mix(in oklab, var(--a1) 32%, transparent), transparent),
+              radial-gradient(140px 160px at -20% 120%, color-mix(in oklab, var(--a2) 26%, transparent), transparent),
+              rgba(255, 255, 255, 0.08);
+  outline: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.3s var(--ease);
+}
+
+.cover-uploader:hover .uploader-icon {
+  transform: scale(1.1);
+}
+
+.uploader-icon i {
+  font-size: 24px;
+}
+
+.uploader-text strong {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.uploader-text .muted {
+  color: #cfcfe8;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.uploader-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background 0.3s var(--ease);
+}
+
+.badge:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Overlay para dragover */
+.uploader-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 3px dashed color-mix(in oklab, var(--a3) 65%, transparent);
+  color: #eafff7;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  font-size: 18px;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.cover-uploader.is-dragover .uploader-overlay {
+  opacity: 1;
+}
+
+/* Vista previa */
+#coverPreview {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* Helper */
+.hint {
+  margin-top: 8px;
+  color: #cfcfe8;
+  font-size: 13px;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* ====== Acciones ====== */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: rotate(45deg);
+  transition: transform 0.6s var(--ease);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.btn-primary:hover::before {
+  transform: rotate(45deg) translateX(50%);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-primary[disabled], .btn-secondary[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ================= TOAST ================= */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+.toast {
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: toastIn 0.4s var(--ease);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toast-ok {
+  background: linear-gradient(180deg, rgba(0, 255, 153, 0.15), rgba(0, 255, 153, 0.08));
+  border-color: rgba(0, 255, 153, 0.3);
+  color: #e8fff5;
+}
+
+.toast-error {
+  background: linear-gradient(180deg, rgba(255, 77, 109, 0.15), rgba(255, 77, 109, 0.08));
+  border-color: rgba(255, 77, 109, 0.3);
+  color: #ffe8ec;
+}
+
+.toast i {
+  font-size: 20px;
+}
+
+.toast-ok i {
+  color: var(--a3);
+}
+
+.toast-error i {
+  color: #ff4d6d;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.95); 
+    opacity: 0; 
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1); 
+    opacity: 1; 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes shimmer {
+  0% { 
+    transform: rotate(45deg) translateX(-100%);
+  }
+  100% { 
+    transform: rotate(45deg) translateX(200%);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklab, var(--a1) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 40px color-mix(in oklab, var(--a1) 50%, transparent),
+                0 0 60px color-mix(in oklab, var(--a2) 30%, transparent);
+  }
+}
+
+/* ================= SHARE LINK MODAL SPECIFIC STYLES ================= */
+#shareLinkModal {
+  width: min(400px, 90vw);
+  text-align: center;
+}
+
+#shareLinkModal .modal-title {
+  margin-bottom: 20px;
+}
+
+#shareLinkInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 16px;
+  margin-bottom: 20px;
+  transition: all 0.3s var(--ease);
+}
+
+#shareLinkInput:focus {
+  outline: none;
+  border-color: var(--a1);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--a1) 25%, transparent);
+}
+
+#submitShareLink {
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--r-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  width: 100%;
+}
+
+#submitShareLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+#submitShareLink:active {
+  transform: translateY(0);
+}
+
+/* ================= BUTTON STYLES ================= */
+.btn {
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--r-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  margin: 10px 0;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ================= RESPONSIVE DESIGN ================= */
+@media (max-width: 768px) {
+  .playlist-header {
+    padding: 20px;
+  }
+  
+  .playlist-title {
+    font-size: 2rem;
+  }
+  
+  .playlist-subtitle {
+    font-size: 1rem;
+  }
+  
+  .playlist-grid {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .tile .tile-cover,
+  .tile-create .create-cover {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .modal {
+    padding: 20px;
+  }
+}

@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+      @yield('content')
+@include('components.traductor')
   @include('components.footer')
 
   <div class="with-sidebar">
@@ -16,19 +18,19 @@
 
    {{-- ====== CARD DE LA PLAYLIST ====== --}}
       <div class="playlist-card">
-        <div class="cover">
+        <div class="cover traducible">
           <img src="{{ $playlist->cover_url ?? 'https://via.placeholder.com/250x250.png?text=Cover' }}" 
                alt="Portada Playlist">
         </div>
 
-        <div class="info">
-          <span class="subtitle">Playlist pública</span>
+        <div class="info traducible">
+          <span class="subtitle traducible">Playlist pública</span>
           <h2 class="title">{{ $playlist->nombre }}</h2>
           <span class="update">Actualizado {{ $playlist->updated_at->diffForHumans() }}</span>
-          <p class="description">{{ $playlist->descripcion ?? '(Sin descripción)' }}</p>
+          <p class="description traducible">{{ $playlist->descripcion ?? '(Sin descripción)' }}</p>
           <div class="actions">
-            <button class="btn play"><i class="fa-solid fa-play"></i> Reproducir</button>
-            <button class="btn shuffle"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
+            <button class="btn play traducible"><i class="fa-solid fa-play traducible"></i> Reproducir</button>
+            <button class="btn shuffle traducible"><i class="fa-solid fa-shuffle traducible"></i> Aleatorio</button>
           </div>
         </div>
       </div>
@@ -51,7 +53,7 @@
               @endforeach
             </ul>
           @else
-            <p class="empty-msg">🎵 Aún no tienes canciones en esta playlist.</p>
+            <p class="empty-msg traducible">🎵 Aún no tienes canciones en esta playlist.</p>
           @endif
         </div>
       </section>
