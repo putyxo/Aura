@@ -2,145 +2,182 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-  :root{
-    --player-h: 88px;
-    --bg-1:#0e0e11;
-    --bg-2:#141421;
-    --fg:#f5f6fa;
-    --fg-dim:#b7b8c8;
-    --line:#26263a;
-    --accent:#aa029c;
-    --accent-2:#6b3df6;
-    --radius:14px;
-    --dur:.22s;
-    --ease:cubic-bezier(.2,.8,.2,1);
-    color-scheme: dark;
-  }
+:root{
+  --pl-h: 88px;
 
-  /* Asegura espacio para el player fijo */
-  body:not(.has-player){ padding-bottom: var(--player-h); }
+  --pl-fg:#f5f6fa;
+  --pl-fg-dim:#b7b8c8;
+  --pl-line:#26263a;
+  --pl-accent:#aa029c;
+  --pl-accent2:#6b3df6;
+  --pl-radius:14px;
+  --pl-dur:.22s;
+  --pl-ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme: dark;
 
-  .fusion-player{
-    position:fixed; inset:auto 0 0 0; height:var(--player-h);
-    display:grid; grid-template-columns: 1fr minmax(360px, 1.2fr) 1fr;
-    align-items:center; gap:16px;
-    padding:10px 18px;
-    background:
-      radial-gradient(1200px 120px at 20% 120%, color-mix(in oklab, var(--accent) 22%, transparent) 0%, transparent 60%),
-      linear-gradient(90deg, var(--bg-2), var(--bg-1));
-    border-top:1px solid var(--line);
-    box-shadow: 0 -18px 40px rgba(0,0,0,.45);
-    backdrop-filter: blur(8px) saturate(1.1);
-    -webkit-backdrop-filter: blur(8px) saturate(1.1);
-    z-index: 999;
-    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    color:var(--fg);
-  }
+  --sidebar-width: 268px;
+  --sidebar-width-mini: 76px;
+  --sidebar-gap: 20px;
+  --color-accent:#aa029c;
+  --color-bg-1: #000000;
+  --color-bg-2: #090212;
+  --sidebar-accent:#a855f7;
+  --sidebar-line: rgba(168,85,247,.14);
+  --color-line:#26263a;
+  --color-dim:#b6b6c8;
+  --color-text:#f6f7fb;
+  --anim-dur:.25s; 
+  --anim-ease:cubic-bezier(.2,.8,.2,1);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,.40);
+  --sidebar-collapsed: 76px;     /* ancho del sidebar colapsado */
+  --sidebar-expanded: 268px;     /* ancho del sidebar expandido */
+  --color-bg:#0b0b10; 
+  --color-panel:#0f0f17; 
+  --color-panel2:#141428; 
+  --color-a1:#a855f7; 
+  --color-a2:#ec4899; 
+  --color-a3:#00ffa8;
+  --shadow-md: 0 10px 30px rgba(0,0,0,.30);
+}
 
-  /* ============== Columna 1: Track info ============== */
-  .track-info{
-    display:flex; align-items:center; gap:14px; min-width:0;
-  }
-  .track-cover{
-    width:58px;height:58px;border-radius:12px;object-fit:cover; flex:0 0 auto;
-    box-shadow: 0 8px 20px rgba(0,0,0,.35);
-  }
-  .track-text{ min-width:0; }
-  .track-title{
-    margin:0; font-size:14px; font-weight:600; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .track-artist{
-    margin:2px 0 0; font-size:12px;color:var(--fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .track-actions{ display:flex; gap:10px; margin-left:6px; }
-  .icon-btn{
-    display:inline-grid; place-items:center;
-    width:32px; height:32px; border-radius:10px;
-    border:1px solid transparent; background:transparent; color:var(--fg-dim);
-    cursor:pointer; transition: all var(--dur) var(--ease);
-  }
-  .icon-btn:hover{ color:var(--fg); border-color:var(--line); transform: translateY(-1px); }
-  .icon-btn.active{ color:#ff4b91; border-color:color-mix(in oklab, #ff4b91 40%, transparent); }
+/* Asegura espacio para el player fijo */
+body:not(.has-player){ padding-bottom: var(--pl-h); }
 
-  /* ============== Columna 2: Controles ============== */
-  .controls{
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
-  }
-  .main-buttons{ display:flex; align-items:center; gap:18px; }
-  .ctl{
-    background:transparent; border:none; color:var(--fg); cursor:pointer;
-    width:36px;height:36px;border-radius:50%;
-    display:grid;place-items:center; transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
-  }
-  .ctl:hover{ transform:translateY(-1px); background:rgba(255,255,255,.06); }
-  .ctl[aria-pressed="true"]{ color:var(--accent); }
-  .play-btn{
-    width:44px;height:44px;border-radius:50%;
-    background: linear-gradient(135deg, var(--fg) 0%, #e9e9ee 100%);
-    color:#121212; box-shadow: 0 10px 28px rgba(0,0,0,.35), inset 0 -2px 4px rgba(0,0,0,.14);
-  }
-  .play-btn:hover{ transform: scale(1.04); }
+.fusion-player{
+  position:fixed; inset:auto 0 0 0; height:var(--pl-h);
+  display:grid; grid-template-columns: 1fr minmax(360px, 1.2fr) 1fr;
+  align-items:center; gap:16px;
+  padding:10px 18px;
+  background: linear-gradient(90deg, var(--color-bg-2), var(--color-bg-1));
+  border-top:1px solid var(--pl-line);
+  box-shadow: 0 -18px 40px rgba(0,0,0,.45);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  z-index: 999;
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  color:var(--pl-fg);
+}
 
-  .progress{
-    display:flex; align-items:center; gap:10px; width:min(560px, 92%); }
-  .time{ font-size:12px; color:var(--fg-dim); font-variant-numeric: tabular-nums; min-width:42px; text-align:center; }
+/* ============== Columna 1: Track info ============== */
+.track-info{
+  display:flex; align-items:center; gap:14px; min-width:0;
+}
+.track-cover{
+  width:58px;height:58px;border-radius:12px;object-fit:cover; flex:0 0 auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+}
+.track-text{ min-width:0; }
+.track-title{
+  margin:0; font-size:14px; font-weight:600; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.track-artist{
+  margin:2px 0 0; font-size:12px;color:var(--pl-fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.track-actions{ display:flex; gap:10px; margin-left:6px; }
+.icon-btn{
+  display:inline-grid; place-items:center;
+  width:32px; height:32px; border-radius:10px;
+  border:1px solid transparent; background:transparent; color:var(--pl-fg-dim);
+  cursor:pointer; transition: all var(--pl-dur) var(--pl-ease);
+}
+.icon-btn:hover{ color:var(--pl-fg); border-color:var(--pl-line); transform: translateY(-1px); }
+.icon-btn.active{ color:#ff4b91; border-color:color-mix(in oklab, #ff4b91 40%, transparent); }
 
-  /* Barra de progreso (custom range) */
-  .seek-wrap{ position:relative; flex:1; }
-  .seek{
-    -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:999px;
-    background:linear-gradient(90deg, var(--accent) 0 0) no-repeat, #2a2a3d;
-    outline:none; cursor:pointer;
-  }
-  .seek::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:14px;height:14px;border-radius:50%;
-    background:var(--fg); box-shadow: 0 2px 6px rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.25); margin-top:-4px;
-    transition: transform var(--dur) var(--ease);
-  }
-  .seek::-moz-range-thumb{
-    width:14px;height:14px;border-radius:50%; background:var(--fg); border:none;
-  }
-  .seek:active::-webkit-slider-thumb{ transform: scale(1.1); }
-  .buffered{
-    position:absolute; left:0; top:50%; height:6px; transform:translateY(-50%);
-    border-radius:999px; background:#3a3a55; width:0; pointer-events:none;
-  }
+/* ============== Columna 2: Controles ============== */
+.controls{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+}
+.main-buttons{ display:flex; align-items:center; gap:18px; }
+.ctl{
+  background:transparent; border:none; color:var(--pl-fg); cursor:pointer;
+  width:36px;height:36px;border-radius:50%;
+  display:grid;place-items:center; transition: transform var(--pl-dur) var(--pl-ease), background var(--pl-dur) var(--pl-ease), color var(--pl-dur) var(--pl-ease);
+}
+.ctl:hover{ transform:translateY(-1px); background:rgba(255,255,255,.06); }
+.ctl[aria-pressed="true"]{ color:var(--pl-accent); }
+.play-btn{
+  width:44px;height:44px;border-radius:50%;
+  background: linear-gradient(135deg, var(--pl-fg) 0%, #e9e9ee 100%);
+  color:#121212; box-shadow: 0 10px 28px rgba(0,0,0,.35), inset 0 -2px 4px rgba(0,0,0,.14);
+}
+.play-btn:hover{ transform: scale(1.04); }
 
-  /* ============== Columna 3: Opciones ============== */
-  .options{ display:flex; align-items:center; gap:14px; justify-content:flex-end; }
-  .volume{ display:flex; align-items:center; gap:8px; }
-  .vol-range{
-    -webkit-appearance:none; appearance:none; width:100px; height:6px; border-radius:999px;
-    background:linear-gradient(90deg, var(--accent-2) 0 0) no-repeat, #2a2a3d;
-    outline:none; cursor:pointer;
-  }
-  .vol-range::-webkit-slider-thumb{
-    -webkit-appearance:none; width:12px;height:12px;border-radius:50%; background:var(--fg);
-    border:1px solid rgba(0,0,0,.25); box-shadow: 0 2px 6px rgba(0,0,0,.3); margin-top:-3px;
-  }
+.progress{
+  display:flex; align-items:center; gap:10px; width:min(560px, 92%); }
+.time{ font-size:12px; color:var(--pl-fg-dim); font-variant-numeric: tabular-nums; min-width:42px; text-align:center; }
 
-  /* Estados focus accesibles */
-  .icon-btn:focus-visible, .ctl:focus-visible, .play-btn:focus-visible, .seek:focus-visible, .vol-range:focus-visible{
-    outline:2px solid color-mix(in oklab, var(--accent) 70%, #fff 0%); outline-offset:2px; border-radius:10px;
-  }
+/* Barra de progreso (custom range) */
+.seek-wrap{ position:relative; flex:1; }
+.seek {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pl-accent) 0% 0%) no-repeat, #2a2a3d;
+  background-size: 0% 100%;
+  outline: none;
+  cursor: pointer;
+  transition: background-size 0.15s linear;
+}
 
-  /* Responsivo */
-  @media (max-width: 920px){
-    .fusion-player{ grid-template-columns: 1fr 1fr; height:auto; padding:12px 14px; row-gap:10px; }
-    .options{ grid-column:1 / -1; justify-content:space-between; }
-    body:not(.has-player){ padding-bottom: calc(var(--player-h) + 28px); }
-  }
-  @media (max-width: 540px){
-    .track-artist{ display:none; }
-    .progress{ width:100%; }
-    .vol-range{ width:84px; }
-  }
+.seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pl-fg);
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  border: 1px solid rgba(0,0,0,.25);
+  margin-top: -4px;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.seek:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: var(--pl-accent);
+}
 
-  /* Animaciones reducidas si el usuario prefiere */
-  @media (prefers-reduced-motion: reduce){
-    .ctl:hover, .icon-btn:hover, .play-btn:hover{ transform:none; }
-    .fusion-player, .ctl, .icon-btn{ transition:none; }
-  }
+.buffered{
+  position:absolute; left:0; top:50%; height:6px; transform:translateY(-50%);
+  border-radius:999px; background:#3a3a55; width:0; pointer-events:none;
+}
+
+/* ============== Columna 3: Opciones ============== */
+.options{ display:flex; align-items:center; gap:14px; justify-content:flex-end; }
+.volume{ display:flex; align-items:center; gap:8px; }
+.vol-range{
+  -webkit-appearance:none; appearance:none; width:100px; height:6px; border-radius:999px;
+  background:linear-gradient(90deg, var(--pl-accent2) 0 0) no-repeat, #2a2a3d;
+  outline:none; cursor:pointer;
+}
+.vol-range::-webkit-slider-thumb{
+  -webkit-appearance:none; width:12px;height:12px;border-radius:50%; background:var(--pl-fg);
+  border:1px solid rgba(0,0,0,.25); box-shadow: 0 2px 6px rgba(0,0,0,.3); margin-top:-3px;
+}
+
+/* Estados focus accesibles */
+.icon-btn:focus-visible, .ctl:focus-visible, .play-btn:focus-visible, .seek:focus-visible, .vol-range:focus-visible{
+  outline:2px solid color-mix(in oklab, var(--pl-accent) 70%, #fff 0%); outline-offset:2px; border-radius:10px;
+}
+
+/* Responsivo */
+@media (max-width: 920px){
+  .fusion-player{ grid-template-columns: 1fr 1fr; height:auto; padding:12px 14px; row-gap:10px; }
+  .options{ grid-column:1 / -1; justify-content:space-between; }
+  body:not(.has-player){ padding-bottom: calc(var(--pl-h) + 28px); }
+}
+@media (max-width: 540px){
+  .track-artist{ display:none; }
+  .progress{ width:100%; }
+  .vol-range{ width:84px; }
+}
+
+/* Animaciones reducidas si el usuario prefiere */
+@media (prefers-reduced-motion: reduce){
+  .ctl:hover, .icon-btn:hover, .play-btn:hover{ transform:none; }
+  .fusion-player, .ctl, .icon-btn{ transition:none; }
+}
+
 </style>
 
 <footer class="fusion-player" role="contentinfo" aria-label="Reproductor de audio">
@@ -171,7 +208,7 @@
       <span class="time current-time">0:00</span>
       <div class="seek-wrap">
         <div class="buffered" aria-hidden="true"></div>
-        <input type="range" class="seek" min="0" max="100" value="0" step="1" aria-label="Línea de tiempo">
+        <input type="range" class="seek" min="0" max="100" value="0" step="any" aria-label="Línea de tiempo">
       </div>
       <span class="time total-time">--:--</span>
     </div>
@@ -242,37 +279,51 @@
     volRange.style.backgroundSize = `${val}% 100%`;
   };
 
-  function loadSong(index){
-    if (!songList.length) return;
-    current = (index + songList.length) % songList.length;
+function loadSong(index){
+  if (!songList.length) return;
+  current = (index + songList.length) % songList.length;
 
-    const el = songList[current];
-    const src = el?.dataset?.src || '';
-    const title = el?.dataset?.title || 'Sin título';
-    const artist = el?.dataset?.artist || 'Desconocido';
-    const cover = el?.dataset?.cover || 'img/album.jpg';
-
-    audio.src = src;
-    titleEl.textContent = title;
-    artistEl.textContent = artist;
-    coverEl.src = cover;
-
-    // Reproducción automática al cargar
-    audio.play().then(() => {
-      playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    }).catch(()=>{ /* autoplay bloqueado: deja el botón en Play */ });
+  const el = songList[current];
+  let src = el?.dataset?.src || '';
+  if (!src) {
+    alert("Esta canción no tiene audio disponible");
+    return;
   }
+
+  // Si es link de Google Drive, normalizarlo
+  if (src.includes("drive.google.com")) {
+    const idMatch = src.match(/[-\w]{25,}/);
+    if (idMatch) {
+      src = `https://docs.google.com/uc?export=download&id=${idMatch[0]}`;
+    }
+  }
+
+  const title = el?.dataset?.title || 'Sin título';
+  const artist = el?.dataset?.artist || 'Desconocido';
+  const cover = el?.dataset?.cover || 'img/album.jpg';
+
+  audio.src = src;
+  titleEl.textContent = title;
+  artistEl.textContent = artist;
+  coverEl.src = cover;
+
+  songList.forEach(btn => btn.closest('.card').classList.remove('active-song'));
+  el.closest('.card').classList.add('active-song');
+
+  audio.play().then(() => {
+    playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  }).catch(err => {
+    console.error("Error reproduciendo:", err);
+  });
+}
+
+
 
   // Inicializa volumen
   audio.volume = Number(volRange.value) / 100;
   applyVolumeFill();
 
-  // Eventos de la lista
-  songList.forEach((item, i) => {
-    item.addEventListener('click', () => {
-      loadSong(i);
-    });
-  });
+
 
   // Controles
   playBtn.addEventListener('click', () => {
@@ -335,47 +386,35 @@
   });
 
   // Progreso
-  audio.addEventListener('loadedmetadata', () => {
-    seek.max = Math.floor(audio.duration || 0);
-    totalTimeEl.textContent = fmt(audio.duration);
-    // buffer
-    updateBuffered();
-  });
+// Progreso
+audio.addEventListener('loadedmetadata', () => {
+  seek.max = audio.duration || 0;
+  totalTimeEl.textContent = fmt(audio.duration);
+  updateBuffered();
+});
 
-  audio.addEventListener('timeupdate', () => {
-    seek.value = Math.floor(audio.currentTime || 0);
+// Actualización fluida de la barra
+function updateProgress() {
+  if (!audio.paused && !audio.ended) {
+    seek.value = audio.currentTime; // sin redondear
     currentTimeEl.textContent = fmt(audio.currentTime);
     applyProgressFill();
-  });
+    requestAnimationFrame(updateProgress); // bucle animado
+  }
+}
 
-  const updateBuffered = () => {
-    try{
-      if (audio.buffered.length){
-        const end = audio.buffered.end(audio.buffered.length - 1);
-        const ratio = Math.min(1, (end || 0) / (audio.duration || 1));
-        bufferedBar.style.width = `${ratio * 100}%`;
-      }
-    }catch(_e){}
-  };
-  audio.addEventListener('progress', updateBuffered);
+audio.addEventListener('play', () => {
+  requestAnimationFrame(updateProgress);
+});
 
-  seek.addEventListener('input', () => {
-    audio.currentTime = Number(seek.value) || 0;
-    applyProgressFill();
-  });
+audio.addEventListener('pause', () => {
+  // No seguimos actualizando si se pausa
+});
 
-  audio.addEventListener('ended', () => {
-    if (repeatMode === 2) {
-      loadSong(current); // repetir pista
-    } else if (isShuffle) {
-      nextBtn.click();
-    } else if (repeatMode === 1) {
-      loadSong(current + 1);
-    } else {
-      // fin sin repetir
-      playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    }
-  });
+seek.addEventListener('input', () => {
+  audio.currentTime = Number(seek.value) || 0;
+  applyProgressFill();
+});
 
   // Volumen + mute
   volRange.addEventListener('input', () => {
@@ -422,9 +461,26 @@
   // Inicializa estilos fill
   applyProgressFill();
 
-  // Observa si cambian dinámicamente las canciones (opcional)
-  const obs = new MutationObserver(() => {
-    songList = Array.from(document.querySelectorAll('.cancion-item'));
+function bindSongEvents() {
+  songList.forEach((item, i) => {
+    if (!item.dataset.bound) {
+      item.addEventListener('click', () => {
+        console.log("▶️ Click en:", item.dataset.title, item.dataset.src);
+        loadSong(i);
+      });
+      item.dataset.bound = "true"; // evita duplicar eventos
+    }
   });
-  obs.observe(document.body, { childList:true, subtree:true });
+}
+
+// engancha inicial
+bindSongEvents();
+
+// si aparecen canciones nuevas en el DOM, vuelve a enganchar
+const obs = new MutationObserver(() => {
+  songList = Array.from(document.querySelectorAll('.cancion-item'));
+  bindSongEvents();
+});
+obs.observe(document.body, { childList:true, subtree:true });
+
 </script>

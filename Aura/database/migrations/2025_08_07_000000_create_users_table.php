@@ -22,7 +22,6 @@ class CreateUsersTable extends Migration
             $table->text('biografia')->nullable();
             $table->string('imagen_portada')->nullable();
             $table->boolean('verificado')->default(false);
-            $table->json('generos')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('ultima_sesion')->nullable();
             $table->boolean('is_active')->default(true);

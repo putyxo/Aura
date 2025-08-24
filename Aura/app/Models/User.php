@@ -2,21 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'nombre',
         'email',
@@ -28,31 +21,74 @@ class User extends Authenticatable
         'nombre_artistico',
         'biografia',
         'imagen_portada',
+        'banner',
         'verificado',
         'generos',
     ];
-    
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /* ==============================
+       RELACIONES FOLLOWERS / FOLLOWINGS
+       ============================== */
+
+    // Usuarios que sigo (relación muchos a muchos)
+    public function followings()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
+    }
+
+    // Usuarios que me siguen (relación muchos a muchos)
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'followed_id', 'follower_id');
+    }
+
+    // Verificar si sigo a un usuario
+    public function isFollowing($userId): bool
+    {
+        return $this->followings()->where('followed_id', $userId)->exists();
+    }
+
+    // Verificar si me siguen
+    public function isFollowedBy($userId): bool
+    {
+        return $this->followers()->where('follower_id', $userId)->exists();
+    }
+
+    /* ==============================
+       ACCESSORS PARA AVATAR / BANNER / PORTADA
+       ============================== */
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar
+            ? route('media.drive', ['id' => $this->avatar])
+            : asset('img/default-avatar.png');
+    }
+
+    public function getBannerUrlAttribute()
+    {
+        return $this->banner
+            ? route('media.drive', ['id' => $this->banner])
+            : asset('img/default-banner.png');
+    }
+
+    public function getImagenPortadaUrlAttribute()
+    {
+        return $this->imagen_portada
+            ? route('media.drive', ['id' => $this->imagen_portada])
+            : asset('img/default-cover.png');
     }
 }

@@ -1,0 +1,234 @@
+/* ================== BASE / RESET ================== */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+:root{
+  --maxw:1200px;
+  --pad:24px;
+  --radius:16px;
+  --accent-1:#a855f7;
+  --accent-2:#ec4899;
+  --accent-3:#00ffa8;
+  --text:#ffffff;
+  --text-dim:#b8b8b8;
+  --line:#262626;
+}
+body{background:#000;color:var(--text)}
+.app-container{display:flex;flex-direction:column;min-height:100vh}
+
+.main-content{flex:1;position:relative;overflow-y:auto;padding-bottom:100px}
+.main-content::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(1000px 520px at 12% 8%, rgba(168,85,247,.14), transparent 55%),
+    radial-gradient(900px 480px at 88% 10%, rgba(236,72,153,.10), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.06) 0%, rgba(0,0,0,.76) 55%, rgba(0,0,0,.92) 100%);
+}
+.main-content > *{position:relative;z-index:2}
+
+
+/* ================== NAVBAR ================== */
+.navbar{
+  display:flex;justify-content:space-between;align-items:center;
+  height:64px;padding:16px 24px;background:rgba(0,0,0,.6);
+  border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(8px);z-index:10
+}
+.nav-controls{display:flex;gap:12px}
+.nav-button{
+  background:transparent;color:#fff;border:1px solid rgba(255,255,255,.16);
+  border-radius:50%;width:36px;height:36px;display:grid;place-items:center;
+  cursor:pointer;font-size:16px;transition:.22s cubic-bezier(.2,.8,.2,1)
+}
+.nav-button:hover{border-color:rgba(255,255,255,.28);transform:translateY(-1px) scale(1.05)}
+
+.search-container{display:flex;align-items:center;gap:10px}
+.search-bar{
+  display:flex;align-items:center;gap:10px;height:38px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:0 12px;width:260px;transition:.22s
+}
+.search-bar:focus-within{border-color:rgba(168,85,247,.35);box-shadow:0 0 0 2px rgba(168,85,247,.22);width:280px}
+.search-bar input{flex:1;border:none;background:transparent;color:#e8e8e8;font-size:14px;outline:none}
+.search-bar input::placeholder{color:#9c9c9c}
+.search-button{background:transparent;border:0;color:var(--accent-1);font-size:16px;cursor:pointer}
+
+.user-controls{display:flex;align-items:center;gap:12px}
+.home-button,.user-profile{
+  display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;
+  background:transparent;border:1px solid rgba(255,255,255,.16);
+  border-radius:20px;color:#fff;transition:.22s
+}
+.home-button:hover,.user-profile:hover{background:rgba(255,255,255,.06);transform:translateY(-1px)}
+.profile-pic{width:28px;height:28px;border-radius:8px;object-fit:cover;background:#7c3aed}
+
+/* ================== MAIN BACKDROP ================== */
+
+/* ================== CENTER WRAP ================== */
+.artist-header,
+.artist-sections.two-col{
+  width:min(var(--maxw), 92vw);
+  margin-inline:auto;
+  padding-inline:var(--pad);
+}
+
+/* ================== ARTIST HEADER ================== */
+.artist-header{
+  display:flex;gap:32px;align-items:flex-end;margin-top:40px;padding-top:24px;padding-bottom:8px
+}
+.artist-image img{
+  width:260px;height:260px;object-fit:cover;border-radius:14px;transition:.22s
+}
+.artist-image img:hover{transform:translateY(-2px)}
+.artist-info{display:flex;flex-direction:column;gap:10px}
+.artist-info h1{
+  font-size:clamp(40px,6vw,72px);font-weight:900;line-height:1.05;letter-spacing:.2px;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.monthly-listeners{font-size:15px;color:var(--text-dim)}
+.follow-button{
+  height:36px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.16);color:#fff;font-weight:700;cursor:pointer;transition:.22s
+}
+.follow-button:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
+.play-button{
+  width:56px;height:56px;border-radius:50%;border:0;display:grid;place-items:center;margin-top:6px;
+  background:#1DB954;color:#000;font-size:22px;cursor:pointer;transition:.22s
+}
+.play-button:hover{transform:scale(1.06)}
+
+/* ================== LAYOUT: POPULAR + ALBUMS (SIN CUADROS) ================== */
+.artist-sections.two-col{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:start;margin-top:8px
+}
+
+/* --- TITULOS con subrayado morado fino --- */
+.popular-section h2,
+.albums-section h2{
+  font-size:18px;font-weight:800;letter-spacing:.3px;margin-bottom:14px;color:#fff;
+  position:relative;display:inline-block;padding-bottom:6px
+}
+.popular-section h2::after,
+.albums-section h2::after{
+  content:"";position:absolute;left:0;right:-6px;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+  border-radius:2px;opacity:.9;
+  
+}
+
+/* --- POPULAR: filas limpias, sin caja --- */
+.popular-section{padding:0}
+.track-list{display:flex;flex-direction:column;gap:6px}
+.track{
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;
+  padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);
+  transition:background-color .18s ease, transform .18s ease;
+}
+.track:last-child{border-bottom:none}
+.track:hover{background-color:rgba(255,255,255,.04)}
+.track-left{display:flex;align-items:center;gap:14px;min-width:0}
+.track-image img{width:52px;height:52px;border-radius:10px;object-fit:cover}
+.track-info{display:flex;flex-direction:column;min-width:0}
+.track-name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-number{font-size:12px;color:var(--text-dim)}
+.track-duration{font-weight:700;font-size:13px;color:#e9baff;min-width:46px;text-align:right}
+
+/* --- ALBUMS: solo portadas + texto, sin caja --- */
+.albums-section{padding:0}
+.album-grid{
+  --tile:160px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--tile),1fr));gap:18px
+}
+.album{
+  display:flex;flex-direction:column;gap:8px;align-items:flex-start;
+  /* sin fondo/borde */
+}
+.album img{
+  width:100%;aspect-ratio:1/1;border-radius:12px;object-fit:cover;
+  transition:transform .22s, box-shadow .22s
+}
+.album img:hover{transform:translateY(-2px) scale(1.02)}
+.album-name{font-weight:700;font-size:14px;color:#eaeaea}
+
+
+
+/* ================== PLAYER (FIJO) ================== */
+.player-bar{
+  position:fixed;left:0;right:0;bottom:0;height:90px;
+  background:linear-gradient(135deg,rgba(20,20,20,.96),rgba(40,40,40,.96));
+  display:flex;justify-content:space-between;align-items:center;padding:0 20px;
+  border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px);z-index:1000
+}
+.now-playing{display:flex;align-items:center;gap:14px}
+.now-playing-image img{width:60px;height:60px;border-radius:10px;object-fit:cover}
+.now-playing-info{display:flex;flex-direction:column}
+.now-playing-name{font-weight:800;font-size:14px}
+.now-playing-artist{font-size:12px;color:var(--text-dim)}
+.like-button{background:none;border:none;color:#1DB954;cursor:pointer}
+.player-controls{display:flex;flex-direction:column;align-items:center;gap:6px}
+.control-buttons{display:flex;gap:14px}
+.progress-bar{display:flex;align-items:center;gap:8px}
+.progress-container{width:300px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress{height:100%;width:45%;background:linear-gradient(90deg,var(--accent-1),var(--accent-2))}
+.volume-controls{display:flex;align-items:center;gap:10px}
+.volume-slider{width:80px;height:4px;background:rgba(255,255,255,.18);border-radius:2px}
+.volume-level{height:100%;width:60%;background:linear-gradient(90deg,var(--accent-1),var(--accent-3))}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width:1200px){
+  .artist-sections.two-col{grid-template-columns:1fr;gap:28px}
+  .artist-image img{width:220px;height:220px}
+}
+@media (max-width:768px){
+  .navbar{padding:12px}
+  .search-bar{width:200px}
+  .artist-header{flex-direction:column;align-items:center;text-align:center}
+  .artist-image img{width:190px;height:190px}
+  .album-grid{--tile:140px}
+}
+
+/* === Estilos para Albums + botón Sencillos === */
+.albums-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-singles {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .22s;
+}
+
+.toggle-singles:hover {
+  background: rgba(255,255,255,.12);
+  transform: translateY(-1px);
+}
+
+.singles-list {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.single {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.single img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.single-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #eaeaea;
+}

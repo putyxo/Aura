@@ -1,0 +1,174 @@
+/* ================== THEME ================== */
+:root {
+  --bg: #0b0b10;
+  --card: #11111a;
+  --text: #f6f7fb;
+  --muted: #b6b6c8;
+  --accent: #a855f7;
+  --btn-bg: #1a1b22;
+  --btn-hover: #242635;
+  --radius: 14px;
+  --shadow: 0 10px 25px rgba(0,0,0,0.5);
+  --transition: all 0.25s ease;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ================== CARD ================== */
+.playlist-card {
+  display: flex;
+  gap: 24px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  max-width: 950px;
+  width: 90%;
+  margin: 20px auto;
+  transition: var(--transition);
+}
+
+.cover img {
+  width: 250px;
+  height: 250px;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.update {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}
+
+.btn {
+  background: var(--btn-bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn:hover {
+  background: var(--btn-hover);
+}
+
+/* ================== SONGS ================== */
+.playlist-songs {
+  max-width: 950px;
+  width: 90%;
+  margin: 30px auto;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.songs-header {
+  margin-bottom: 16px;
+}
+
+.song-search {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--btn-bg);
+  color: var(--text);
+}
+
+.songs-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.song-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.song-title {
+  font-weight: 600;
+}
+
+.song-artist {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-left: 10px;
+}
+
+.song-play {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 768px) {
+  .playlist-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .cover img {
+    width: 200px;
+    height: 200px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+}
