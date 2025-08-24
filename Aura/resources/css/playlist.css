@@ -1,0 +1,308 @@
+/* ================= TOKENS ================= */
+:root{
+  --bg:#0b0b10;
+  --panel:#0f0f17;
+  --panel2:#141428;
+  --line:#24243a;
+  --text:#f6f7fb; --dim:#b6b6c8;
+
+  --a1:#a855f7; --a2:#ec4899; --a3:#00ffa8;      /* marca */
+  --ring: 0 0 0 3px color-mix(in oklab, var(--a1) 28%, transparent);
+  --ring-err: 0 0 0 3px color-mix(in oklab, #ff4d6d 32%, transparent);
+
+  --r-lg:18px; --r-md:14px; --r-sm:12px;
+  --dur:.22s; --ease:cubic-bezier(.2,.8,.2,1);
+  --shadow: 0 10px 30px rgba(0,0,0,.30);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,.45);
+}
+
+/* ================= BASE ================= */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab, var(--a1) 18%, transparent) 0%, transparent 60%),
+    radial-gradient(1000px 700px at 10% 10%, color-mix(in oklab, var(--a2) 15%, transparent) 0%, transparent 60%),
+    radial-gradient(900px 400px at 60% 110%, color-mix(in oklab, var(--a3) 14%, transparent) 0%, transparent 55%),
+    var(--bg);
+  overflow:hidden;
+}
+
+.app{display:flex;flex-direction:column;height:100vh}
+.shell{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* ================= TOAST ================= */
+.toast-ok{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg, rgba(0,255,153,.10), rgba(0,255,153,.06));
+  border:1px solid rgba(0,255,153,.28);
+  color:#e8fff5;padding:10px 14px;border-radius:var(--r-sm);margin-bottom:18px
+}
+.toast-ok i{ color:var(--a3) }
+
+/* ================= GRID/TILES ================= */
+.playlist-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 40px;
+  padding: 40px;
+  justify-content: center;
+}
+
+/* Tarjeta de playlist */
+.tile{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .3s ease, filter .3s ease;
+}
+.tile:hover{ 
+  transform: translateY(-10px) scale(1.06); 
+  filter: drop-shadow(0 16px 28px rgba(0,0,0,.55));
+}
+
+/* Portada XXL */
+.tile .tile-cover{
+  position: relative;
+  width: 260px;
+  height: 260px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #1a1a1f;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,.4);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+.tile:hover .tile-cover{
+  transform: scale(1.07);
+  box-shadow: 0 16px 40px rgba(0,0,0,.65);
+}
+.tile .tile-cover img{ 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  display: block; 
+}
+
+/* Botón Play flotante */
+.tile .play-btn{
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  opacity: 0;
+  transform: scale(.8);
+  transition: opacity .25s ease, transform .25s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+}
+.tile:hover .play-btn{
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Nombre de playlist */
+.tile .tile-name{
+  margin-top: 14px;
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--text);
+  letter-spacing: .4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* “Nueva playlist” */
+.tile-create .create-cover{
+  width: 260px;
+  height: 260px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  display: grid;
+  place-items: center;
+  font-size: 56px;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,.4);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+.tile-create:hover .create-cover{
+  transform: scale(1.07);
+  box-shadow: 0 16px 40px rgba(0,0,0,.65);
+}
+.tile-create .tile-name{ 
+  font-weight: 900; 
+  font-size: 20px; 
+  margin-top: 14px;
+}
+
+
+
+/* ================= MODAL ================= */
+.modal-backdrop{
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(4,4,8,.70);
+  backdrop-filter: blur(2px);
+  animation: fadeIn .18s var(--ease);
+}
+
+.modal{
+  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(.98);
+  width:min(820px,92vw);
+  color:#fff; z-index:1001;
+  border-radius: var(--r-lg);
+  padding:28px 28px 22px;
+  background:
+    radial-gradient(900px 340px at 80% -30%, color-mix(in oklab, var(--a1) 12%, transparent), transparent 60%),
+    radial-gradient(700px 260px at 0% 120%, color-mix(in oklab, var(--a2) 10%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in oklab, #1a1b26 88%, transparent), color-mix(in oklab, #13141e 92%, transparent));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+  animation: modalIn .22s var(--ease) forwards;
+}
+
+.modal-title{ margin:2px 0 18px; font-size:22px; font-weight:800; text-align:center; letter-spacing:.2px }
+.modal-close{
+  position:absolute; right:12px; top:10px;
+  width:34px; height:34px; border:none; border-radius:999px;
+  background:rgba(255,255,255,.10); color:#fff; font-size:18px;
+  cursor:pointer; display:grid; place-items:center;
+  transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.modal-close:hover{ background:rgba(255,255,255,.18); transform: rotate(90deg) }
+
+/* ====== Layout del formulario ====== */
+.modal-grid{
+  display:grid;
+  grid-template-columns: 1.05fr .95fr;
+  grid-template-areas:
+    "name   cover"
+    "desc   cover";
+  gap:20px;
+  margin-top:8px;
+}
+.field       { grid-area: name; }
+.cover-field { grid-area: cover; }
+.field-span2 { grid-area: desc; }
+
+@media (max-width: 720px){
+  .modal-grid{
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "name"
+      "desc"
+      "cover";
+  }
+}
+
+/* ====== Campos ====== */
+.label{ font-size:12px; color:var(--dim); font-weight:600; margin-bottom:8px }
+.field-msg{ display:block; margin-top:6px; font-size:12px }
+.field-msg.msg-error{ color:#ff8ba4 }
+.field-msg.msg-ok{ color:#74f1c3 }
+
+.input,.textarea{
+  width:100%; border:none; border-radius:var(--r-sm);
+  padding:12px 14px; color:#fff; font-weight:700;
+  background: linear-gradient(180deg, #262644, #1e1e35);
+  outline: 1px solid rgba(255,255,255,.08);
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), outline-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.input::placeholder,.textarea::placeholder{ color:#eae3ff; opacity:.9; font-weight:800 }
+.input:focus,.textarea:focus{ box-shadow: var(--ring); outline-color: color-mix(in oklab, var(--a1) 44%, transparent) }
+.textarea{ resize:vertical; min-height:120px }
+
+/* ====== Cover Uploader ====== */
+.cover-field{ display:flex; flex-direction:column }
+.cover-uploader{
+  position:relative; display:block; width:100%; aspect-ratio:1/1;
+  border-radius:var(--r-sm); overflow:hidden; cursor:pointer;
+  background: linear-gradient(180deg, #221e45, #1b1836);
+  outline:1px dashed rgba(255,255,255,.22);     /* estilo dropzone */
+  transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease), outline-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.cover-uploader:hover{ transform: translateY(-1px); filter: brightness(1.03) }
+.cover-uploader:focus-visible{ box-shadow: var(--ring) }
+.cover-uploader.is-dragover{
+  outline-color: color-mix(in oklab, var(--a3) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--a3) 30%, transparent), 0 16px 44px rgba(0,0,0,.35);
+}
+
+/* Instrucciones */
+.uploader-hint{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; gap:10px;
+  color:#efe9ff; padding:16px;
+}
+.uploader-icon{
+  width:56px; height:56px; border-radius:14px;
+  display:grid; place-items:center;
+  background: radial-gradient(160px 120px at 60% -40%, color-mix(in oklab, var(--a1) 28%, transparent), transparent 60%),
+              radial-gradient(120px 140px at -20% 120%, color-mix(in oklab, var(--a2) 22%, transparent), transparent 60%),
+              rgba(255,255,255,.06);
+  outline:1px solid rgba(255,255,255,.10);
+}
+.uploader-icon i{ font-size:20px }
+.uploader-text strong{ font-weight:800 }
+.uploader-text .muted{ color:#cfcfe8; font-weight:600; font-size:12px }
+.uploader-meta{ display:flex; gap:8px; margin-top:2px }
+.badge{
+  font-size:11px; font-weight:700; padding:4px 8px; border-radius:999px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.10);
+}
+
+/* Overlay para dragover */
+.uploader-overlay{
+  position:absolute; inset:0; display:grid; place-items:center;
+  background: rgba(0,0,0,.28);
+  border: 2px dashed color-mix(in oklab, var(--a3) 60%, transparent);
+  color:#eafff7; font-weight:800; letter-spacing:.3px;
+  border-radius: inherit; opacity:0; transition: opacity var(--dur) var(--ease);
+  pointer-events:none;
+}
+
+/* Vista previa */
+#coverPreview{ display:none; width:100%; height:100%; object-fit:cover }
+
+/* Helper */
+.hint{ margin-top:6px; color:#cfcfe8; font-size:12px; opacity:.8 }
+
+/* ====== Acciones ====== */
+.actions{ display:flex; justify-content:center; gap:12px; margin-top:22px }
+.btn-primary,.btn-secondary{
+  border:none; border-radius:999px; padding:12px 22px; font-weight:800; cursor:pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.btn-primary{
+  background:linear-gradient(135deg, var(--a1), var(--a2)); color:#fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.btn-primary:hover{ transform:translateY(-1px); box-shadow:0 16px 32px rgba(0,0,0,.45) }
+.btn-primary:active{ transform:translateY(0) scale(.98) }
+
+.btn-secondary{ background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.10) }
+.btn-secondary:hover{ background:rgba(255,255,255,.14) }
+.btn-secondary:active{ transform:translateY(0) scale(.98) }
+
+.btn-primary[disabled], .btn-secondary[disabled]{ opacity:.6; cursor:not-allowed }
+
+/* ================= ANIMATIONS ================= */
+@keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+@keyframes modalIn{
+  0%{ transform:translate(-50%,-50%) scale(.98); opacity:.0 }
+  100%{ transform:translate(-50%,-50%) scale(1); opacity:1 }
+}

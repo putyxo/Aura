@@ -1,122 +1,294 @@
+/* ===================== TOKENS / THEME ===================== */
+:root {
+  --bg: #0e0e14;
+  --panel: #15151f;
+  --panel2: #1d1d2b;
+  --line: rgba(255,255,255,.08);
+  --text: #f6f7fb;
+  --dim: #b6b6c8;
+  --accent: #1db954; /* verde tipo Spotify */
+  --accent-hover: #17a44a;
+
+  --r-lg: 18px;
+  --r-md: 14px;
+  --r-sm: 10px;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+
+  --dur: .25s;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-    background: #181818;
-    font-family: 'Inter', sans-serif;
-    color: #fff;
-  }
-  .upload-container {
-    display: flex;
-    gap: 32px;
-    max-width: 700px;
-    margin: 48px auto;
-    background: #222;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-    padding: 40px;
-    align-items: flex-start;
-  }
-  .dropzone {
-    flex: 1;
-    background: #181818;
-    border: 2px dashed #1db954;
-    border-radius: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 220px;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    margin-right: 0;
-  }
-  .dropzone.dragover {
-    border-color: #fff;
-    background: #232323;
-  }
-  .dropzone input[type="file"] {
-    display: none;
-  }
-  .dropzone-icon {
-    font-size: 48px;
-    color: #1db954;
-    margin-bottom: 12px;
-  }
-  .dropzone-text {
-    color: #aaa;
-    font-size: 16px;
-    text-align: center;
-  }
-  .upload-form {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .upload-form label {
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .upload-form input[type="text"],
-  .upload-form input[type="file"] {
-    background: #181818;
-    border: 1px solid #333;
-    border-radius: 8px;
-    color: #fff;
-    padding: 8px 12px;
-    font-size: 15px;
-    margin-bottom: 8px;
-  }
-  .upload-form input[type="file"] {
-    padding: 0;
-    border: none;
-    background: none;
-    color: #fff;
-  }
-  .upload-form button {
-    background: #1db954;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 0;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 12px;
-    transition: 0.2s;
-  }
-  .upload-form button:hover {
-    background: #17a44a;
-    }    
-    
-    /* Estilos para centrar el contenido */
-    .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh; /* Altura completa de la ventana */
-        flex-direction: column; /* Alinear en columna */
-      }
-      .card {
-        cursor: pointer;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-        margin: 10px;
-        display: inline-block;
-        transition: transform 0.2s;
-        width: 150px; /* Ancho fijo para los cuadros */
-      }
-      .card:hover {
-        transform: scale(1.05);
-      }
-      .upload-container {
-        display: none; /* Ocultar el formulario inicialmente */
-        flex-direction: column;
-        align-items: center;
-      }
-      .hidden {
-        display: none;
-      }
-      .song-input {
-        margin-bottom: 10px;
-      }
+  background: var(--bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
+  line-height: 1.45;
+  min-height: 100vh;
+}
+
+/* ===================== SECCIÓN INICIAL ===================== */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 30px;
+  text-align: center;
+}
+
+.home h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+/* ===================== CARDS ===================== */
+.container {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.card {
+  background: var(--panel);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), 
+              box-shadow var(--dur) var(--ease),
+              border var(--dur) var(--ease);
+  width: 220px;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.card p {
+  padding: 12px;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 40px rgba(0,0,0,.6);
+  border-color: var(--accent);
+}
+
+/* ===================== FORMULARIO UPLOAD ===================== */
+.upload-container {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 640px;
+  margin: 30px auto;
+  padding: 28px;
+  background: var(--panel2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  animation: fadeIn .35s ease;
+}
+
+/* ===================== BOTÓN VOLVER ===================== */
+.btn-volver {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--dim);
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+.btn-volver:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ===================== DROPZONES ===================== */
+.dropzone {
+  border: 2px dashed var(--line);
+  border-radius: var(--r-md);
+  background: #12121a;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.dropzone:hover {
+  border-color: var(--accent);
+  background: #181820;
+}
+.dropzone.dragover {
+  border-color: #fff;
+  background: #202030;
+}
+.dropzone-icon {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+.dropzone-text {
+  font-size: .95rem;
+  color: var(--dim);
+}
+
+/* ==== PREVIEW BOX ==== */
+.preview {
+  width: 100%;
+  max-width: 320px;
+  height: 200px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 6px;
+  background: rgba(255,255,255,0.03);
+  margin: 0 auto;
+  overflow-y: auto;   /* ✅ scroll vertical */
+  overflow-x: hidden; /* evita scroll horizontal */
+}
+
+.preview img,
+.preview video,
+.preview audio {
+  width: 100%;       /* que ocupe el ancho del preview */
+  height: auto;      /* altura libre (puede sobrepasar y activar scroll) */
+  display: block;
+  border-radius: var(--r-sm);
+}
+
+/* ===================== LISTA TRACKS ===================== */
+#tracks-list {
+  max-height: 220px;   /* ✅ límite de altura */
+  overflow-y: auto;    /* ✅ scroll cuando se llena */
+  padding-right: 6px;  /* espacio para scrollbar */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#tracks-list input[type="text"] {
+  width: 100%;
+  background: #111;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: .9rem;
+}
+
+
+/* ===================== CAMPOS FORM ===================== */
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.upload-form label {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.upload-form input[type="text"],
+.upload-form input[type="date"],
+.upload-form select {
+  background: #111;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: .95rem;
+  transition: border-color var(--dur), box-shadow var(--dur);
+}
+.upload-form input:focus,
+.upload-form select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(29,185,84,.25);
+}
+
+/* ===================== BOTÓN ===================== */
+.upload-form button {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 14px;
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--dur), transform var(--dur), box-shadow var(--dur);
+}
+.upload-form button:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+.upload-form button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ===================== LISTA TRACKS ===================== */
+#tracks-list input[type="text"] {
+  width: 100%;
+  background: #111;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: .9rem;
+}
+
+/* ===================== ANIMACIONES ===================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .container { flex-direction: column; gap: 16px; }
+  .card { width: 100%; }
+  .upload-container { padding: 18px; }
+  .preview { max-width: 100%; }
+}
+
+/* Contenedor que podrá scrolear */
+.upload-container {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 640px;
+  margin: -130px auto;
+  padding: 28px;
+  background: var(--panel2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  animation: fadeIn .35s ease;
+
+  max-height: calc(100vh - 100px); /* ⚡ se adapta a la pantalla */
+  overflow-y: auto;                /* ⚡ scroll vertical si se llena */
+}

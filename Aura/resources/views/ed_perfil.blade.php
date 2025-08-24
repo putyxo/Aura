@@ -40,13 +40,14 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Configuración de perfil — <?=htmlspecialchars($artistName)?> · Música</title>
+  <title class="traducible">Configuración de perfil — <?=htmlspecialchars($artistName)?> · Música</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
  @vite('resources/css/ed_perfil.css')
 
 </head>
 <body>
-
+        @yield('content')
+@include('components.traductor')
   <header class="topbar">
     <div class="top-left">
 <a href="menu" class="icon-btn" aria-label="Atrás">◀</a>
@@ -58,7 +59,7 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
     </div>
     <div class="top-right">
       <button class="nav-pill">Home</button>
-      <button class="nav-pill">Mi biblioteca</button>
+      <button class="nav-pill traducible">Mi biblioteca</button>
       <button class="avatar-btn" aria-label="Perfil">PT</button>
     </div>
   </header>
@@ -79,22 +80,22 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
           </div>
 
           <div class="sub">
-            <div class="pill" id="listeners"><?=htmlspecialchars($monthlyListeners)?> oyentes mensuales</div>
+            <div class="pill traducible" id="listeners"><?=htmlspecialchars($monthlyListeners)?> oyentes mensuales</div>
             <div style="flex:1"></div>
           </div>
 
           <div class="controls">
-            <button class="edit-btn" id="editBtn" aria-label="Editar perfil">
+            <button class="edit-btn traducible" id="editBtn " aria-label="Editar perfil">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#fff"/></svg>
               Editar perfil
             </button>
 
-            <button class="follow" id="followBtn"><?= (isset($config['following']) && $config['following']) ? 'Siguiendo' : 'Seguir' ?></button>
+            <button class="follow traducible" id="followBtn"><?= (isset($config['following']) && $config['following']) ? 'Siguiendo' : 'Seguir' ?></button>
 
-            <div style="margin-left:auto;color:var(--muted);font-weight:700">Configuración · Perfil</div>
+            <div style="margin-left:auto;color:var(--muted);font-weight:700" class="traducible"  >Configuración · Perfil</div>
           </div>
 
-          <div class="bio" id="bio"><?=htmlspecialchars($config['bio'] ?? 'Artista · Unificador · Realizador · Audiencia. — Actualiza tu biografía en "Editar perfil" para darle más personalidad a tu página.')?></div>
+          <div class="bio traducible" id="bio"><?=htmlspecialchars($config['bio'] ?? 'Artista · Unificador · Realizador · Audiencia. — Actualiza tu biografía en "Editar perfil" para darle más personalidad a tu página.')?></div>
 
         </div>
       </div>
@@ -106,7 +107,7 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
           <div class="thumb">S</div>
           <div class="info">
             <div class="title"><?=htmlspecialchars($t['title'])?></div>
-            <div class="meta"><?=htmlspecialchars($t['plays'])?> reproducciones</div>
+            <div class="meta traducible"><?=htmlspecialchars($t['plays'])?> reproducciones</div>
           </div>
           <div class="duration"><?=htmlspecialchars($t['duration'])?></div>
         </div>
@@ -126,8 +127,8 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
         <?php endforeach; ?>
       </div>
 
-      <div class="young-tips">
-        <strong>Consejo:</strong> Personaliza tu portada y añade enlaces a redes para conectar con fans.
+      <div class="young-tips" >
+        <strong class="traducible">Consejo:</strong> <p>Personaliza tu portada y añade enlaces a redes para conectar con fans.</p>
       </div>
     </aside>
 
@@ -141,15 +142,15 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
       <!-- Form: se envía con JS a save_profile.php -->
       <form id="profileForm" method="post" enctype="multipart/form-data" action="../views/save_profile.php">
         <!-- Sección de Información Básica -->
-        <div class="form-section">
+        <div class="form-section" class="traducible">
           <h4>Información Básica</h4>
           <div class="form-group grid-2">
-            <label for="inputName">
+            <label for="inputName" >
               Nombre del artista
               <input id="inputName" name="artistName" type="text" placeholder="Nombre del artista" value="<?=htmlspecialchars($artistName)?>">
               <span class="error-message" id="errorName"></span>
             </label>
-            <label for="inputListeners">
+            <label for="inputListeners" >
               Oyentes mensuales
               <input id="inputListeners" name="monthlyListeners" type="text" placeholder="Ej: 1,234,567" value="<?=htmlspecialchars($monthlyListeners)?>">
               <span class="error-message" id="errorListeners"></span>
@@ -172,14 +173,14 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
             </div>
             <div class="file-input-container">
               <input id="coverFile" name="cover" type="file" accept="image/*">
-              <p class="file-info">Selecciona una imagen (jpg/png/webp). Max 3MB.</p>
+              <p class="file-info traducible">Selecciona una imagen (jpg/png/webp). Max 3MB.</p>
               <span class="error-message" id="errorCover"></span>
             </div>
           </div>
         </div>
 
         <!-- Sección de Detalles Adicionales -->
-        <div class="form-section">
+        <div class="form-section traducible">
           <h4>Detalles Adicionales</h4>
           <div class="form-group grid-2">
             <label for="inputGenre">
@@ -197,7 +198,7 @@ function image_or_placeholder($path, $w = 400, $h = 400) {
               <span class="error-message" id="errorGenre"></span>
             </label>
 
-            <label for="inputSocial">
+            <label for="inputSocial" class="traducible">
               Red social (ej. Instagram)
               <input id="inputSocial" name="social" type="text" placeholder="https://instagram.com/usuario" value="<?=htmlspecialchars($config['social'] ?? '')?>">
               <span class="error-message" id="errorSocial"></span>

@@ -22,6 +22,8 @@ public function register(): void
      */
     public function boot(): void
     {
-        //
+        if (session()->has('locale')) {
+        App::setLocale(session('locale'));
+         }
     }
 }

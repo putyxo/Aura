@@ -9,84 +9,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-  {{-- Fondo Aurora --}}
-  @include('components.aurora-background')
-
+    @yield('content')
+@include('components.traductor')
   <div class="app">
-    <!-- ===== BARRA LATERAL ===== -->
-    <aside class="sidebar" id="sidebar">
-      <a href="#" class="brand" aria-label="AURA Inicio">
-        <div class="logo-clip">
-          <img src="../img/Aura_LOGO.png" alt="Logo de AURA" class="logo-img">
-        </div>
-      </a>
-     <nav class="menu">
-    <a href="#" class="item active"><i class="fas fa-house"></i><span class="label">Inicio</span></a>
-    <a href="menu_album" class="item"><i class="fas fa-heart"></i><span class="label">Favoritos</span></a>
-    <a href="menu_artista" class="item"><i class="fas fa-layer-group"></i><span class="label">Biblioteca</span></a>
+   
 
-    {{-- Botón "Subir música" solo si es artista --}}
-    @auth
-        @if(auth()->user()->es_artista)
-            <a href="{{ route('musica.subir') }}" class="item">
-                <i class="fas fa-upload"></i>
-                <span class="label">Subir Música</span>
-            </a>
-        @endif
-    @endauth
 
-    <div class="menu-sep"></div>
-</nav>
-    </aside>
+<div class="with-sidebar">
+  @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}
 
-    <!-- ===== CONTENIDO PRINCIPAL ===== -->
-    <main class="main-content">
-    <header class="header">
-  <!-- buscador -->
-  <div class="header-search-group">
-    <span class="search-icon"></span>
-    <input class="search" type="text" placeholder="Buscar..." />
-    <button class="filter-btn">
-      <i class="fa-solid fa-sliders"></i>
-      Filtros
-    </button>
-  </div>
-
-  <!-- barra superior derecha -->
-  <div class="topbar">
-    <div class="quick-actions" role="toolbar" aria-label="Acciones rápidas">
-      <button class="qa-btn" title="Verificados"><i class="fa-regular fa-circle-check"></i></button>
-      <button class="qa-btn" title="Mensajes"><i class="fa-regular fa-message"></i></button>
-      <button class="qa-btn" title="Ajustes"><i class="fa-solid fa-gear"></i></button>
-      <button class="qa-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
-    </div>
-
-<div class="user-menu">
-    <button class="user-chip" id="userMenuBtn" title="Cuenta">
-        <img class="chip-avatar" src="{{ auth()->user()->avatar ?? 'https://i.ibb.co/album-profile.png' }}" alt="Perfil">
-        <span class="chip-name">
-            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-        </span>
-        <i class="fa-solid fa-chevron-down"></i>
-    </button>
-
-    <div class="dropdown-menu" id="userDropdown" style="display: none;">
-        <a href="{{ route('ed_perfil') }}" class="dropdown-item">
-            <i class="fa-solid fa-user"></i> Perfil
-        </a>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="dropdown-item logout">
-                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-            </button>
-        </form>
-    </div>
-</div>
-
-  </div>
-</header>
-
+  <main class="main-content">
 
       <section class="playlist-section">
         <h2>Lista de reproducción para ti</h2>
@@ -200,26 +132,12 @@
           </div>
         </div>
       </section>
-    </main>
 
-  @include('components.footer')
 
+
+  </main>
   </div>
+    @include('components.footer')
 </body>
 </html>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('userMenuBtn');
-    const menu = document.getElementById('userDropdown');
-
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    });
-
-    document.addEventListener('click', () => {
-        menu.style.display = 'none';
-    });
-});
-</script>

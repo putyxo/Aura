@@ -9,22 +9,11 @@
     <script src="script.js" defer></script>
 </head>
 <body>
+            @yield('content')
+@include('components.traductor')
     <div class="app-container">
         <!-- Navigation Bar -->
-        <nav class="navbar">
-            <div class="nav-left">
-                <a href="menu" class="home-icon"><i class="fas fa-home"></i> Home</a>
-            </div>
-            <div class="nav-center">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Buscar" value="Buscar">
-                </div>
-            </div>
-            <div class="nav-right">
-                <a href="#" class="profile-btn">N</a>
-            </div>
-        </nav>
+  @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}
 
         <!-- Main Content -->
         <main class="main-content">
@@ -46,9 +35,7 @@
 
             <!-- Album Actions -->
             <div class="album-actions">
-                <button class="like-btn"><i class="far fa-heart"></i></button>
-                <button class="save-btn"><i class="far fa-plus-square"></i></button>
-                <button class="menu-btn"><i class="fas fa-ellipsis-h"></i></button>
+
                 <button class="play-btn"><i class="fas fa-play"></i></button>
             </div>
 
@@ -211,9 +198,11 @@
                     <div class="artist-item">
                         <img src="img/idol album.jpeg" alt="Nile Rodgers" class="artist-img">
                         <span class="artist-name">The idol</span>
+     
                     </div>
                 </div>
             </div>
+              @include('components.footer')
         </main>
     </div>
 </body>
