@@ -1,219 +1,246 @@
-<?php
-// index.php
-// Carga configuración persistente si existe
-$configFile = __DIR__ . '/config.json';
-$config = [];
-if (file_exists($configFile)) {
-    $cfgRaw = file_get_contents($configFile);
-    $cfg = json_decode($cfgRaw, true);
-    if (is_array($cfg)) $config = $cfg;
-}
-
-// Valores por defecto (se usará $config si existe)
-$artistName = $config['artistName'] ?? 'The Weeknd';
-$monthlyListeners = $config['monthlyListeners'] ?? '112,845,675';
-$profileImage = $config['profileImage'] ?? 'assets/cover.jpg';
-
-$popularTracks = $config['popularTracks'] ?? [
-    ['title' => 'Popular', 'plays' => '1,171,123,830', 'duration' => '3:51'],
-    ['title' => 'Golden Gun', 'plays' => '13,570,973', 'duration' => '3:36'],
-    ['title' => 'Die For You', 'plays' => '104,982,947', 'duration' => '3:16'],
-    ['title' => 'Como capo', 'plays' => '13,982,401', 'duration' => '2:54']
-];
-
-$albums = $config['albums'] ?? [
-    ['title' => 'Starboy', 'image' => 'assets/album1.jpg'],
-    ['title' => 'The Idol OST', 'image' => 'assets/album2.jpg'],
-    ['title' => 'Trilogy', 'image' => 'assets/album3.jpg'],
-    ['title' => 'After Hours', 'image' => 'assets/album4.jpg']
-];
-
-// Helper para placeholder si falta imagen
-function image_or_placeholder($path, $w = 400, $h = 400) {
-    if (file_exists($path)) return $path;
-    $svg = "<svg xmlns='http://www.w3.org/2000/svg' width='$w' height='$h'><rect width='100%' height='100%' fill='%23333' rx='20'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%23eee'>No image</text></svg>";
-    return 'data:image/svg+xml;utf8,' . rawurlencode($svg);
-}
-?>
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title class="traducible">Configuración de perfil — <?=htmlspecialchars($artistName)?> · Música</title>
+  <title>Perfil — {{ $user->nombre_artistico ?? 'Invitado' }} · Aura</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
- @vite('resources/css/ed_perfil.css')
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  @vite('resources/css/ed_perfil.css')
 </head>
 <body>
-        @yield('content')
-@include('components.traductor')
-  <header class="topbar">
-    <div class="top-left">
-<a href="menu" class="icon-btn" aria-label="Atrás">◀</a>
-<a href="/ruta-siguiente" class="icon-btn" aria-label="Adelante">▶</a>
+@include('components.sidebar')
+@include('components.footer')
+@if (!function_exists('drive_image_view'))
+    @php
+    function drive_image_view($url) {
+        if (!$url) return null;
 
-    </div>
-    <div class="top-center">
-      <input class="search" placeholder="Buscar artista, lista, canción" aria-label="Buscar">
-    </div>
-    <div class="top-right">
-      <button class="nav-pill">Home</button>
-      <button class="nav-pill traducible">Mi biblioteca</button>
-      <button class="avatar-btn" aria-label="Perfil">PT</button>
-    </div>
-  </header>
+        // /file/d/FILE_ID/
+        if (preg_match('~/d/([^/]+)~', $url, $m)) {
+            return "https://drive.google.com/uc?export=view&id={$m[1]}";
+        }
 
-  <div class="stage">
-    <div class="profile-card">
-      <div class="header">
-        <div class="cover">
-          <img id="coverImg" src="<?=image_or_placeholder($profileImage)?>" alt="cover">
+        // ?id=FILE_ID
+        if (preg_match('~[?&]id=([^&]+)~', $url, $m)) {
+            return "https://drive.google.com/uc?export=view&id={$m[1]}";
+        }
+
+        return $url;
+    }
+    @endphp
+@endif
+
+<main class="main-content">
+
+  <!-- ===== HERO PERFIL ===== -->
+  <section class="profile-hero">
+    <div class="profile-banner" style="background-image: url('{{ $user->imagen_portada ? asset($user->imagen_portada) : '' }}')">
+      <div class="banner-overlay"></div>
+
+      @if(Auth::check() && Auth::id() === $user->id)
+        <div class="edit-btn">
+          <button class="btn-primary" id="editBtn"><i class="fa-solid fa-pen"></i> Editar</button>
         </div>
-        <div class="meta">
-          <div class="row-top">
-            <h1 id="artistName"><?=htmlspecialchars($artistName)?></h1>
-            <div class="badges">
-              <span class="badge">Verified</span>
-              <span class="badge alt" id="genreBadge"><?=htmlspecialchars($config['genre'] ?? 'R&B')?></span>
+      @endif
+
+      <div class="profile-header">
+        <h1 id="artistName">{{ $user->nombre_artistico ?? 'Artista' }}</h1>
+      </div>
+
+      <div class="btn-follow-container">
+        @auth
+          @if(Auth::id() !== $user->id)
+            @if(Auth::user()->isFollowing($user->id))
+              <form action="{{ route('perfil.unfollow', $user->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn-follow">Dejar de seguir</button>
+              </form>
+            @else
+              <form action="{{ route('perfil.follow', $user->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn-follow">Seguir</button>
+              </form>
+            @endif
+          @endif
+        @endauth
+      </div>
+
+      <div class="profile-footer">
+        <span class="listeners"><i class="fa-solid fa-headphones"></i> {{ $user->oyentes_mensuales ?? 0 }} oyentes mensuales</span>
+        <span class="followers"><i class="fa-solid fa-user-group"></i> {{ $user->seguidores ?? 0 }} seguidores</span>
+      </div>
+
+      <div class="avatar-wrap xl">
+        @if($user && $user->avatar)
+          <img class="avatar-img" src="{{ asset('storage/' . $user->avatar) }}?v={{ time() }}" alt="{{ $user->nombre_artistico ?? $user->nombre }}">
+        @else
+          <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
+        @endif
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTENIDO MÚSICA ===== -->
+  <section class="music-layout">
+    <!-- Álbumes -->
+    <div class="music-column">
+      <h2><i class="fa-solid fa-compact-disc"></i> Álbumes</h2>
+      <div class="grid">
+        @forelse($albumes as $album)
+          <div class="card hover-zoom">
+            <div class="card-img">
+              <img src="{{ asset($album->portada ?? 'img/default-album.png') }}" alt="album">
+              <div class="img-overlay"></div>
             </div>
+            <h4>{{ $album->titulo }}</h4>
+            <p>{{ $album->anio ?? '' }}</p>
           </div>
-
-          <div class="sub">
-            <div class="pill traducible" id="listeners"><?=htmlspecialchars($monthlyListeners)?> oyentes mensuales</div>
-            <div style="flex:1"></div>
-          </div>
-
-          <div class="controls">
-            <button class="edit-btn traducible" id="editBtn " aria-label="Editar perfil">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#fff"/></svg>
-              Editar perfil
-            </button>
-
-            <button class="follow traducible" id="followBtn"><?= (isset($config['following']) && $config['following']) ? 'Siguiendo' : 'Seguir' ?></button>
-
-            <div style="margin-left:auto;color:var(--muted);font-weight:700" class="traducible"  >Configuración · Perfil</div>
-          </div>
-
-          <div class="bio traducible" id="bio"><?=htmlspecialchars($config['bio'] ?? 'Artista · Unificador · Realizador · Audiencia. — Actualiza tu biografía en "Editar perfil" para darle más personalidad a tu página.')?></div>
-
-        </div>
+        @empty
+          <div class="empty">No hay álbumes todavía 📀</div>
+        @endforelse
       </div>
-
-      <div class="popular">
-        <h3>Últimos likes</h3>
-        <?php foreach($popularTracks as $t): ?>
-        <div class="track" data-title="<?=htmlspecialchars($t['title'])?>">
-          <div class="thumb">S</div>
-          <div class="info">
-            <div class="title"><?=htmlspecialchars($t['title'])?></div>
-            <div class="meta traducible"><?=htmlspecialchars($t['plays'])?> reproducciones</div>
-          </div>
-          <div class="duration"><?=htmlspecialchars($t['duration'])?></div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-
     </div>
 
-    <aside class="albums-panel">
-      <h4>Playlist</h4>
-      <div class="albums-grid">
-        <?php foreach($albums as $a): ?>
-          <div class="album" tabindex="0">
-            <img src="<?=image_or_placeholder($a['image'],600,600)?>" alt="<?=htmlspecialchars($a['title'])?>">
-            <div class="a-title"><?=htmlspecialchars($a['title'])?></div>
+<!-- Canciones -->
+<div class="music-column">
+  <h2><i class="fa-solid fa-music"></i> Canciones</h2>
+  <div class="grid">
+    @foreach($canciones as $song)
+          @php
+            $rawAudio = $song->audio_url;
+            $audioUrl = null;
+
+            if ($rawAudio) {
+                if (Str::contains($rawAudio, 'drive.google')) {
+                    // Extraer ID de Drive
+                    if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } else {
+                        $id = null;
+                    }
+                    // Usar SIEMPRE el proxy de Laravel
+                    $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
+                } else {
+                    $audioUrl = $rawAudio; // Otro enlace externo
+                }
+            }
+          @endphp
+
+          <div class="card hover-zoom">
+            <button class="cancion-item"
+              type="button"
+              data-src="{{ $audioUrl }}"
+              data-title="{{ $song->title }}"
+              data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}">
+              <h4>{{ $song->title }}</h4>
+              <p>{{ $song->duration ?? '0:00' }}</p>
+            </button>
           </div>
-        <?php endforeach; ?>
-      </div>
-
-      <div class="young-tips" >
-        <strong class="traducible">Consejo:</strong> <p>Personaliza tu portada y añade enlaces a redes para conectar con fans.</p>
-      </div>
-    </aside>
-
+    @endforeach
   </div>
+</div>
 
-  <!-- Modal / Panel moderno para editar perfil -->
-  <div class="modal" id="editModal" aria-hidden="true">
-    <div class="modal-content">
-      <h3>Editar perfil</h3>
+  </section>
 
-      <!-- Form: se envía con JS a save_profile.php -->
-      <form id="profileForm" method="post" enctype="multipart/form-data" action="../views/save_profile.php">
-        <!-- Sección de Información Básica -->
-        <div class="form-section" class="traducible">
-          <h4>Información Básica</h4>
-          <div class="form-group grid-2">
-            <label for="inputName" >
-              Nombre del artista
-              <input id="inputName" name="artistName" type="text" placeholder="Nombre del artista" value="<?=htmlspecialchars($artistName)?>">
-              <span class="error-message" id="errorName"></span>
-            </label>
-            <label for="inputListeners" >
-              Oyentes mensuales
-              <input id="inputListeners" name="monthlyListeners" type="text" placeholder="Ej: 1,234,567" value="<?=htmlspecialchars($monthlyListeners)?>">
-              <span class="error-message" id="errorListeners"></span>
-            </label>
+  <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
+  <section class="section">
+    <h2><i class="fa-solid fa-bolt"></i> Últimos lanzamientos</h2>
+    <div class="grid releases">
+      @forelse($lanzamientos as $item)
+        <div class="card hover-zoom">
+          <div class="card-img">
+            <img src="{{ asset($item['cover'] ?? 'img/default-release.png') }}" alt="release">
+            <div class="img-overlay"></div>
           </div>
+          <h4>
+            @if($item['tipo'] === 'album') 📀 @else 🎵 @endif {{ $item['titulo'] }}
+          </h4>
+          <p>{{ $item['anio'] }}</p>
+        </div>
+      @empty
+        <div class="empty">Aún no hay lanzamientos 🔥</div>
+      @endforelse
+    </div>
+  </section>
+</main>
 
-          <label for="inputBio" class="form-group">
-            Biografía
-            <textarea id="inputBio" name="bio" rows="4" placeholder="Escribe una biografía corta..."><?=htmlspecialchars($config['bio'] ?? '')?></textarea>
-            <span class="error-message" id="errorBio"></span>
+@if(Auth::check() && Auth::id() === $user->id)
+<div class="modal" id="editModal" aria-hidden="true">
+  <div class="modal-content glass">
+    <!-- Formulario de edición -->
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
+      <button type="button" class="btn-advanced"><i class="fa-solid fa-gear"></i> Configuración avanzada</button>
+    </div>
+    <form action="{{ route('perfil.update') }}" method="POST" enctype="multipart/form-data">
+      @csrf
+      <!-- Campos de edición... -->
+      <div class="modal-row two-cols">
+        <div class="col">
+          <label>Nombre artístico actual</label>
+          <div class="locked-input">
+            <input type="text" value="{{ $user->nombre_artistico ?? 'Sin definir' }}" readonly>
+            <i class="fa-solid fa-lock lock-icon"></i>
+          </div>
+        </div>
+        <div class="col">
+          <label>Nuevo nombre artístico</label>
+          <input name="nuevo_nombre_artistico" type="text" placeholder="Escribe el nuevo nombre artístico">
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="modal-row">
+        <div class="label-col">Foto de perfil</div>
+        <div class="input-col center-content">
+          <label class="file-preview avatar-edit">
+            @if($user && $user->avatar)
+              <img src="{{ asset('storage/' . $user->avatar) }}?v={{ time() }}" alt="avatar">
+            @else
+              <i class="fa-solid fa-user"></i>
+            @endif
+            <input type="file" name="avatar" accept="image/*" hidden>
+            <div class="overlay"><i class="fa-solid fa-camera"></i></div>
           </label>
         </div>
+      </div>
 
-        <!-- Sección de Imagen de Portada -->
-        <div class="form-section">
-          <h4>Imagen de Portada</h4>
-          <div class="form-group image-upload-group">
-            <div class="image-preview-container">
-              <img id="coverPreview" src="<?=image_or_placeholder($profileImage,240,240)?>" alt="preview" class="cover-preview-img">
-            </div>
-            <div class="file-input-container">
-              <input id="coverFile" name="cover" type="file" accept="image/*">
-              <p class="file-info traducible">Selecciona una imagen (jpg/png/webp). Max 3MB.</p>
-              <span class="error-message" id="errorCover"></span>
-            </div>
-          </div>
+      <!-- Banner -->
+      <div class="modal-row">
+        <div class="label-col">Banner</div>
+        <div class="input-col">
+          <label class="file-preview banner-edit">
+            @if($user && $user->banner)
+              <img src="{{ asset($user->banner) }}" alt="banner">
+            @else
+              <div class="banner-placeholder">No hay banner</div>
+            @endif
+            <input type="file" name="banner" accept="image/*" hidden>
+            <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+          </label>
         </div>
+      </div>
 
-        <!-- Sección de Detalles Adicionales -->
-        <div class="form-section traducible">
-          <h4>Detalles Adicionales</h4>
-          <div class="form-group grid-2">
-            <label for="inputGenre">
-              Género
-              <select id="inputGenre" name="genre">
-                <?php
-                  $genres = ['R&B','Pop','Hip-Hop','Indie','Electronica','Reggaetón'];
-                  $currentGenre = $config['genre'] ?? 'R&B';
-                  foreach($genres as $g) {
-                    $sel = ($g === $currentGenre) ? 'selected' : '';
-                    echo "<option value=\"".htmlspecialchars($g)."\" $sel>".htmlspecialchars($g)."</option>";
-                  }
-                ?>
-              </select>
-              <span class="error-message" id="errorGenre"></span>
-            </label>
-
-            <label for="inputSocial" class="traducible">
-              Red social (ej. Instagram)
-              <input id="inputSocial" name="social" type="text" placeholder="https://instagram.com/usuario" value="<?=htmlspecialchars($config['social'] ?? '')?>">
-              <span class="error-message" id="errorSocial"></span>
-            </label>
-          </div>
+      <!-- Biografía -->
+      <div class="modal-row">
+        <div class="label-col">Descripción</div>
+        <div class="input-col">
+          <textarea name="bio" rows="4">{{ $user->biografia ?? '' }}</textarea>
         </div>
+      </div>
 
-        <div class="modal-actions">
-          <button type="button" id="saveEdit">Guardar</button>
-          <button type="button" id="cancelEdit" class="muted">Cancelar</button>
-        </div>
-      </form>
-    </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary glow"><i class="fa-solid fa-save"></i> Guardar</button>
+        <button type="button" class="btn-secondary" id="cancelEdit"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+      </div>
+    </form>
   </div>
+</div>
+@endif
 
-  <script src="../js/ed-perfil.js"></script>
+@vite('resources/js/ed-perfil.js')
 </body>
 </html>

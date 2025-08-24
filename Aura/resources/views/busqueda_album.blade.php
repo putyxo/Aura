@@ -21,8 +21,6 @@
   </style>
 </head>
 <body>
-          @yield('content')
-@include('components.traductor')
 <div class="wrap">
 
   <h1>Canciones por álbum</h1>
@@ -30,7 +28,7 @@
   {{-- ===== Buscador simple por query-string ===== --}}
   <form class="search" method="get">
     <input type="text" name="name" placeholder="Escribe el nombre del álbum…" value="{{ request('name', $albumName ?? '') }}" />
-    <button type="submit" class="traducible">Buscar</button>
+    <button type="submit">Buscar</button>
   </form>
 
   @php

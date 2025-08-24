@@ -11,8 +11,6 @@
 <body>
 <div class="app">
   <div class="with-sidebar">
-        @yield('content')
-@include('components.traductor')
     @include('components.sidebar')
 
     <main class="main-content">
@@ -30,7 +28,7 @@
           <div class="tile-cover create-cover">
             <i class="fa-solid fa-plus"></i>
           </div>
-          <div class="tile-name traducible">Nueva playlist</div>
+          <div class="tile-name">Nueva playlist</div>
         </button>
 
 {{-- Tiles 1..N: Playlists desde BD (últimas primero) --}}
@@ -40,14 +38,14 @@
     @if($pl->cover_url)
       <img src="{{ $pl->cover_url }}" alt="Portada de {{ $pl->nombre }}">
     @else
-      <div class="cover-placeholder traducible">Sin portada</div>
+      <div class="cover-placeholder">Sin portada</div>
     @endif
   </div>
   <div class="tile-name" title="{{ $pl->nombre }}">{{ $pl->nombre }}</div>
 </a>
 @empty
   {{-- Opcional: estado vacío --}}
-  <div class="tile traducible" style="grid-column: span 2; text-align:center; padding:16px">
+  <div class="tile" style="grid-column: span 2; text-align:center; padding:16px">
     Aún no tienes playlists. ¡Crea la primera! ✨
   </div>
 @endforelse
@@ -64,8 +62,8 @@
     <span id="detailUpdate" class="update"></span>
     <p id="detailDescription" class="description"></p>
     <div class="actions">
-      <button class="btn play"><i class="fa-solid fa-play traducible"></i> Reproducir</button>
-      <button class="btn shuffle"><i class="fa-solid fa-shuffle traducible"></i> Aleatorio</button>
+      <button class="btn play"><i class="fa-solid fa-play"></i> Reproducir</button>
+      <button class="btn shuffle"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
     </div>
   </div>
 </div>
@@ -76,7 +74,7 @@
 
 <div id="playlistModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <button class="modal-close" id="btnClosePlaylistModal" aria-label="Cerrar">×</button>
-  <h3 id="modalTitle" class="modal-title traducible">Añadir Playlist</h3>
+  <h3 id="modalTitle" class="modal-title">Añadir Playlist</h3>
 
   <form id="playlistForm" action="{{ route('playlists.store') }}" method="POST" enctype="multipart/form-data" novalidate>
     @csrf
@@ -84,14 +82,14 @@
     <div class="modal-grid">
       <!-- Columna izquierda -->
       <div class="field" aria-live="polite">
-        <label for="pl_nombre" class="label traducible">Nombre del álbum</label>
+        <label for="pl_nombre" class="label">Nombre del álbum</label>
         <input id="pl_nombre" name="nombre" type="text" class="input" placeholder="(NOMBRE DEL ÁLBUM)" required>
         <small class="field-msg" id="nameMsg"></small>
       </div>
 
       <!-- Columna derecha: Portada -->
       <div class="cover-field">
-        <label class="label traducible" >Portada</label>
+        <label class="label">Portada</label>
 
         <!-- Zona de arrastre -->
         <label for="pl_cover"
@@ -109,7 +107,7 @@
             <div class="uploader-icon">
               <i class="fa-solid fa-arrow-up-from-bracket"></i>
             </div>
-            <div class="uploader-text traducible">
+            <div class="uploader-text">
               <strong>Arrastra y suelta</strong> la imagen<br>
               <span class="muted">o haz clic para seleccionar</span>
             </div>
@@ -120,25 +118,25 @@
           </div>
 
           <!-- Overlay de estado (dragover) -->
-          <div class="uploader-overlay traducible" id="uploaderOverlay" aria-hidden="true">
+          <div class="uploader-overlay" id="uploaderOverlay" aria-hidden="true">
             Suelta la imagen aquí
           </div>
         </label>
 
-        <small class="hint traducible">PNG/JPG hasta 5MB</small>
+        <small class="hint">PNG/JPG hasta 5MB</small>
         <small class="field-msg" id="coverMsg"></small>
       </div>
 
       <div class="field field-span2" aria-live="polite">
-        <label for="pl_desc" class="label traducible">Descripción</label>
+        <label for="pl_desc" class="label">Descripción</label>
         <textarea id="pl_desc" name="descripcion" class="textarea" rows="4" placeholder="(Descripción)"></textarea>
         <small class="field-msg" id="descMsg"></small>
       </div>
     </div>
 
     <div class="actions">
-      <button type="button" class="btn-secondary traducible" id="btnCancelPlaylist">Cancelar</button>
-      <button type="submit" class="btn-primary traducible" id="btnSubmit">Guardar</button>
+      <button type="button" class="btn-secondary" id="btnCancelPlaylist">Cancelar</button>
+      <button type="submit" class="btn-primary" id="btnSubmit">Guardar</button>
     </div>
   </form>
 </div>

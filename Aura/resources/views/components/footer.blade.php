@@ -108,20 +108,35 @@ body:not(.has-player){ padding-bottom: var(--pl-h); }
 
 /* Barra de progreso (custom range) */
 .seek-wrap{ position:relative; flex:1; }
-.seek{
-  -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:999px;
-  background:linear-gradient(90deg, var(--pl-accent) 0 0) no-repeat, #2a2a3d;
-  outline:none; cursor:pointer;
+.seek {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pl-accent) 0% 0%) no-repeat, #2a2a3d;
+  background-size: 0% 100%;
+  outline: none;
+  cursor: pointer;
+  transition: background-size 0.15s linear;
 }
-.seek::-webkit-slider-thumb{
-  -webkit-appearance:none; appearance:none; width:14px;height:14px;border-radius:50%;
-  background:var(--pl-fg); box-shadow: 0 2px 6px rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.25); margin-top:-4px;
-  transition: transform var(--pl-dur) var(--pl-ease);
+
+.seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pl-fg);
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  border: 1px solid rgba(0,0,0,.25);
+  margin-top: -4px;
+  transition: transform 0.15s ease, background 0.2s ease;
 }
-.seek::-moz-range-thumb{
-  width:14px;height:14px;border-radius:50%; background:var(--pl-fg); border:none;
+.seek:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: var(--pl-accent);
 }
-.seek:active::-webkit-slider-thumb{ transform: scale(1.1); }
+
 .buffered{
   position:absolute; left:0; top:50%; height:6px; transform:translateY(-50%);
   border-radius:999px; background:#3a3a55; width:0; pointer-events:none;
@@ -193,7 +208,7 @@ body:not(.has-player){ padding-bottom: var(--pl-h); }
       <span class="time current-time">0:00</span>
       <div class="seek-wrap">
         <div class="buffered" aria-hidden="true"></div>
-        <input type="range" class="seek" min="0" max="100" value="0" step="1" aria-label="Línea de tiempo">
+        <input type="range" class="seek" min="0" max="100" value="0" step="any" aria-label="Línea de tiempo">
       </div>
       <span class="time total-time">--:--</span>
     </div>
@@ -264,37 +279,51 @@ body:not(.has-player){ padding-bottom: var(--pl-h); }
     volRange.style.backgroundSize = `${val}% 100%`;
   };
 
-  function loadSong(index){
-    if (!songList.length) return;
-    current = (index + songList.length) % songList.length;
+function loadSong(index){
+  if (!songList.length) return;
+  current = (index + songList.length) % songList.length;
 
-    const el = songList[current];
-    const src = el?.dataset?.src || '';
-    const title = el?.dataset?.title || 'Sin título';
-    const artist = el?.dataset?.artist || 'Desconocido';
-    const cover = el?.dataset?.cover || 'img/album.jpg';
-
-    audio.src = src;
-    titleEl.textContent = title;
-    artistEl.textContent = artist;
-    coverEl.src = cover;
-
-    // Reproducción automática al cargar
-    audio.play().then(() => {
-      playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    }).catch(()=>{ /* autoplay bloqueado: deja el botón en Play */ });
+  const el = songList[current];
+  let src = el?.dataset?.src || '';
+  if (!src) {
+    alert("Esta canción no tiene audio disponible");
+    return;
   }
+
+  // Si es link de Google Drive, normalizarlo
+  if (src.includes("drive.google.com")) {
+    const idMatch = src.match(/[-\w]{25,}/);
+    if (idMatch) {
+      src = `https://docs.google.com/uc?export=download&id=${idMatch[0]}`;
+    }
+  }
+
+  const title = el?.dataset?.title || 'Sin título';
+  const artist = el?.dataset?.artist || 'Desconocido';
+  const cover = el?.dataset?.cover || 'img/album.jpg';
+
+  audio.src = src;
+  titleEl.textContent = title;
+  artistEl.textContent = artist;
+  coverEl.src = cover;
+
+  songList.forEach(btn => btn.closest('.card').classList.remove('active-song'));
+  el.closest('.card').classList.add('active-song');
+
+  audio.play().then(() => {
+    playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  }).catch(err => {
+    console.error("Error reproduciendo:", err);
+  });
+}
+
+
 
   // Inicializa volumen
   audio.volume = Number(volRange.value) / 100;
   applyVolumeFill();
 
-  // Eventos de la lista
-  songList.forEach((item, i) => {
-    item.addEventListener('click', () => {
-      loadSong(i);
-    });
-  });
+
 
   // Controles
   playBtn.addEventListener('click', () => {
@@ -357,47 +386,35 @@ body:not(.has-player){ padding-bottom: var(--pl-h); }
   });
 
   // Progreso
-  audio.addEventListener('loadedmetadata', () => {
-    seek.max = Math.floor(audio.duration || 0);
-    totalTimeEl.textContent = fmt(audio.duration);
-    // buffer
-    updateBuffered();
-  });
+// Progreso
+audio.addEventListener('loadedmetadata', () => {
+  seek.max = audio.duration || 0;
+  totalTimeEl.textContent = fmt(audio.duration);
+  updateBuffered();
+});
 
-  audio.addEventListener('timeupdate', () => {
-    seek.value = Math.floor(audio.currentTime || 0);
+// Actualización fluida de la barra
+function updateProgress() {
+  if (!audio.paused && !audio.ended) {
+    seek.value = audio.currentTime; // sin redondear
     currentTimeEl.textContent = fmt(audio.currentTime);
     applyProgressFill();
-  });
+    requestAnimationFrame(updateProgress); // bucle animado
+  }
+}
 
-  const updateBuffered = () => {
-    try{
-      if (audio.buffered.length){
-        const end = audio.buffered.end(audio.buffered.length - 1);
-        const ratio = Math.min(1, (end || 0) / (audio.duration || 1));
-        bufferedBar.style.width = `${ratio * 100}%`;
-      }
-    }catch(_e){}
-  };
-  audio.addEventListener('progress', updateBuffered);
+audio.addEventListener('play', () => {
+  requestAnimationFrame(updateProgress);
+});
 
-  seek.addEventListener('input', () => {
-    audio.currentTime = Number(seek.value) || 0;
-    applyProgressFill();
-  });
+audio.addEventListener('pause', () => {
+  // No seguimos actualizando si se pausa
+});
 
-  audio.addEventListener('ended', () => {
-    if (repeatMode === 2) {
-      loadSong(current); // repetir pista
-    } else if (isShuffle) {
-      nextBtn.click();
-    } else if (repeatMode === 1) {
-      loadSong(current + 1);
-    } else {
-      // fin sin repetir
-      playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    }
-  });
+seek.addEventListener('input', () => {
+  audio.currentTime = Number(seek.value) || 0;
+  applyProgressFill();
+});
 
   // Volumen + mute
   volRange.addEventListener('input', () => {
@@ -444,9 +461,26 @@ body:not(.has-player){ padding-bottom: var(--pl-h); }
   // Inicializa estilos fill
   applyProgressFill();
 
-  // Observa si cambian dinámicamente las canciones (opcional)
-  const obs = new MutationObserver(() => {
-    songList = Array.from(document.querySelectorAll('.cancion-item'));
+function bindSongEvents() {
+  songList.forEach((item, i) => {
+    if (!item.dataset.bound) {
+      item.addEventListener('click', () => {
+        console.log("▶️ Click en:", item.dataset.title, item.dataset.src);
+        loadSong(i);
+      });
+      item.dataset.bound = "true"; // evita duplicar eventos
+    }
   });
-  obs.observe(document.body, { childList:true, subtree:true });
+}
+
+// engancha inicial
+bindSongEvents();
+
+// si aparecen canciones nuevas en el DOM, vuelve a enganchar
+const obs = new MutationObserver(() => {
+  songList = Array.from(document.querySelectorAll('.cancion-item'));
+  bindSongEvents();
+});
+obs.observe(document.body, { childList:true, subtree:true });
+
 </script>

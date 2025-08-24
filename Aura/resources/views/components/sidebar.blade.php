@@ -1,5 +1,3 @@
-
-
 <!-- ===== BARRA LATERAL ===== -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <aside class="sidebar" id="sidebar">
@@ -177,9 +175,12 @@ body{
       <i class="fa-solid fa-sliders"></i>
       <span class="btn-label">Filtros</span>
     </button>
+
+    <!-- 🔎 Caja de resultados -->
+    <div id="searchResults" class="search-results"></div>
   </div>
 
-  <!-- Acciones rápidas (SOLO íconos) -->
+  <!-- Acciones rápidas -->
   <div class="quick-actions" role="toolbar" aria-label="Acciones rápidas">
     @auth
       @if(auth()->user()->es_artista)
@@ -192,85 +193,59 @@ body{
     <button class="qa-btn" type="button" title="Ajustes"><i class="fa-solid fa-gear"></i></button>
     <button class="qa-btn" type="button" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
   </div>
-  <!-- Usuario (MOVER fuera de .topbar/.quick-actions) -->
-<div class="user-menu">
-  <button class="user-chip" id="userMenuBtn" type="button" title="Cuenta" aria-expanded="false">
-    <img class="chip-avatar"
-         src=""
-    
-         alt="Avatar">
-    <span class="chip-name">
-      {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-    </span>
-    <i class="fa-solid fa-chevron-down"></i>
-  </button>
 
-  <div class="dropdown-menu" id="userDropdown" aria-hidden="true">
-    <!-- Fila: avatar + datos + botón Editar a la par de la foto -->
-    <div class="profile-grid">
-      <div class="avatar-wrap">
-        <img class="profile-avatar"
-             src=""
-             onerror="'"
-             alt="Avatar">
+  <!-- Usuario -->
+  <div class="user-menu">
+    <button class="user-chip" id="userMenuBtn" type="button" aria-expanded="false">
+      <img class="chip-avatar" src="" alt="Avatar">
+      <span class="chip-name">
+        {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+      </span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
 
-        <!-- Botón EDITAR a la par de la foto -->
-        <a href="{{ route('ed_perfil') }}" class="edit-chip" title="Editar foto y nombre">
-          <i class="fa-solid fa-pen"></i><span>Editar</span>
-        </a>
-      </div>
-
-      <div class="id-block">
-        <div class="profile-name">
-          {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+    <div class="dropdown-menu" id="userDropdown" aria-hidden="true">
+      <!-- Avatar + editar -->
+      <div class="profile-grid">
+        <div class="avatar-wrap">
+          <img class="profile-avatar" src="" alt="Avatar">
+          <a href="{{ route('perfil.show', auth()->id()) }}" class="edit-chip"><i class="fa-solid fa-pen"></i><span>Editar</span></a>
         </div>
-        @if(auth()->user()->email)
-          <div class="profile-email">{{ auth()->user()->email }}</div>
-        @endif
+        <div class="id-block">
+          <div class="profile-name">{{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}</div>
+          @if(auth()->user()->email)
+            <div class="profile-email">{{ auth()->user()->email }}</div>
+          @endif
+        </div>
       </div>
-    </div>
 
-    <!-- Dos botones abajo: Subir música + Traductor -->
-    <div class="actions-two">
-      @auth
-        @if(auth()->user()->es_artista)
-          <a class="pill-btn" href="{{ route('musica.subir') }}">
-            <i class="fa-solid fa-upload"></i><span class="label traducible">Subir música</span>
-          </a>
-        @endif
-      @endauth
-      <button class="pill-btn" type="button" id="translatorBtn">
-        <i class="fa-solid fa-language"></i><span class="label traducible">Traductor</span>
-      </button>
-    </div>
+      <!-- Botones -->
+      <div class="actions-two">
+        @auth
+          @if(auth()->user()->es_artista)
+            <a class="pill-btn" href="{{ route('musica.subir') }}"><i class="fa-solid fa-upload"></i><span>Subir música</span></a>
+          @endif
+        @endauth
+        <button class="pill-btn" type="button" id="translatorBtn"><i class="fa-solid fa-language"></i><span>Traductor</span></button>
+      </div>
 
-    <!-- Configuración centrado con texto -->
-    <div class="center-config">
-      <a href="{{ route('ed_perfil') }}" class="center-btn" title="Configuración">
-        <i class="fa-solid fa-gear"></i><span class="label traducible">Configuración</span>
-      </a>
-    </div>
+      <!-- Configuración -->
+      <div class="center-config">
+        <a href="{{ route('perfil.show', auth()->id()) }}" class="center-btn"><i class="fa-solid fa-gear"></i><span>Configuración</span></a>
+      </div>
 
-    <!-- Lista inferior: Perfil y Salir -->
-    <ul class="dropdown-list list-bottom">
-      <li>
-        <a href="{{ route('ed_perfil') }}" class="dropdown-item">
-          <i class="fa-solid fa-user"></i><span class="label traducible">Perfil</span>
-        </a>
-      </li>
-      <li class="dropdown-sep"></li>
-      <li>
-        <form method="POST" action="{{ route('logout') }}">@csrf
-          <button type="submit" class="logout-wide">
-            <i class="fa-solid fa-right-from-bracket"></i><span class="label traducible">Salir</span>
-          </button>
-        </form>
-      </li>
-    </ul>
+      <!-- Perfil / Salir -->
+      <ul class="dropdown-list list-bottom">
+        <li><a href="{{ route('perfil.show', auth()->id()) }}" class="dropdown-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a></li>
+        <li class="dropdown-sep"></li>
+        <li>
+          <form method="POST" action="{{ route('logout') }}">@csrf
+            <button type="submit" class="logout-wide"><i class="fa-solid fa-right-from-bracket"></i><span>Salir</span></button>
+          </form>
+        </li>
+      </ul>
+    </div>
   </div>
-</div>
-
-
 </header>
 
 <style>
@@ -626,80 +601,119 @@ body{
 
 
 
+/* Asegurar que los resultados se posicionen respecto al buscador */
+.header-search-group {
+  position: relative; /* 👈 clave */
+}
+
+/* Caja de resultados */
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px); /* justo debajo del input */
+  left: 0;
+  right: 0;
+  background: #11131d;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  min-height: 50px;           /* 👈 altura mínima visible */
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  z-index: 500;
+  display: none;              /* 👈 oculto por defecto */
+}
+
+/* Scrollbar bonito */
+.search-results::-webkit-scrollbar { width: 8px; }
+.search-results::-webkit-scrollbar-thumb {
+  background: #2c2c3e;
+  border-radius: 10px;
+}
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #3d3d55;
+}
+
+/* Ítems de resultado */
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #eaeaea;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background .2s;
+}
+.search-item:hover { background: rgba(255,255,255,.08); }
+
+.search-item img {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.search-item div { display: flex; flex-direction: column; line-height: 1.2; }
+.search-item strong { font-size: 14px; font-weight: 600; }
+.search-item small { font-size: 12px; color: var(--color-dim); }
+
+
+
+
+
 
 </style>
 
 <script>
-/* Toggle del menú de usuario y cierre al hacer click fuera */
-(function(){
-  const btn = document.getElementById('userMenuBtn');
-  const dd  = document.getElementById('userDropdown');
-  if(!btn || !dd) return;
-  btn.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    dd.style.display = dd.style.display === 'none' || !dd.style.display ? 'block' : 'none';
+/* === Buscador === */
+const searchInput = document.querySelector('.search');
+const resultsBox = document.getElementById('searchResults');
+
+if (searchInput && resultsBox) {
+  searchInput.addEventListener('input', async () => {
+    const q = searchInput.value.trim();
+
+    if (q.length < 2) {
+      resultsBox.innerHTML = "<div class='search-item'>Escribe al menos 2 letras...</div>";
+      resultsBox.style.display = "block";   // 👈 siempre se muestra
+      return;
+    }
+
+    try {
+      const res = await fetch(`/buscar?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        resultsBox.innerHTML = "<div class='search-item'>No se encontraron resultados</div>";
+      } else {
+        resultsBox.innerHTML = data.map(item => `
+          <a href="${item.url}" class="search-item">
+            <img src="${item.avatar}" alt="${item.tipo}">
+            <div>
+              <strong>${item.nombre}</strong><br>
+              <small>${item.tipo}</small>
+            </div>
+          </a>
+        `).join('');
+      }
+
+      resultsBox.style.display = "block"; // 👈 asegúrate que se vea
+    } catch (err) {
+      console.error("Error en búsqueda:", err);
+      resultsBox.innerHTML = "<div class='search-item'>Error al buscar</div>";
+      resultsBox.style.display = "block";
+    }
   });
-  document.addEventListener('click', ()=>{ dd.style.display = 'none'; });
-})();
-// en vez de tocar style.display
-document.getElementById('userMenuBtn').addEventListener('click', (e)=>{
-  e.stopPropagation();
-  document.querySelector('.user-menu')?.classList.toggle('open');
-});
-document.addEventListener('click', ()=> document.querySelector('.user-menu')?.classList.remove('open'));
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const wrapper = document.querySelector('.user-menu');
-  const btn = document.getElementById('userMenuBtn');
-  const menu = document.getElementById('userDropdown');
-  if (!wrapper || !btn || !menu) return;
 
-  const openMenu = (open) => {
-    wrapper.classList.toggle('open', open);
-    menu.setAttribute('data-open', open ? 'true' : 'false');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-  };
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const wrapper = document.querySelector('.user-menu');
-  const btn = document.getElementById('userMenuBtn');
-  const menu = document.getElementById('userDropdown');
-  if (!wrapper || !btn || !menu) return;
-
-  const openMenu = (open) => {
-    wrapper.classList.toggle('open', open);
-    menu.setAttribute('data-open', open ? 'true' : 'false');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-  };
-
-  btn.addEventListener('click', (e) => { e.stopPropagation(); openMenu(menu.getAttribute('data-open') !== 'true'); });
-  menu.addEventListener('click', (e) => e.stopPropagation());
-  document.addEventListener('click', () => openMenu(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openMenu(false); });
-});
-</script>
-
-</script>
-
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('userMenuBtn');
-    const menu = document.getElementById('userDropdown');
-
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    });
-
-    document.addEventListener('click', () => {
-        menu.style.display = 'none';
-    });
-});
-
+  // Cerrar si haces click fuera
+  document.addEventListener('click', (e) => {
+    if (!resultsBox.contains(e.target) && e.target !== searchInput) {
+      resultsBox.style.display = "none";
+    }
+  });
+}
 
 
 </script>
+

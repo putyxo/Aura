@@ -21,8 +21,6 @@
   </style>
 </head>
 <body>
-          @yield('content')
-@include('components.traductor')
 <div class="wrap">
   <h1>Buscar canciones</h1>
 
@@ -30,7 +28,7 @@
   <form class="search" method="get" action="{{ route('busqueda_individual') }}">
     <input type="text" name="q" placeholder="Escribe el nombre de la canción…"
            value="{{ request('q','') }}" />
-    <button type="submit" class="traducible">Buscar</button>
+    <button type="submit">Buscar</button>
   </form>
 
   @php

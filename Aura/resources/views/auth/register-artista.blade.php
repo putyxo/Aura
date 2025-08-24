@@ -14,8 +14,7 @@
   <title>Registro</title>
 </head>
 <body>
-      @yield('content')
-@include('components.traductor')
+
   <!-- CANVAS PARA FONDO ANIMADO -->
      <canvas id="canvas"></canvas>
   <canvas class="glslCanvas" id="canvas"></canvas>
@@ -43,38 +42,38 @@
             <h1>Regístrate</h1>
             <div class="form-group">
               <input type="text" name="nombre" required />
-              <label class="traducible">Nombre de usuario</label>
+              <label>Nombre de usuario</label>
             </div>
 
             <div class="form-group">
                 <input type="text" name="nombre_artistico" required />
-                <label class="traducible">Nombre Artistico</label>
+                <label>Nombre Artistico</label>
               </div>
           
             <div class="form-group">
               <input type="email" name="email" required />
-              <label class="traducible">Correo Electrónico</label>
+              <label>Correo Electrónico</label>
             </div>
           
             <div class="form-group">
               <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" />
-              <label class="traducible">Fecha Nacimiento</label>
+              <label>Fecha Nacimiento</label>
             </div>
           
             <div class="form-group">
               <input type="password" name="password" required />
-              <label class="traducible">Contraseña</label>
+              <label>Contraseña</label>
             </div>
           
             <div class="form-group">
               <input type="password" name="password_confirmation" required />
-              <label class="traducible">Confirmar contraseña</label>
+              <label>Confirmar contraseña</label>
             </div>
           
-            <button type="submit" class="btn-registrarse traducible">Registrarse</button>
+            <button type="submit" class="btn-registrarse">Registrarse</button>
           
             <div class="remember">
-              <div class="right traducible"><a href="#">¿Necesitas ayuda?</a></div>
+              <div class="right"><a href="#">¿Necesitas ayuda?</a></div>
             </div>
           
             <div class="signup">
@@ -91,33 +90,33 @@
     </div>
 
     <div class="plans-section">
-      <h2 class="traducible">Selecciona tu plan</h2>
+      <h2>Elige tu plan</h2>
       <div class="plans">
         <div class="plan-card basic">
           <h3>Gratis</h3>
-          <p class="traducible">$0/mes</p>
+          <p>$0/mes</p>
           <ul>
-            <li class="traducible">Escucha aleatoria</li>
-            <li class="traducible">Con anuncios</li>
-            <li class="traducible">Calidad estándar</li>
+            <li>Escucha aleatoria</li>
+            <li>Con anuncios</li>
+            <li>Calidad estándar</li>
           </ul>
         </div>
         <div class="plan-card premium">
           <h3>Premium</h3>
-          <p class="traducible">$4.99/mes</p>
+          <p>$4.99/mes</p>
           <ul>
-            <li class="traducible">Sin anuncios</li>
-            <li class="traducible">Modo offline</li>
-            <li class="traducible">Mejor calidad</li>
+            <li>Sin anuncios</li>
+            <li>Modo offline</li>
+            <li>Mejor calidad</li>
           </ul>
         </div>
         <div class="plan-card familia">
-          <h3 class="traducible">Familiar</h3>
+          <h3>Familiar</h3>
           <p>$7.99/mes</p>
           <ul>
-            <li class="traducible">Hasta 6 cuentas</li>
-            <li class="traducible">Control parental</li>
-            <li class="traducible">Sin anuncios</li>
+            <li>Hasta 6 cuentas</li>
+            <li>Control parental</li>
+            <li>Sin anuncios</li>
           </ul>
         </div>
       </div>

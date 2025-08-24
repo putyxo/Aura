@@ -7,8 +7,6 @@
   <link rel="stylesheet" href="{{ asset('css/like.css') }}">
 </head>
 <body>
-      @yield('content')
-@include('components.traductor')
   <div class="with-sidebar">
     @include('components.sidebar')
 

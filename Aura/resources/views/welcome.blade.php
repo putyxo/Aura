@@ -13,10 +13,7 @@
     </head>
 
     
-      @yield('content')
-@include('components.traductor')
-
-
+  
     <body>
       <div class="bg-main">
        <div class="bg-main-img"></div>

@@ -11,8 +11,7 @@
   <title>Login Aura</title>
 </head>
 <body>
-      @yield('content')
-@include('components.traductor')
+
   <!-- Fondo animado -->
   <canvas id="canvas"></canvas>
   <canvas class="glslCanvas" id="canvas"></canvas>
@@ -37,21 +36,21 @@
 
           <div class="form-group">
             <input type="text" name="email" required />
-            <label class="traducible">Correo Electrónico</label>
+            <label>Correo Electrónico</label>
           </div>
 
           <div class="form-group">
             <input type="password" name="password" required />
-            <label class="traducible">Contraseña</label>
+            <label>Contraseña</label>
           </div>
 
-          <button type="submit" class="btn-registrarse traducible">Iniciar sesión</button>
+          <button type="submit" class="btn-registrarse">Iniciar sesión</button>
 
           <div class="remember">
-            <div class="right traducible"><a href="#">¿Necesitas ayuda?</a></div>
+            <div class="right"><a href="#">¿Necesitas ayuda?</a></div>
           </div>
 
-          <div class="signup traducible">
+          <div class="signup">
             <p>¿Nuevo en Aura? <a href='seleccionar-tipo'>Regístrate ahora</a>.</p>
           </div>
 

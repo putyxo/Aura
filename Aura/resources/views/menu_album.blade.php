@@ -9,8 +9,6 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-            @yield('content')
-@include('components.traductor')
     <div class="app-container">
         <!-- Navigation Bar -->
   @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}

@@ -14,8 +14,7 @@
   <title>Registro</title>
 </head>
 <body>
-      @yield('content')
-@include('components.traductor')
+
   <!-- CANVAS PARA FONDO ANIMADO -->
      <canvas id="canvas"></canvas>
   <canvas class="glslCanvas" id="canvas"></canvas>

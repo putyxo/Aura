@@ -7,8 +7,6 @@
   @vite('resources/css/subir.css')
 </head>
 <body>
-          @yield('content')
-@include('components.traductor')
                 @include('components.sidebar')
               @include('components.footer')
 @php
@@ -76,7 +74,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   <h2>¿Qué deseas subir?</h2>
   <div class="container">
     <div class="card" onclick="mostrarRegistro('cancion')">
-      <img 
+      <img
         src="{{ $coverSongUrl ?? $placeholder }}"
         alt="Contenido"
         style="width:100%;height:140px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08)"
@@ -95,7 +93,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 </section>
 
 {{-- ================= FORMULARIO (cambia action según selección) ================= --}}
-<form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-container" action="{{ route('songs.store') }}">
+<form method="post" enctype="multipart/form-data" id="uploadForm" action="{{ route('songs.store') }}">
   @csrf
 
   <button type="button" onclick="volverASeleccion()" class="btn-volver">Volver a elegir</button>
@@ -103,7 +101,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   {{-- -------- SINGLE -------- --}}
   <div class="dropzone" id="dropzone-single">
     <span class="dropzone-icon">🎵</span>
-    <span class="dropzone-text traducible">Haz click o arrastra tu archivo MP3 aquí</span>
+    <span class="dropzone-text">Haz click o arrastra tu archivo MP3 aquí</span>
     <input type="file" id="mp3" name="mp3" accept=".mp3,audio/mpeg">
   </div>
   <div id="mp3Preview" class="preview" style="margin-top:8px"></div>
@@ -112,14 +110,14 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   <div id="album-dropzones" class="hidden" style="display:none; gap:12px; flex-direction:column">
     <div class="dropzone" id="dz-cover">
       <span class="dropzone-icon">🖼️</span>
-      <span class="dropzone-text traducible">Haz click o arrastra la portada (JPG/PNG/WEBP) – máx 10MB</span>
+      <span class="dropzone-text">Haz click o arrastra la portada (JPG/PNG/WEBP) – máx 10MB</span>
       <input type="file" id="cover" name="cover" accept="image/*">
     </div>
     <div id="coverPreview" class="preview" style="margin-top:8px"></div>
 
     <div class="dropzone" id="dz-tracks">
       <span class="dropzone-icon">🎵</span>
-      <span class="dropzone-text traducible">Haz click o arrastra varios MP3 aquí</span>
+      <span class="dropzone-text">Haz click o arrastra varios MP3 aquí</span>
       <input type="file" id="tracks" name="tracks[]" accept=".mp3,audio/mpeg" multiple>
     </div>
     <div id="tracks-list" style="display:none;gap:10px;flex-direction:column"></div>
@@ -128,12 +126,12 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   <div class="upload-form">
     {{-- -------- FORM SINGLE -------- --}}
     <div id="form-cancion">
-      <label for="nombre" class="traducible">Nombre de la canción:</label>
+      <label for="nombre">Nombre de la canción:</label>
       <input type="text" id="nombre" name="nombre">
 
-      <label for="categoria-cancion" class="traducible">Género:</label>
+      <label for="categoria-cancion">Género:</label>
       <select id="categoria-cancion" name="categoria">
-        <option value="" class="traducible">Selecciona un género</option>
+        <option value="">Selecciona un género</option>
         <option value="Pop">Pop</option>
         <option value="Rock">Rock</option>
         <option value="Reggaeton">Reggaeton</option>
@@ -151,19 +149,19 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
         <option value="Otro">Otro</option>
       </select>
 
-      <label for="portada" class="traducible">Portada (opcional):</label>
+      <label for="portada">Portada (opcional):</label>
       <input type="file" id="portada" name="portada" accept="image/*">
       <div id="singleCoverPreview" class="preview" style="margin-top:8px"></div>
     </div>
 
     {{-- -------- FORM ÁLBUM -------- --}}
     <div id="form-album" class="hidden">
-      <label for="title" class="traducible">Título del álbum:</label>
+      <label for="title">Título del álbum:</label>
       <input type="text" id="title" name="title">
 
-      <label for="genre" class="traducible">Género (opcional):</label>
+      <label for="genre">Género (opcional):</label>
       <select id="genre" name="genre">
-        <option value="" class="traducible">Selecciona un género</option>
+        <option value="">Selecciona un género</option>
         <option value="Pop">Pop</option>
         <option value="Rock">Rock</option>
         <option value="Reggaeton">Reggaeton</option>
@@ -181,11 +179,11 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
         <option value="Otro">Otro</option>
       </select>
 
-      <label for="release_date" class="traducible">Fecha de lanzamiento (opcional):</label>
+      <label for="release_date">Fecha de lanzamiento (opcional):</label>
       <input type="date" id="release_date" name="release_date">
     </div>
 
-    <button type="submit" id="btn-submit class="traducible"">Subir</button>
+    <button type="submit" id="btn-submit">Subir</button>
   </div>
 </form>
 
