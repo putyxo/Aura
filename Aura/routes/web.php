@@ -100,7 +100,6 @@ Route::get('/phpinfo', fn() => dd(PHP_BINARY, php_ini_loaded_file()));
 // ===== Auth =====
 require __DIR__.'/auth.php';
 
-use App\Http\Controllers\MiControlador;
 
 Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
 
