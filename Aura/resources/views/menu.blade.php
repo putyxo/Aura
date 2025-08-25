@@ -17,7 +17,7 @@
 
 <div class="with-sidebar">
   @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}
-
+        @include('components.header')
   <main class="main-content">
 
       <section class="playlist-section">

@@ -11,6 +11,7 @@
 @include('components.traductor')
   <div class="page-container">
     @include('components.sidebar')
+        @include('components.header')
 
 
 
@@ -20,7 +21,7 @@
       <section class="songs-section">
         <!-- Encabezado visual (opcional, sin lógica) -->
         <header class="favorite-header surface">
-          <img src="{{ asset('img/like-cover.png') }}" alt="Favoritos" />
+          <img src="img/like_imagen.png" alt="Favoritos" />
           <div class="playlist-info">
             <span class="playlist-type">Lista</span>
             <h1 class="playlist-title">Canciones que te gustan</h1>
@@ -47,33 +48,7 @@
         -->
       </section>
 
-      <!-- Sección derecha: cola de reproducción (estética, estática) -->
-      <aside class="queue-section">
-        <h3>Cola de reproducción</h3>
-        <div class="queue-list">
-          <div class="queue-item">
-            <img src="https://via.placeholder.com/56" alt="Carátula">
-            <div>
-              <p class="q-title">Pista en cola</p>
-              <p class="q-artist">Artista</p>
-            </div>
-          </div>
-          <div class="queue-item">
-            <img src="https://via.placeholder.com/56" alt="Carátula">
-            <div>
-              <p class="q-title">Otra pista</p>
-              <p class="q-artist">Artista</p>
-            </div>
-          </div>
-          <div class="queue-item">
-            <img src="https://via.placeholder.com/56" alt="Carátula">
-            <div>
-              <p class="q-title">Siguiente</p>
-              <p class="q-artist">Artista</p>
-            </div>
-          </div>
-        </div>
-      </aside>
+   
 
     </main>
 

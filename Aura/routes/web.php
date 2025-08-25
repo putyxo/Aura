@@ -24,7 +24,7 @@ Route::get('/', fn() => view('welcome'))->name('welcome'); // ahora abre index
 Route::get('/welcome', fn() => view('welcome'))->name('welcome');
 Route::get('/menu', fn() => view('menu'))->name('menu');
 Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
-Route::get('/menu_album', fn() => view('menu_album'))->name('menu_album');
+Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
 Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
 Route::get('/like', fn() => view('like'))->name('like');
 Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');

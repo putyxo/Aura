@@ -9,7 +9,7 @@
 <body>
   <div class="with-sidebar">
     @include('components.sidebar')
-
+        @include('components.header')
     <main class="main-content">
       <!-- Verifica si hay artistas seguidos -->
       @if($artistasSeguidos->isEmpty())

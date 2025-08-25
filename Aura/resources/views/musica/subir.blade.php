@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-<<<<<<< HEAD
 @php
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -75,7 +74,6 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 @endphp
 
 
-=======
 /* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
 if (!function_exists('drive_extract_id')) {
     function drive_extract_id($url) {
@@ -131,7 +129,6 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 @endphp
 
 
->>>>>>> Parte-JP
 {{-- ================= SELECCIÓN DE TIPO ================= --}}
 <section class="home active">
   <h2>¿Qué deseas subir?</h2>

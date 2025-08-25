@@ -63,7 +63,7 @@
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="modal-content">
       <h3>Editar perfil</h3>
-      <form method="POST" action="{{ route('perfil.save') }}" enctype="multipart/form-data">
+      <form method="POST" action="{{ route('perfil.update') }}" enctype="multipart/form-data">
         @csrf
 
         <!-- Información básica -->

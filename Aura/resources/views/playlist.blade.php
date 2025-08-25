@@ -12,6 +12,7 @@
 <div class="app">
   <div class="with-sidebar">
     @include('components.sidebar')
+            @include('components.header')
     
     <main class="main-content">
       <div class="shell">

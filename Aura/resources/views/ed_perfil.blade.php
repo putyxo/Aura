@@ -11,6 +11,7 @@
 <body>
 @include('components.sidebar')
 @include('components.footer')
+        @include('components.header')
 @if (!function_exists('drive_image_view'))
     @php
     function drive_image_view($url) {
