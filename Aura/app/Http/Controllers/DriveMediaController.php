@@ -9,7 +9,7 @@ class DriveMediaController extends Controller
 {
     public function stream(Request $request, string $id)
     {
-        // Permite pasar url completa o solo el id
+        // Permitir pasar URL completa o solo el ID
         if (preg_match('~/d/([^/]+)~', $id, $m)) {
             $id = $m[1];
         }
@@ -20,7 +20,6 @@ class DriveMediaController extends Controller
         // Construir la URL pública de descarga de Google Drive
         $url = "https://docs.google.com/uc?export=download&id={$id}";
 
-        // Stream del archivo desde Drive hacia el navegador
         return new StreamedResponse(function () use ($url) {
             $stream = fopen($url, 'r');
             if ($stream) {
@@ -31,9 +30,18 @@ class DriveMediaController extends Controller
                 fclose($stream);
             }
         }, 200, [
-            "Content-Type" => "audio/mpeg",
-            "Cache-Control" => "no-cache, must-revalidate",
-            "Pragma" => "no-cache"
+            // Detectar el MIME usando PHP en vez de forzarlo a audio
+            "Content-Type" => $this->detectMime($url),
+            "Cache-Control" => "public, max-age=86400",
         ]);
+    }
+
+    private function detectMime(string $url): string
+    {
+        $headers = @get_headers($url, 1);
+        if ($headers && isset($headers["Content-Type"])) {
+            return is_array($headers["Content-Type"]) ? $headers["Content-Type"][0] : $headers["Content-Type"];
+        }
+        return "application/octet-stream"; // fallback
     }
 }

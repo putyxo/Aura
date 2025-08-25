@@ -8,6 +8,35 @@
   --color-a2:#d946ef;
   --shadow-lg: 0 24px 60px rgba(0,0,0,.45);
 }
+.avatar-wrap {
+  position: relative;
+  width: 180px;     /* tamaño del círculo */
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden; /* recorta lo que se salga */
+  margin: 0 auto;
+  box-shadow: 0 0 12px rgba(0,0,0,.4);
+}
+
+.avatar-wrap img.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* asegura que llene el círculo */
+  object-position: center; /* centrado por defecto */
+  display: block;
+}
+/* Por defecto */
+.avatar-wrap img.avatar-img {
+  object-fit: cover;
+  object-position: center;
+  transition: object-position .3s ease, transform .3s ease;
+}
+
+/* Ejemplo: al pasar el mouse, mover */
+.avatar-wrap img.avatar-img:hover {
+  cursor: move;
+  transform: scale(1.1); /* simula zoom */
+}
 
 body {
   font-family:'Montserrat',sans-serif;

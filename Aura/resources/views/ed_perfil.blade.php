@@ -7,35 +7,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   @vite('resources/css/ed_perfil.css')
+  <style>
+    /* Avatar circular */
+    .avatar-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto;
+      box-shadow: 0 0 12px rgba(0,0,0,.4);
+    }
+    .avatar-wrap img.avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: object-position .3s ease, transform .3s ease;
+    }
+  </style>
 </head>
 <body>
 @include('components.sidebar')
 @include('components.footer')
-@if (!function_exists('drive_image_view'))
-    @php
-    function drive_image_view($url) {
-        if (!$url) return null;
-
-        // /file/d/FILE_ID/
-        if (preg_match('~/d/([^/]+)~', $url, $m)) {
-            return "https://drive.google.com/uc?export=view&id={$m[1]}";
-        }
-
-        // ?id=FILE_ID
-        if (preg_match('~[?&]id=([^&]+)~', $url, $m)) {
-            return "https://drive.google.com/uc?export=view&id={$m[1]}";
-        }
-
-        return $url;
-    }
-    @endphp
-@endif
 
 <main class="main-content">
 
   <!-- ===== HERO PERFIL ===== -->
   <section class="profile-hero">
-    <div class="profile-banner" style="background-image: url('{{ $user->imagen_portada ? asset($user->imagen_portada) : '' }}')">
+   <div class="profile-banner"
+     style="background-image: url('{{ $user->banner ? route('media.drive', ['id' => $user->banner]) . '?v=' . time() : '' }}')">
       <div class="banner-overlay"></div>
 
       @if(Auth::check() && Auth::id() === $user->id)
@@ -73,7 +74,9 @@
 
       <div class="avatar-wrap xl">
         @if($user && $user->avatar)
-          <img class="avatar-img" src="{{ asset('storage/' . $user->avatar) }}?v={{ time() }}" alt="{{ $user->nombre_artistico ?? $user->nombre }}">
+          <img class="avatar-img"
+               src="{{ route('media.drive', ['id' => $user->avatar]) }}?v={{ time() }}"
+               alt="{{ $user->nombre_artistico ?? $user->nombre }}">
         @else
           <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
         @endif
@@ -90,7 +93,7 @@
         @forelse($albumes as $album)
           <div class="card hover-zoom">
             <div class="card-img">
-              <img src="{{ asset($album->portada ?? 'img/default-album.png') }}" alt="album">
+              <img src="{{ $album->portada ? drive_direct_url($album->portada) : asset('img/default-album.png') }}" alt="album">
               <div class="img-overlay"></div>
             </div>
             <h4>{{ $album->titulo }}</h4>
@@ -102,18 +105,17 @@
       </div>
     </div>
 
-<!-- Canciones -->
-<div class="music-column">
-  <h2><i class="fa-solid fa-music"></i> Canciones</h2>
-  <div class="grid">
-    @foreach($canciones as $song)
+    <!-- Canciones -->
+    <div class="music-column">
+      <h2><i class="fa-solid fa-music"></i> Canciones</h2>
+      <div class="grid">
+        @foreach($canciones as $song)
           @php
             $rawAudio = $song->audio_url;
             $audioUrl = null;
 
             if ($rawAudio) {
                 if (Str::contains($rawAudio, 'drive.google')) {
-                    // Extraer ID de Drive
                     if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
                         $id = $m[1];
                     } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
@@ -121,10 +123,9 @@
                     } else {
                         $id = null;
                     }
-                    // Usar SIEMPRE el proxy de Laravel
                     $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
                 } else {
-                    $audioUrl = $rawAudio; // Otro enlace externo
+                    $audioUrl = $rawAudio;
                 }
             }
           @endphp
@@ -139,10 +140,9 @@
               <p>{{ $song->duration ?? '0:00' }}</p>
             </button>
           </div>
-    @endforeach
-  </div>
-</div>
-
+        @endforeach
+      </div>
+    </div>
   </section>
 
   <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
@@ -152,7 +152,7 @@
       @forelse($lanzamientos as $item)
         <div class="card hover-zoom">
           <div class="card-img">
-            <img src="{{ asset($item['cover'] ?? 'img/default-release.png') }}" alt="release">
+            <img src="{{ $item['cover'] ? drive_direct_url($item['cover']) : asset('img/default-release.png') }}" alt="release">
             <div class="img-overlay"></div>
           </div>
           <h4>
@@ -177,7 +177,6 @@
     </div>
     <form action="{{ route('perfil.update') }}" method="POST" enctype="multipart/form-data">
       @csrf
-      <!-- Campos de edición... -->
       <div class="modal-row two-cols">
         <div class="col">
           <label>Nombre artístico actual</label>
@@ -198,7 +197,9 @@
         <div class="input-col center-content">
           <label class="file-preview avatar-edit">
             @if($user && $user->avatar)
-              <img src="{{ asset('storage/' . $user->avatar) }}?v={{ time() }}" alt="avatar">
+              <img class="avatar-img"
+                   src="{{ route('media.drive', ['id' => $user->avatar]) }}?v={{ time() }}"
+                   alt="{{ $user->nombre_artistico ?? $user->nombre }}">
             @else
               <i class="fa-solid fa-user"></i>
             @endif
@@ -208,13 +209,21 @@
         </div>
       </div>
 
+      <!-- 🔧 Control de posición del avatar -->
+      <div class="modal-row">
+        <div class="label-col">Ajustar posición</div>
+        <div class="input-col">
+          <input type="range" id="avatarPos" min="0" max="100" value="50">
+        </div>
+      </div>
+
       <!-- Banner -->
       <div class="modal-row">
         <div class="label-col">Banner</div>
         <div class="input-col">
           <label class="file-preview banner-edit">
             @if($user && $user->banner)
-              <img src="{{ asset($user->banner) }}" alt="banner">
+              <img src="{{ route('media.drive', ['id' => $user->banner]) }}?v={{ time() }}" alt="banner">
             @else
               <div class="banner-placeholder">No hay banner</div>
             @endif
@@ -242,5 +251,16 @@
 @endif
 
 @vite('resources/js/ed-perfil.js')
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const range = document.getElementById("avatarPos");
+  const img   = document.querySelector(".avatar-wrap img.avatar-img");
+  if (range && img) {
+    range.addEventListener("input", e => {
+      img.style.objectPosition = `${e.target.value}% center`;
+    });
+  }
+});
+</script>
 </body>
 </html>

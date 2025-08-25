@@ -7,15 +7,19 @@ use App\Models\Cancion;
 use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use App\Services\GoogleDriveOAuthService;
 
 class PerfilController extends Controller
 {
+    protected GoogleDriveOAuthService $drive;
+
+    public function __construct(GoogleDriveOAuthService $drive)
+    {
+        $this->drive = $drive;
+    }
+
     /**
      * Muestra el perfil de un usuario.
-     *
-     * @param int $id
-     * @return \Illuminate\View\View
      */
     public function show($id)
     {
@@ -23,7 +27,7 @@ class PerfilController extends Controller
 
         // Obtener las canciones y álbumes del usuario
         $canciones = Cancion::where('user_id', $user->id)->get();
-        $albumes = Album::where('user_id', $user->id)->get();
+        $albumes   = Album::where('user_id', $user->id)->get();
 
         // Combinar álbumes y canciones para lanzamientos
         $lanzamientos = collect();
@@ -70,7 +74,7 @@ class PerfilController extends Controller
 
         $request->validate([
             'nuevo_nombre_artistico' => 'nullable|string|max:255',
-            'bio' => 'nullable|string|max:1000',
+            'bio'    => 'nullable|string|max:1000',
             'avatar' => 'nullable|image|max:5120',
             'banner' => 'nullable|image|max:8192',
         ]);
@@ -82,16 +86,33 @@ class PerfilController extends Controller
             $user->biografia = $request->bio;
         }
 
+        // Carpeta de destino en Drive
+        $folderId = env('GOOGLE_DRIVE_UPLOAD_FOLDER_ID');
+
+        // === AVATAR en Drive ===
         if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            $path = Storage::disk('public')->put('avatars', $file);
-            $user->avatar = 'storage/' . $path;
+            $file  = $request->file('avatar');
+            $local = $file->getPathname();
+            $name  = uniqid('avatar_') . '.' . $file->getClientOriginalExtension();
+            $mime  = $file->getMimeType();
+
+            $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
+
+            // Guardamos solo el ID del archivo
+            $user->avatar = $uploaded['id'];
         }
 
+        // === BANNER en Drive ===
         if ($request->hasFile('banner')) {
-            $file = $request->file('banner');
-            $path = Storage::disk('public')->put('banners', $file);
-            $user->banner = 'storage/' . $path;
+            $file  = $request->file('banner');
+            $local = $file->getPathname();
+            $name  = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
+            $mime  = $file->getMimeType();
+
+            $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
+
+            // Guardamos solo el ID del archivo
+            $user->banner = $uploaded['id'];
         }
 
         $user->save();
