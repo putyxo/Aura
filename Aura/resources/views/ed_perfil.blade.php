@@ -116,11 +116,8 @@
         @forelse($albumes as $album)
           <div class="card hover-zoom">
             <div class="card-img">
-<<<<<<< HEAD
         <img src="{{ $album->portada ? route('media.drive', ['id' => $album->portada]) : asset('img/default-album.png') }}" alt="album">
-=======
                <img src="{{ drive_img_url($album->cover_path, 300) }}" alt="album">
->>>>>>> Parte-jp
               <div class="img-overlay"></div>
             </div>
             <h4>{{ $album->title }}</h4>
