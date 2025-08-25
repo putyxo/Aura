@@ -35,8 +35,10 @@
 
   <!-- ===== HERO PERFIL ===== -->
   <section class="profile-hero">
-   <div class="profile-banner"
-     style="background-image: url('{{ $user->banner ? route('media.drive', ['id' => $user->banner]) . '?v=' . time() : '' }}')">
+<div class="profile-banner"
+     style="background-image: url('{{ drive_img_url($user->banner, 1920) }}&v={{ time() }}')">
+</div>
+
       <div class="banner-overlay"></div>
 
       @if(Auth::check() && Auth::id() === $user->id)
@@ -74,9 +76,10 @@
 
       <div class="avatar-wrap xl">
         @if($user && $user->avatar)
-          <img class="avatar-img"
-               src="{{ route('media.drive', ['id' => $user->avatar]) }}?v={{ time() }}"
-               alt="{{ $user->nombre_artistico ?? $user->nombre }}">
+<img class="avatar-img"
+     src="{{ drive_img_url($user->avatar, 500) }}&v={{ time() }}"
+     alt="{{ $user->nombre_artistico ?? $user->nombre }}">
+
         @else
           <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
         @endif
@@ -93,11 +96,11 @@
         @forelse($albumes as $album)
           <div class="card hover-zoom">
             <div class="card-img">
-              <img src="{{ $album->portada ? drive_direct_url($album->portada) : asset('img/default-album.png') }}" alt="album">
+               <img src="{{ drive_img_url($album->cover_path, 300) }}" alt="album">
               <div class="img-overlay"></div>
             </div>
-            <h4>{{ $album->titulo }}</h4>
-            <p>{{ $album->anio ?? '' }}</p>
+            <h4>{{ $album->title }}</h4>
+            <p>Por {{ $album->user->nombre_artistico ?? $album->user->nombre }}</p>
           </div>
         @empty
           <div class="empty">No hay álbumes todavía 📀</div>
@@ -152,7 +155,7 @@
       @forelse($lanzamientos as $item)
         <div class="card hover-zoom">
           <div class="card-img">
-            <img src="{{ $item['cover'] ? drive_direct_url($item['cover']) : asset('img/default-release.png') }}" alt="release">
+            <img src="{{ $item['cover'] ? drive_img_url($item['cover'], 300) : asset('img/default-release.png') }}" alt="release">
             <div class="img-overlay"></div>
           </div>
           <h4>
