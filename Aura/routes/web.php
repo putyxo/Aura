@@ -22,7 +22,10 @@ Route::get('/', fn() => view('welcome'))->name('welcome'); // ahora abre index
 
 // ===== Páginas públicas =====
 Route::get('/welcome', fn() => view('welcome'))->name('welcome');
-Route::get('/menu', fn() => view('menu'))->name('menu');
+
+// ===== Rutas protegidas (requieren login) =====
+Route::middleware('auth')->group(function () {
+    Route::get('/menu', fn() => view('menu'))->name('menu');
 Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
 Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
 Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
@@ -31,6 +34,7 @@ Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist
 Route::get('/prueba', fn() => view('prueba'))->name('prueba');
 Route::get('/recientes', fn() => view('recientes'))->name('recientes');
 
+Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
 
 // Playlist show individual
 Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
@@ -52,8 +56,6 @@ Route::post('/perfil/unfollow/{userId}', [PerfilController::class, 'unfollow'])-
 // ===== Buscador =====
 Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
 
-// ===== Rutas protegidas (requieren login) =====
-Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', fn() => view('dashboard'))
         ->middleware(['verified'])
@@ -116,4 +118,6 @@ Route::get('/busqueda_individual', function () {
 })->name('busqueda_individual');
 
 
-    
+    Route::get('/test-helper', function () {
+    return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
+});
