@@ -1,94 +1,173 @@
-/* === RESET GENERAL === */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root{
-  /* Paleta morado oscuro + negro */
-  --bg:#0d0c13;
-  --surface:#141225;
-  --surface-2:#1a1630;
-  --ink:#ffffff;
-  --muted:#b7b7c8;
-  --line:rgba(255,255,255,.10);
-  --accent:#a78bfa;        /* morado suave */
-  --accent-2:#7c3aed;      /* morado intenso */
-  --success:#430e50;       /* verde play */
+/* ================== THEME ================== */
+:root {
+  --bg: #0b0b10;
+  --card: #11111a;
+  --text: #f6f7fb;
+  --muted: #b6b6c8;
+  --accent: #a855f7;
+  --btn-bg: #1a1b22;
+  --btn-hover: #242635;
+  --radius: 14px;
+  --shadow: 0 10px 25px rgba(0,0,0,0.5);
+  --transition: all 0.25s ease;
 }
 
-html, body { height: 100%; }
-body { font-family: 'Poppins', sans-serif; color: var(--ink); background: radial-gradient(1200px 700px at 20% -10%, #2b2550 0%, transparent 60%) , var(--bg); line-height: 1.5; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
 
-/* ===== CONTENEDOR PRINCIPAL ===== */
-.with-sidebar { display: flex; min-height: 100vh; }
-
-main.main-content{
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0,1fr) 360px; /* lista estrecha + cola derecha */
+/* ================== CARD FAVORITOS ================== */
+.favorite-card {
+  position: relative;
+  display: flex;
   gap: 24px;
-  padding: 28px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  max-width: 1250px;
+  width: 100%;
+  margin: 10px auto;
+  transition: var(--transition);
 }
 
-/* Tarjetas de superficie */
-.surface{ background: linear-gradient(180deg, var(--surface), var(--surface-2)); border:1px solid var(--line); border-radius: 16px; }
-
-/* ===== ENCABEZADO ===== */
-.favorite-header{
-  display: flex; align-items: center; gap: 20px;
-  padding: 22px; 
+.favorite-cover img {
+  width: 330px;
+  height: 330px;
+  border-radius: var(--radius);
+  object-fit: cover;
 }
-.favorite-header img{
-  width: 132px; height: 132px; object-fit: cover; border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.45);
-  border:1px solid var(--line);
+
+.favorite-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.playlist-info{ display: flex; flex-direction: column; gap: 6px; }
-.playlist-type{ font-size:.8rem; color: var(--muted); text-transform: uppercase; letter-spacing:.08em; }
-.playlist-title{ font-size: 2.2rem; font-weight: 800; }
-.playlist-user{ font-size:.95rem; color: var(--muted); }
 
-/* ===== BOTONES DE ACCIÓN ===== */
-.favorite-actions{ display:flex; align-items:center; gap:14px; margin: 18px 0 12px; }
-.favorite-actions .btn-play{
-  background: var(--success); color:#fff; border:none; width:54px; height:54px;
-  border-radius: 50%; cursor:pointer; font-size:1.4rem;
-  transition: transform .18s ease, box-shadow .18s ease;
-  box-shadow: 0 10px 18px rgba(211, 6, 187, 0.353);
+.favorite-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
-.favorite-actions .btn-play:hover{ transform: scale(1.06); }
-.favorite-actions .btn-icon{
-  background: transparent; color: var(--ink);
-  border:1px solid var(--line); padding:10px 16px; border-radius: 999px; font-size:.9rem; cursor:pointer;
+
+.favorite-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text);
 }
-.favorite-actions .btn-icon:hover{ background: rgba(255,255,255,.06); }
 
-/* ===== SECCIÓN IZQUIERDA (LISTA) ===== */
-.songs-section{ min-width: 0; }
-
-/* Cabecera de tabla y filas compactas */
-.songs-table{ display: grid; gap: 0; }
-.songs-header,
-.song-row{
-  display: grid;
-  grid-template-columns: 44px 1.6fr 1fr 0.8fr 64px; /* más estrecho */
-  align-items: center;
-  padding: 10px 8px;          /* compacto */
-  border-bottom: 1px solid var(--line);
-  background: transparent;
-}
-.songs-header{ color: var(--muted); font-size:.82rem; text-transform: uppercase; letter-spacing:.04em; }
-.song-row{ transition: background .18s ease; }
-.song-row:hover{ background: rgba(255,255,255,.04); }
-
-.song-title{ display:flex; align-items:center; gap:12px; min-width:0; }
-.song-title img{ width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid var(--line); }
-.song-meta h3{ font-size:.98rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.song-meta p{ font-size:.82rem; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-/* ===== ESTADO VACÍO ===== */
-.empty-state{ margin-top: 10px; }
-.empty-box{
-  border:1px dashed var(--line);
-  border-radius: 16px; padding: 28px;
+.favorite-user {
+  font-size: 0.9rem;
   color: var(--muted);
-  background: linear-gradient(180deg, rgba(124,58,237,.08), transparent);
+  margin-bottom: 20px;
+}
+
+.favorite-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.favorite-actions .btn {
+  background: var(--btn-bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.favorite-actions .btn:hover {
+  background: var(--btn-hover);
+}
+
+/* ================== LISTA DE LIKES ================== */
+.likes-section {
+  max-width: 1250px;
+  width: 90%;
+  margin: 30px auto;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.likes-header {
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.likes-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.like-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.like-title {
+  font-weight: 600;
+}
+
+.like-artist {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-left: 10px;
+}
+
+.like-play {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* ================== EMPTY STATE ================== */
+.empty-msg {
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 768px) {
+  .favorite-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .favorite-cover img {
+    width: 200px;
+    height: 200px;
+  }
+
+  .favorite-actions {
+    flex-direction: column;
+    width: 100%;
+  }
 }

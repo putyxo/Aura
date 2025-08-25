@@ -17,36 +17,43 @@
 
     <main class="main-content">
 
-      <!-- Sección izquierda: lista / contenido existente -->
-      <section class="songs-section">
-        <!-- Encabezado visual (opcional, sin lógica) -->
-        <header class="favorite-header surface">
-          <img src="img/like_imagen.png" alt="Favoritos" />
-          <div class="playlist-info">
-            <span class="playlist-type">Lista</span>
-            <h1 class="playlist-title">Canciones que te gustan</h1>
-            <span class="playlist-user">Tus me gusta</span>
-          </div>
-        </header>
+<div class="favorite-card">
+  <div class="favorite-cover">
+    <img src="img/like_icono.jpg" alt="Favoritos">
+  </div>
 
-        <!-- Acciones visuales (sin funcionalidad nueva) -->
-        <div class="favorite-actions">
-          <button class="btn-play" aria-label="Reproducir">&#9658;</button>
-          <button class="btn-icon">Aleatorio</button>
-          <button class="btn-icon">Descargar</button>
+  <div class="favorite-info">
+    <span class="favorite-subtitle">Lista</span>
+    <h2 class="favorite-title">Favoritos</h2>
+    <span class="favorite-user">Tus me gusta</span>
+
+    <div class="favorite-actions">
+      <button class="btn"><i class="fa-solid fa-play"></i> Reproducir</button>
+      <button class="btn"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
+    </div>
+  </div>
+</div>
+
+<section class="likes-section">
+  <h3 class="likes-header"><i class="fa-solid fa-heart"></i> Canciones que te gustan</h3>
+
+  <div class="likes-list">
+    <ul>
+      <li class="like-item">
+        <div class="like-info">
+          <span class="like-title">Título de canción</span>
+          <span class="like-artist">Artista</span>
         </div>
+        <button class="like-play"><i class="fa-solid fa-play"></i></button>
+      </li>
+      <!-- Más items aquí -->
+    </ul>
 
-        <!-- Contenido original del apartado -->
-        <div class="empty-state">
-          <div class="empty-box">
-            <h2>Aún no se ha dado like a nada</h2>
-          </div>
-        </div>
+    <!-- Estado vacío -->
+    <p class="empty-msg"><i class="fa-solid fa-circle-exclamation"></i> Aún no has dado like a ninguna canción.</p>
+  </div>
+</section>
 
-        <!--
-          aki hay q agregar lo de la funcionaliad puty
-        -->
-      </section>
 
    
 

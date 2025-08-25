@@ -30,7 +30,6 @@
 <body>
 @include('components.sidebar')
 @include('components.footer')
-<<<<<<< HEAD
         @include('components.header')
 @if (!function_exists('drive_image_view'))
     @php
@@ -51,8 +50,6 @@
     }
     @endphp
 @endif
-=======
->>>>>>> Parte-jp
 
 <main class="main-content">
 
@@ -116,7 +113,7 @@
         @forelse($albumes as $album)
           <div class="card hover-zoom">
             <div class="card-img">
-              <img src="{{ $album->portada ? drive_direct_url($album->portada) : asset('img/default-album.png') }}" alt="album">
+        <img src="{{ $album->portada ? route('media.drive', ['id' => $album->portada]) : asset('img/default-album.png') }}" alt="album">
               <div class="img-overlay"></div>
             </div>
             <h4>{{ $album->titulo }}</h4>
