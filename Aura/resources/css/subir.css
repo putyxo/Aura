@@ -102,9 +102,6 @@ body {
   border-radius: var(--r-lg);
   box-shadow: var(--shadow);
   animation: fadeIn .35s ease;
-
-  max-height: calc(100vh - 100px); /* se adapta a la pantalla */
-  overflow-y: auto;                /* scroll vertical si se llena */
 }
 
 /* ===================== BOTÓN VOLVER ===================== */
@@ -167,24 +164,24 @@ body {
   padding: 6px;
   background: rgba(255,255,255,0.03);
   margin: 0 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: auto;   /* ✅ scroll vertical */
+  overflow-x: hidden; /* evita scroll horizontal */
 }
 
 .preview img,
 .preview video,
 .preview audio {
-  width: 100%;
-  height: auto;
+  width: 100%;       /* que ocupe el ancho del preview */
+  height: auto;      /* altura libre (puede sobrepasar y activar scroll) */
   display: block;
   border-radius: var(--r-sm);
 }
 
 /* ===================== LISTA TRACKS ===================== */
 #tracks-list {
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 6px;
+  max-height: 220px;   /* ✅ límite de altura */
+  overflow-y: auto;    /* ✅ scroll cuando se llena */
+  padding-right: 6px;  /* espacio para scrollbar */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -200,12 +197,6 @@ body {
   font-size: .9rem;
 }
 
-#tracks-list .track-row {
-  display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 10px;
-  align-items: center;
-}
 
 /* ===================== CAMPOS FORM ===================== */
 .upload-form {
@@ -214,21 +205,15 @@ body {
   gap: 16px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
+.upload-form label {
   font-size: .9rem;
   font-weight: 600;
   color: var(--dim);
 }
 
-.form-group input,
-.form-group select {
-  width: 100%;
+.upload-form input[type="text"],
+.upload-form input[type="date"],
+.upload-form select {
   background: #111;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -237,26 +222,15 @@ body {
   font-size: .95rem;
   transition: border-color var(--dur), box-shadow var(--dur);
 }
-.form-group input:focus,
-.form-group select:focus {
+.upload-form input:focus,
+.upload-form select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(29,185,84,.25);
 }
 
-/* ===================== SECCIONES FORM ===================== */
-.upload-container h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-}
-
-/* ===================== BOTÓN SUBMIT ===================== */
-.upload-form button,
-#btn-submit {
+/* ===================== BOTÓN ===================== */
+.upload-form button {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
@@ -267,16 +241,25 @@ body {
   cursor: pointer;
   transition: background var(--dur), transform var(--dur), box-shadow var(--dur);
 }
-.upload-form button:hover,
-#btn-submit:hover {
+.upload-form button:hover {
   background: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0,0,0,.35);
 }
-.upload-form button:active,
-#btn-submit:active {
+.upload-form button:active {
   transform: translateY(0);
   box-shadow: none;
+}
+
+/* ===================== LISTA TRACKS ===================== */
+#tracks-list input[type="text"] {
+  width: 100%;
+  background: #111;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: .9rem;
 }
 
 /* ===================== ANIMACIONES ===================== */
@@ -291,4 +274,21 @@ body {
   .card { width: 100%; }
   .upload-container { padding: 18px; }
   .preview { max-width: 100%; }
+}
+
+/* Contenedor que podrá scrolear */
+.upload-container {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 640px;
+  margin: -130px auto;
+  padding: 28px;
+  background: var(--panel2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  animation: fadeIn .35s ease;
+
+  max-height: calc(100vh - 100px); /* ⚡ se adapta a la pantalla */
+  overflow-y: auto;                /* ⚡ scroll vertical si se llena */
 }

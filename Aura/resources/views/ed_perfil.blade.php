@@ -107,77 +107,21 @@
     </div>
   </section>
 
- <!-- ===== CONTENIDO MÚSICA ===== -->
+  <!-- ===== CONTENIDO MÚSICA ===== -->
   <section class="music-layout">
-
-    <!-- 🎵 Canciones -->
-    <div class="music-column">
-      <h2><i class="fa-solid fa-music"></i> Canciones</h2>
-      <div class="songs-list">
-        @foreach($canciones as $song)
-          @php
-            $coverUrl = $song->cover_url
-                ? drive_img_url($song->cover_url, 300)
-                : asset('img/default-cancion.png');
-            $audioUrl = $song->audio_url ? route('media.drive', ['id' => $song->audio_url]) : null;
-          @endphp
-
-          <div class="song-row">
-            <div class="song-left">
-              <img src="{{ $coverUrl }}" alt="cover">
-              <div class="song-info">
-                <h4>{{ $song->title }}</h4>
-                <p>{{ $user->nombre_artistico ?? 'Desconocido' }}</p>
-              </div>
-            </div>
-            <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
-
-            <!-- botón invisible para tu reproductor -->
-            <button class="cancion-item"
-                    style="display:none"
-                    data-src="{{ $audioUrl }}"
-                    data-title="{{ $song->title }}"
-                    data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}">
-            </button>
-
-            @if(Auth::check() && Auth::id() === $user->id)
-              <form action="{{ route('cancion.destroy', $song->id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta canción?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
-              </form>
-            @endif
-          </div>
-        @endforeach
-      </div>
-
-      <div class="view-more-btn">
-        <button id="toggleViewMore">Ver más</button>
-      </div>
-    </div>
-
-    <!-- 📀 Álbumes -->
+    <!-- Álbumes -->
     <div class="music-column">
       <h2><i class="fa-solid fa-compact-disc"></i> Álbumes</h2>
-      <div class="grid albums-grid">
+      <div class="grid">
         @forelse($albumes as $album)
-          <div class="card album-card">
-            <a href="{{ route('album.show', $album->id) }}" class="card-link">
-              <div class="card-img">
-                <img src="{{ $album->cover_path ? drive_img_url($album->cover_path, 300) : asset('img/default-album.png') }}" alt="Portada del álbum">
-                <div class="img-overlay"></div>
-              </div>
-              <h4>{{ $album->title }}</h4>
-              <p>Por {{ $album->user->nombre_artistico ?? $album->user->nombre }}</p>
-            </a>
-            @if(Auth::check() && Auth::id() === $user->id)
-              <form action="{{ route('album.destroy', $album->id) }}" method="POST" class="delete-form" onsubmit="return confirm('¿Eliminar este álbum?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
-              </form>
-            @endif
-            <div class="play-btn"><i class="fa-solid fa-play"></i></div>
+          <div class="card hover-zoom">
+            <div class="card-img">
+        <img src="{{ $album->portada ? route('media.drive', ['id' => $album->portada]) : asset('img/default-album.png') }}" alt="album">
+               <img src="{{ drive_img_url($album->cover_path, 300) }}" alt="album">
+              <div class="img-overlay"></div>
+            </div>
+            <h4>{{ $album->title }}</h4>
+            <p>Por {{ $album->user->nombre_artistico ?? $album->user->nombre }}</p>
           </div>
         @empty
           <div class="empty">No hay álbumes todavía 📀</div>
@@ -185,9 +129,47 @@
       </div>
     </div>
 
+    <!-- Canciones -->
+    <div class="music-column">
+      <h2><i class="fa-solid fa-music"></i> Canciones</h2>
+      <div class="grid">
+        @foreach($canciones as $song)
+          @php
+            $rawAudio = $song->audio_url;
+            $audioUrl = null;
+
+            if ($rawAudio) {
+                if (Str::contains($rawAudio, 'drive.google')) {
+                    if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } else {
+                        $id = null;
+                    }
+                    $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
+                } else {
+                    $audioUrl = $rawAudio;
+                }
+            }
+          @endphp
+
+          <div class="card hover-zoom">
+            <button class="cancion-item"
+              type="button"
+              data-src="{{ $audioUrl }}"
+              data-title="{{ $song->title }}"
+              data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}">
+              <h4>{{ $song->title }}</h4>
+              <p>{{ $song->duration ?? '0:00' }}</p>
+            </button>
+          </div>
+        @endforeach
+      </div>
+    </div>
   </section>
 
-  <!-- ⚡ Últimos lanzamientos -->
+  <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
   <section class="section">
     <h2><i class="fa-solid fa-bolt"></i> Últimos lanzamientos</h2>
     <div class="grid releases">
@@ -197,7 +179,9 @@
             <img src="{{ $item['cover'] ? drive_img_url($item['cover'], 300) : asset('img/default-release.png') }}" alt="release">
             <div class="img-overlay"></div>
           </div>
-          <h4>@if($item['tipo'] === 'album') 📀 @else 🎵 @endif {{ $item['titulo'] }}</h4>
+          <h4>
+            @if($item['tipo'] === 'album') 📀 @else 🎵 @endif {{ $item['titulo'] }}
+          </h4>
           <p>{{ $item['anio'] }}</p>
         </div>
       @empty
@@ -293,37 +277,14 @@
 @vite('resources/js/ed-perfil.js')
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const songsList = document.querySelector(".songs-list");
-  const viewMoreBtn = document.querySelector(".view-more-btn");
-  const toggleBtn = document.getElementById("toggleViewMore");
-
-  if (songsList && songsList.children.length > 5) {
-    viewMoreBtn.style.display = "block"; // muestra el botón si hay +5 canciones
-
-    toggleBtn.addEventListener("click", () => {
-      songsList.classList.toggle("expanded");
-
-      // texto del botón
-      toggleBtn.textContent = songsList.classList.contains("expanded")
-        ? "Ver menos ▲"
-        : "Ver más ▼";
-
-      // animación suave de scroll cuando expande
-      if (songsList.classList.contains("expanded")) {
-        songsList.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+  const range = document.getElementById("avatarPos");
+  const img   = document.querySelector(".avatar-wrap img.avatar-img");
+  if (range && img) {
+    range.addEventListener("input", e => {
+      img.style.objectPosition = `${e.target.value}% center`;
     });
   }
-
-  // 🎵 Reproducir al hacer click en fila
-  document.querySelectorAll(".song-row").forEach(row => {
-    row.addEventListener("click", () => {
-      const hiddenBtn = row.querySelector(".cancion-item");
-      if (hiddenBtn) hiddenBtn.click();
-    });
-  });
 });
-
 </script>
 </body>
 </html>

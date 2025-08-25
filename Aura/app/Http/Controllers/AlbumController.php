@@ -12,11 +12,12 @@ class AlbumController extends Controller
     /**
      * Listar todos los álbumes
      */
-public function index()
-{
-    $albumes = Album::with('user')->get(); // Trae todos los álbumes con su usuario
-    return view('album_principal', compact('albumes'));
-}
+    public function index()
+    {
+        $albums = Album::with('songs')->latest()->get();
+
+        return view('albums.index', compact('albums'));
+    }
 
     /**
      * Mostrar un álbum en específico
@@ -106,20 +107,18 @@ public function index()
     /**
      * Eliminar un álbum
      */
-public function destroy($id)
-{
-    $album = Album::findOrFail($id);
-    $userId = $album->user_id;
+    public function destroy($id)
+    {
+        $album = Album::findOrFail($id);
 
-    if ($album->cover_path && Storage::disk('public')->exists($album->cover_path)) {
-        Storage::disk('public')->delete($album->cover_path);
+        // borrar portada si existe
+        if ($album->cover_path && Storage::disk('public')->exists($album->cover_path)) {
+            Storage::disk('public')->delete($album->cover_path);
+        }
+
+        $album->delete();
+
+        return redirect()->route('albums.index')
+                         ->with('success', 'Álbum eliminado correctamente.');
     }
-
-    $album->delete();
-
-    return redirect()->route('perfil.show', $userId)
-                     ->with('success', 'Álbum eliminado correctamente.');
-}
-
-    
 }
