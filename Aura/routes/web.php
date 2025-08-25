@@ -10,6 +10,9 @@ use App\Http\Controllers\MiControlador;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CancionController;
+use App\Models\Album;
+
 
 /*
 |--------------------------------------------------------------------------|
@@ -33,6 +36,10 @@ Route::get('/like', fn() => view('like'))->name('like');
 Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
 Route::get('/prueba', fn() => view('prueba'))->name('prueba');
 Route::get('/recientes', fn() => view('recientes'))->name('recientes');
+Route::get('/albumes', function () {
+    $albumes = Album::with('user')->get();
+    return view('album_principal', compact('albumes'));
+});
 
 Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
 
@@ -70,6 +77,8 @@ Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
     Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
     Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
     Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
+    Route::delete('/album/{id}', [AlbumController::class, 'destroy'])->name('album.destroy');
+    Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
 
     // Búsqueda
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
