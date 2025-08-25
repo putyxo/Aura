@@ -18,6 +18,60 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
+if (!function_exists('drive_extract_id')) {
+    function drive_extract_id($url) {
+        if (!$url) return null;
+        $url = trim($url);
+        if (preg_match('#/file/d/([^/]+)/#i', $url, $m)) return $m[1];   // /file/d/ID/
+        if (preg_match('#[?&]id=([^&]+)#i', $url, $m)) return $m[1];     // ?id=ID
+        return null;
+    }
+}
+if (!function_exists('drive_image_view')) {
+    function drive_image_view($url) {
+        $id = drive_extract_id($url);
+        return $id ? "https://drive.google.com/uc?export=view&id={$id}" : null; // para <img>
+    }
+}
+
+/* ===== Placeholder inline para <img> ===== */
+$placeholder = 'data:image/svg+xml;utf8,' . rawurlencode(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140">
+     <rect width="100%" height="100%" rx="12" ry="12" fill="#1f2937"/>
+     <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+           font-size="14" fill="#9ca3af">Sin portada</text>
+   </svg>'
+);
+
+/* ===== Portadas de prueba desde BD para las tarjetas ===== */
+$coverSongUrl = null;
+if ($songRow = DB::table('songs')->whereNotNull('cover_path')->latest('id')->first()) {
+    $raw = $songRow->cover_path;
+    if ($raw) {
+        if (Str::startsWith($raw, ['http://', 'https://'])) {
+            $coverSongUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
+        } else {
+            $coverSongUrl = Storage::url($raw);
+        }
+    }
+}
+
+$coverAlbumUrl = null;
+if (DB::getSchemaBuilder()->hasTable('albums')) {
+    if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
+        $raw = $albRow->cover_path;
+        if ($raw) {
+            if (Str::startsWith($raw, ['http://', 'https://'])) {
+                $coverAlbumUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
+            } else {
+                $coverAlbumUrl = Storage::url($raw);
+            }
+        }
+    }
+}
+
+
 
 /* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
 if (!function_exists('drive_extract_id')) {
@@ -74,6 +128,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 @endphp
 
 
+<<<<<<< HEAD
 /* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
 if (!function_exists('drive_extract_id')) {
     function drive_extract_id($url) {
@@ -129,6 +184,8 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 @endphp
 
 
+=======
+>>>>>>> Parte-jp
 {{-- ================= SELECCIÓN DE TIPO ================= --}}
 <section class="home active">
   <h2>¿Qué deseas subir?</h2>
@@ -153,11 +210,8 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 </section>
 
 {{-- ================= FORMULARIO (cambia action según selección) ================= --}}
-<<<<<<< HEAD
 <form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-container" action="{{ route('songs.store') }}">
-=======
 <form method="post" enctype="multipart/form-data" id="uploadForm" action="{{ route('songs.store') }}">
->>>>>>> Parte-JP
   @csrf
 
   <button type="button" onclick="volverASeleccion()" class="btn-volver">Volver a elegir</button>
