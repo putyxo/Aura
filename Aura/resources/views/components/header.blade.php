@@ -164,3 +164,74 @@ if (searchInput && resultsBox) {
   });
 }
 </script>
+
+
+<script>
+// ===================== USER MENU DROPDOWN =====================
+(function initUserMenu(){
+  const root      = document.querySelector('.user-menu');
+  const btn       = document.getElementById('userMenuBtn');
+  const dropdown  = document.getElementById('userDropdown');
+
+  if (!root || !btn || !dropdown) return;
+
+  // Evita doble-bind al recargar con PJAX
+  if (btn.dataset.bound === 'true') return;
+  btn.dataset.bound = 'true';
+
+  function openMenu(){
+    root.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    dropdown.setAttribute('aria-hidden', 'false');
+  }
+  function closeMenu(){
+    root.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    dropdown.setAttribute('aria-hidden', 'true');
+  }
+  function toggleMenu(){
+    if (root.classList.contains('open')) closeMenu(); else openMenu();
+  }
+
+  // Click en el chip: abrir/cerrar
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Cerrar al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!root.contains(e.target)) closeMenu();
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // Si el dropdown tiene links, no dejes que el click cierre antes de tiempo
+  dropdown.addEventListener('click', (e) => {
+    // Permite clicks normales en enlaces y botones, pero no cierres por burbujeo
+    e.stopPropagation();
+  });
+
+  // Soporte para PJAX: re-inicializar tras navegación parcial
+  if (window.$ && $.pjax) {
+    $(document).on('pjax:success', function(){ 
+      // Re-intenta inicializar por si el header se re-renderizó
+      setTimeout(initUserMenu, 0);
+    });
+  }
+
+  // (Opcional) Autocargar avatar si usas un campo en el backend
+  try {
+    const avatarEls = root.querySelectorAll('.chip-avatar, .profile-avatar');
+    const fallback  = "{{ asset('img/default-avatar.png') }}";
+    // Si el backend ya imprime src, no hace falta esto.
+    avatarEls.forEach(img => {
+      if (!img.getAttribute('src')) img.setAttribute('src', fallback);
+    });
+  } catch (_) {}
+})();
+</script>
