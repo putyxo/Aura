@@ -15,7 +15,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+<<<<<<< HEAD
 /* ===== Helpers Drive ===== */
+=======
+/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
+>>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
 if (!function_exists('drive_extract_id')) {
     function drive_extract_id($url) {
         if (!$url) return null;
@@ -51,15 +55,86 @@ if ($song = DB::table('songs')->whereNotNull('cover_path')->latest('id')->first(
 
 $coverAlbumUrl = null;
 if (DB::getSchemaBuilder()->hasTable('albums')) {
+<<<<<<< HEAD
     if ($alb = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
         $raw = $alb->cover_path;
         $coverAlbumUrl = Str::startsWith($raw, ['http://','https://'])
             ? (Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw)
             : Storage::url($raw);
+=======
+    if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
+        $raw = $albRow->cover_path;
+        if ($raw) {
+            if (Str::startsWith($raw, ['http://', 'https://'])) {
+                $coverAlbumUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
+            } else {
+                $coverAlbumUrl = Storage::url($raw);
+            }
+        }
     }
 }
 @endphp
 
+
+/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
+if (!function_exists('drive_extract_id')) {
+    function drive_extract_id($url) {
+        if (!$url) return null;
+        $url = trim($url);
+        if (preg_match('#/file/d/([^/]+)/#i', $url, $m)) return $m[1];   // /file/d/ID/
+        if (preg_match('#[?&]id=([^&]+)#i', $url, $m)) return $m[1];     // ?id=ID
+        return null;
+    }
+}
+if (!function_exists('drive_image_view')) {
+    function drive_image_view($url) {
+        $id = drive_extract_id($url);
+        return $id ? "https://drive.google.com/uc?export=view&id={$id}" : null; // para <img>
+    }
+}
+
+/* ===== Placeholder inline para <img> ===== */
+$placeholder = 'data:image/svg+xml;utf8,' . rawurlencode(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140">
+     <rect width="100%" height="100%" rx="12" ry="12" fill="#1f2937"/>
+     <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+           font-size="14" fill="#9ca3af">Sin portada</text>
+   </svg>'
+);
+
+/* ===== Portadas de prueba desde BD para las tarjetas ===== */
+$coverSongUrl = null;
+if ($songRow = DB::table('songs')->whereNotNull('cover_path')->latest('id')->first()) {
+    $raw = $songRow->cover_path;
+    if ($raw) {
+        if (Str::startsWith($raw, ['http://', 'https://'])) {
+            $coverSongUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
+        } else {
+            $coverSongUrl = Storage::url($raw);
+        }
+    }
+}
+
+$coverAlbumUrl = null;
+if (DB::getSchemaBuilder()->hasTable('albums')) {
+    if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
+        $raw = $albRow->cover_path;
+        if ($raw) {
+            if (Str::startsWith($raw, ['http://', 'https://'])) {
+                $coverAlbumUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
+            } else {
+                $coverAlbumUrl = Storage::url($raw);
+            }
+        }
+>>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
+    }
+}
+@endphp
+
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
 {{-- ================= SELECCIÓN DE TIPO ================= --}}
 <section class="home active">
   <h2>¿Qué deseas subir?</h2>
@@ -77,10 +152,19 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   </div>
 </section>
 
+<<<<<<< HEAD
 {{-- ================= FORMULARIO (inicialmente oculto) ================= --}}
 <form method="post" enctype="multipart/form-data" id="uploadForm"
       action="{{ route('songs.store') }}"
       class="upload-container hidden">
+=======
+{{-- ================= FORMULARIO (cambia action según selección) ================= --}}
+<<<<<<< HEAD
+<form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-container" action="{{ route('songs.store') }}">
+=======
+<form method="post" enctype="multipart/form-data" id="uploadForm" action="{{ route('songs.store') }}">
+>>>>>>> Parte-JP
+>>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
   @csrf
 
   <!-- 🔙 Volver -->
