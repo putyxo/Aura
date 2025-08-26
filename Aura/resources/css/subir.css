@@ -1,294 +1,235 @@
-/* ===================== TOKENS / THEME ===================== */
-:root {
-  --bg: #0e0e14;
-  --panel: #15151f;
-  --panel2: #1d1d2b;
-  --line: rgba(255,255,255,.08);
-  --text: #f6f7fb;
-  --dim: #b6b6c8;
-  --accent: #1db954; /* verde tipo Spotify */
-  --accent-hover: #17a44a;
-
-  --r-lg: 18px;
-  --r-md: 14px;
-  --r-sm: 10px;
-  --shadow: 0 8px 28px rgba(0,0,0,.45);
-
-  --dur: .25s;
-  --ease: cubic-bezier(.2,.8,.2,1);
-}
-
-* {
-  box-sizing: border-box;
+/* ===================== Estilos Generales ===================== */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
   margin: 0;
   padding: 0;
-}
-
-body {
-  background: var(--bg);
-  font-family: 'Inter', system-ui, sans-serif;
-  color: var(--text);
-  line-height: 1.45;
-  min-height: 100vh;
-}
-
-/* ===================== SECCIÓN INICIAL ===================== */
-.home {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  gap: 30px;
-  text-align: center;
 }
 
-.home h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.5px;
-}
-
-/* ===================== CARDS ===================== */
 .container {
   display: flex;
-  gap: 24px;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .card {
-  background: var(--panel);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow);
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform var(--dur) var(--ease), 
-              box-shadow var(--dur) var(--ease),
-              border var(--dur) var(--ease);
-  width: 220px;
   text-align: center;
-  border: 1px solid transparent;
-}
-
-.card img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.card p {
-  padding: 12px;
-  font-weight: 600;
-  color: var(--dim);
+  width: 200px;
+  transition: transform 0.2s ease-in-out;
+  margin-bottom: 20px;
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 40px rgba(0,0,0,.6);
-  border-color: var(--accent);
+  transform: scale(1.05);
 }
 
-/* ===================== FORMULARIO UPLOAD ===================== */
-.upload-container {
-  display: none;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 640px;
-  margin: 30px auto;
-  padding: 28px;
-  background: var(--panel2);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
-  animation: fadeIn .35s ease;
-
-  max-height: calc(100vh - 100px); /* se adapta a la pantalla */
-  overflow-y: auto;                /* scroll vertical si se llena */
+.card img {
+  max-width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
-/* ===================== BOTÓN VOLVER ===================== */
-.btn-volver {
-  align-self: flex-start;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: var(--dim);
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: all var(--dur) var(--ease);
-}
-.btn-volver:hover {
-  border-color: var(--accent);
-  color: var(--text);
+.card p {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #333;
 }
 
-/* ===================== DROPZONES ===================== */
-.dropzone {
-  border: 2px dashed var(--line);
-  border-radius: var(--r-md);
-  background: #12121a;
-  padding: 28px;
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--dur) var(--ease);
-  min-height: 160px;
+/* ===================== Formulario ===================== */
+form {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.dropzone:hover {
-  border-color: var(--accent);
-  background: #181820;
-}
-.dropzone.dragover {
-  border-color: #fff;
-  background: #202030;
-}
-.dropzone-icon {
-  font-size: 2.2rem;
-  display: block;
-  margin-bottom: 8px;
-  color: var(--accent);
-}
-.dropzone-text {
-  font-size: .95rem;
-  color: var(--dim);
+  gap: 20px;
 }
 
-/* ==== PREVIEW BOX ==== */
-.preview {
-  width: 100%;
-  max-width: 320px;
-  height: 200px;
-  border-radius: var(--r-md);
-  border: 1px solid rgba(255,255,255,.12);
-  padding: 6px;
-  background: rgba(255,255,255,0.03);
-  margin: 0 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.preview img,
-.preview video,
-.preview audio {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: var(--r-sm);
-}
-
-/* ===================== LISTA TRACKS ===================== */
-#tracks-list {
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#tracks-list input[type="text"] {
-  width: 100%;
-  background: #111;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: var(--text);
-  padding: 8px 12px;
-  font-size: .9rem;
-}
-
-#tracks-list .track-row {
-  display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 10px;
-  align-items: center;
-}
-
-/* ===================== CAMPOS FORM ===================== */
-.upload-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-size: .9rem;
-  font-weight: 600;
-  color: var(--dim);
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  background: #111;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: var(--text);
-  padding: 10px 14px;
-  font-size: .95rem;
-  transition: border-color var(--dur), box-shadow var(--dur);
-}
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(29,185,84,.25);
-}
-
-/* ===================== SECCIONES FORM ===================== */
-.upload-container h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-}
-
-/* ===================== BOTÓN SUBMIT ===================== */
-.upload-form button,
-#btn-submit {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  font-size: 1rem;
-  padding: 14px;
+button[type="submit"] {
+  background-color: #aa029c;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: 5px;
   cursor: pointer;
-  transition: background var(--dur), transform var(--dur), box-shadow var(--dur);
-}
-.upload-form button:hover,
-#btn-submit:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35);
-}
-.upload-form button:active,
-#btn-submit:active {
-  transform: translateY(0);
-  box-shadow: none;
+  transition: background-color 0.3s ease;
 }
 
-/* ===================== ANIMACIONES ===================== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+button[type="submit"]:hover {
+  background-color: #8c017a;
 }
 
-/* ===================== RESPONSIVE ===================== */
+/* ===================== Estilos Dropzone ===================== */
+.dropzone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  background-color: #fafafa;
+  transition: background-color 0.3s, border 0.3s;
+}
+
+.dropzone-icon {
+  font-size: 36px;
+  margin-right: 10px;
+}
+
+.dropzone-text {
+  font-size: 16px;
+  color: #666;
+}
+
+.dropzone.dragover {
+  background-color: #e1e1e1;
+  border: 2px solid #aa029c;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.preview {
+  margin-top: 10px;
+}
+
+.preview img {
+  max-width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 200px;
+}
+
+.preview audio,
+.preview video {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 10px;
+}
+
+/* ===================== Formulario Canción y Álbum ===================== */
+#form-cancion, #form-album {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+input[type="text"], input[type="date"], select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+select {
+  cursor: pointer;
+}
+
+#album-dropzones {
+  display: none;
+  gap: 20px;
+  flex-direction: column;
+}
+
+#album-dropzones .dropzone {
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f4f4f4;
+}
+
+#album-dropzones .dropzone:hover {
+  background-color: #f0f0f0;
+}
+
+#tracks-list {
+  display: none;
+  gap: 10px;
+  flex-direction: column;
+}
+
+#tracks-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#tracks-list input {
+  width: 70%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* ===================== Mostrar/Ocultar Formulario ===================== */
+.hidden {
+  display: none;
+}
+
+#album-dropzones.hidden {
+  display: none;
+}
+
+#form-album.hidden {
+  display: none;
+}
+
+#form-cancion.hidden {
+  display: none;
+}
+
+/* ===================== Estilos de Hover y Estado Activo ===================== */
+#dropzone-single:hover {
+  background-color: #f4f4f4;
+}
+
+#dz-cover:hover {
+  background-color: #e0e0e0;
+}
+
+#dz-tracks:hover {
+  background-color: #e0e0e0;
+}
+
+/* ===================== Responsividad ===================== */
 @media (max-width: 768px) {
-  .container { flex-direction: column; gap: 16px; }
-  .card { width: 100%; }
-  .upload-container { padding: 18px; }
-  .preview { max-width: 100%; }
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  form {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+  }
 }

@@ -14,78 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-/* ===== Helpers Drive ===== */
-=======
-/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
->>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
-=======
-/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
->>>>>>> parte-jp
-if (!function_exists('drive_extract_id')) {
-    function drive_extract_id($url) {
-        if (!$url) return null;
-        $url = trim($url);
-        if (preg_match('#/file/d/([^/]+)/#i', $url, $m)) return $m[1];   // /file/d/ID/
-        if (preg_match('#[?&]id=([^&]+)#i', $url, $m)) return $m[1];     // ?id=ID
-        return null;
-    }
-}
-if (!function_exists('drive_image_view')) {
-    function drive_image_view($url) {
-        $id = drive_extract_id($url);
-        return $id ? "https://drive.google.com/uc?export=view&id={$id}" : null; // para <img>
-    }
-}
-
-/* ===== Placeholder inline para <img> ===== */
-$placeholder = 'data:image/svg+xml;utf8,' . rawurlencode(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140">
-     <rect width="100%" height="100%" rx="12" ry="12" fill="#1f2937"/>
-     <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-           font-size="14" fill="#9ca3af">Sin portada</text>
-   </svg>'
-);
-
-/* ===== Portadas de prueba desde BD para las tarjetas ===== */
-$coverSongUrl = null;
-if ($songRow = DB::table('songs')->whereNotNull('cover_path')->latest('id')->first()) {
-    $raw = $songRow->cover_path;
-    if ($raw) {
-        if (Str::startsWith($raw, ['http://', 'https://'])) {
-            $coverSongUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
-        } else {
-            $coverSongUrl = Storage::url($raw);
-        }
-    }
-}
-
-$coverAlbumUrl = null;
-if (DB::getSchemaBuilder()->hasTable('albums')) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    if ($alb = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
-        $raw = $alb->cover_path;
-        $coverAlbumUrl = Str::startsWith($raw, ['http://','https://'])
-            ? (Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw)
-            : Storage::url($raw);
-=======
-=======
-    if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
-        $raw = $albRow->cover_path;
-        if ($raw) {
-            if (Str::startsWith($raw, ['http://', 'https://'])) {
-                $coverAlbumUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
-            } else {
-                $coverAlbumUrl = Storage::url($raw);
-            }
-        }
-    }
-}
-
-
-
 /* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
 if (!function_exists('drive_extract_id')) {
     function drive_extract_id($url) {
@@ -127,7 +55,6 @@ if ($songRow = DB::table('songs')->whereNotNull('cover_path')->latest('id')->fir
 
 $coverAlbumUrl = null;
 if (DB::getSchemaBuilder()->hasTable('albums')) {
->>>>>>> parte-jp
     if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
         $raw = $albRow->cover_path;
         if ($raw) {
@@ -142,68 +69,6 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
 @endphp
 
 
-<<<<<<< HEAD
-/* ===== Helpers Drive (seguros si se incluyen varias veces) ===== */
-if (!function_exists('drive_extract_id')) {
-    function drive_extract_id($url) {
-        if (!$url) return null;
-        $url = trim($url);
-        if (preg_match('#/file/d/([^/]+)/#i', $url, $m)) return $m[1];   // /file/d/ID/
-        if (preg_match('#[?&]id=([^&]+)#i', $url, $m)) return $m[1];     // ?id=ID
-        return null;
-    }
-}
-if (!function_exists('drive_image_view')) {
-    function drive_image_view($url) {
-        $id = drive_extract_id($url);
-        return $id ? "https://drive.google.com/uc?export=view&id={$id}" : null; // para <img>
-    }
-}
-
-/* ===== Placeholder inline para <img> ===== */
-$placeholder = 'data:image/svg+xml;utf8,' . rawurlencode(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140">
-     <rect width="100%" height="100%" rx="12" ry="12" fill="#1f2937"/>
-     <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-           font-size="14" fill="#9ca3af">Sin portada</text>
-   </svg>'
-);
-
-/* ===== Portadas de prueba desde BD para las tarjetas ===== */
-$coverSongUrl = null;
-if ($songRow = DB::table('songs')->whereNotNull('cover_path')->latest('id')->first()) {
-    $raw = $songRow->cover_path;
-    if ($raw) {
-        if (Str::startsWith($raw, ['http://', 'https://'])) {
-            $coverSongUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
-        } else {
-            $coverSongUrl = Storage::url($raw);
-        }
-    }
-}
-
-$coverAlbumUrl = null;
-if (DB::getSchemaBuilder()->hasTable('albums')) {
-    if ($albRow = DB::table('albums')->whereNotNull('cover_path')->latest('id')->first()) {
-        $raw = $albRow->cover_path;
-        if ($raw) {
-            if (Str::startsWith($raw, ['http://', 'https://'])) {
-                $coverAlbumUrl = Str::contains($raw, 'drive.google') ? (drive_image_view($raw) ?: $raw) : $raw;
-            } else {
-                $coverAlbumUrl = Storage::url($raw);
-            }
-        }
->>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
-    }
-}
-@endphp
-
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
-=======
->>>>>>> parte-jp
 {{-- ================= SELECCIÓN DE TIPO ================= --}}
 <section class="home active">
   <h2>¿Qué deseas subir?</h2>
@@ -227,25 +92,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
   </div>
 </section>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-{{-- ================= FORMULARIO (inicialmente oculto) ================= --}}
-<form method="post" enctype="multipart/form-data" id="uploadForm"
-      action="{{ route('songs.store') }}"
-      class="upload-container hidden">
-=======
-{{-- ================= FORMULARIO (cambia action según selección) ================= --}}
-<<<<<<< HEAD
-<form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-container" action="{{ route('songs.store') }}">
-=======
 <form method="post" enctype="multipart/form-data" id="uploadForm" action="{{ route('songs.store') }}">
->>>>>>> Parte-JP
->>>>>>> parent of 8e2e122 (Merge branch 'Parte-jp' into Parte-ubitzo)
-=======
-{{-- ================= FORMULARIO (cambia action según selección) ================= --}}
-<form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-container" action="{{ route('songs.store') }}">
-<form method="post" enctype="multipart/form-data" id="uploadForm" action="{{ route('songs.store') }}">
->>>>>>> parte-jp
   @csrf
 
   <button type="button" onclick="volverASeleccion()" class="btn-volver">Volver a elegir</button>
@@ -284,21 +131,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
       <label for="categoria-cancion">Género:</label>
       <select id="categoria-cancion" name="categoria">
         <option value="">Selecciona un género</option>
-        <option value="Pop">Pop</option>
-        <option value="Rock">Rock</option>
-        <option value="Reggaeton">Reggaeton</option>
-        <option value="Rap">Rap</option>
-        <option value="Trap">Trap</option>
-        <option value="Electrónica">Electrónica</option>
-        <option value="Indie">Indie</option>
-        <option value="Jazz">Jazz</option>
-        <option value="Salsa">Salsa</option>
-        <option value="Cumbia">Cumbia</option>
-        <option value="Regional">Regional</option>
-        <option value="Metal">Metal</option>
-        <option value="Bachata">Bachata</option>
-        <option value="Reggae">Reggae</option>
-        <option value="Otro">Otro</option>
+        <!-- Géneros aquí -->
       </select>
 
       <label for="portada">Portada (opcional):</label>
@@ -314,21 +147,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
       <label for="genre">Género (opcional):</label>
       <select id="genre" name="genre">
         <option value="">Selecciona un género</option>
-        <option value="Pop">Pop</option>
-        <option value="Rock">Rock</option>
-        <option value="Reggaeton">Reggaeton</option>
-        <option value="Rap">Rap</option>
-        <option value="Trap">Trap</option>
-        <option value="Electrónica">Electrónica</option>
-        <option value="Indie">Indie</option>
-        <option value="Jazz">Jazz</option>
-        <option value="Salsa">Salsa</option>
-        <option value="Cumbia">Cumbia</option>
-        <option value="Regional">Regional</option>
-        <option value="Metal">Metal</option>
-        <option value="Bachata">Bachata</option>
-        <option value="Reggae">Reggae</option>
-        <option value="Otro">Otro</option>
+        <!-- Géneros aquí -->
       </select>
 
       <label for="release_date">Fecha de lanzamiento (opcional):</label>
@@ -338,6 +157,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
     <button type="submit" id="btn-submit">Subir</button>
   </div>
 </form>
+
 
 {{-- ===================== SCRIPT: PREVIEW LIB ===================== --}}
 <script>
@@ -364,7 +184,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
     return 'audio';
   }
 
-  function renderPreview(el, src, opts={}){
+  function renderPreview(el, src, opts={}) {
     const type = kindFrom(src, opts.type);
     el.innerHTML = '';
     const url = (typeof src === 'string') ? src : URL.createObjectURL(src);
@@ -447,7 +267,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
     form.style.display = 'flex';
 
     if (tipo === 'album') {
-      form.action = "{{ route('albums.store') }}";
+      form.action = "{{ route('albums.store') }}";  // Cambia la acción a álbum
       btnSubmit.textContent = 'Crear Álbum y Subir Canciones';
 
       titleAlbum.setAttribute('required', 'required');
@@ -462,7 +282,7 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
       formSong.classList.add('hidden');
       dzSingle.style.display = 'none';
     } else {
-      form.action = "{{ route('songs.store') }}";
+      form.action = "{{ route('songs.store') }}";  // Cambia la acción a canción
       btnSubmit.textContent = 'Subir canción';
 
       nombreInput.setAttribute('required', 'required');
@@ -551,6 +371,59 @@ if (DB::getSchemaBuilder()->hasTable('albums')) {
     initFilePreview('#cover', '#coverPreview', 'image');
     initFilePreview('#portada', '#singleCoverPreview', 'image');
   });
+
+  // === PREVIEW PORTADA ===
+  const coverInput = document.getElementById("cover");
+  const coverPreview = document.getElementById("coverPreview");
+
+  coverInput.addEventListener("change", () => {
+    coverPreview.innerHTML = ""; // limpia lo anterior
+    const file = coverInput.files[0];
+    if (file) {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      img.style.maxWidth = "100%";
+      img.style.maxHeight = "200px";
+      img.style.borderRadius = "10px";
+      coverPreview.appendChild(img);
+    }
+  });
+
+  // === PREVIEW TRACKS ===
+  const tracksInput = document.getElementById("tracks");
+  const tracksList = document.getElementById("tracks-list");
+
+  tracksInput.addEventListener("change", () => {
+    tracksList.innerHTML = "";
+    if (tracksInput.files.length > 0) {
+      tracksList.style.display = "flex"; // lo muestra
+    } else {
+      tracksList.style.display = "none"; // lo oculta si está vacío
+    }
+
+    [...tracksInput.files].forEach(file => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+
+      // Nombre del archivo
+      const name = document.createElement("span");
+      name.textContent = file.name;
+      name.style.flex = "1";
+      name.style.color = "#ccc";
+
+      // Reproductor
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = URL.createObjectURL(file);
+
+      row.appendChild(name);
+      row.appendChild(audio);
+      tracksList.appendChild(row);
+    });
+  });
+
 </script>
 
 </body>
