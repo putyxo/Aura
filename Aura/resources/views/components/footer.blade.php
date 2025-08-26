@@ -334,4 +334,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const obs=new MutationObserver(()=>bindSongEvents());
   obs.observe(document.body,{childList:true,subtree:true});
 });
+
+// 🎵 Enganchar filas de canciones en todas las páginas
+function bindRowEvents() {
+  document.querySelectorAll(".song-row").forEach(row => {
+    if (!row.dataset.bound) {
+      row.addEventListener("click", (e) => {
+        // evitar conflicto con borrar/quitar de favoritos
+        if (e.target.closest(".delete-btn")) return;
+
+        const hiddenBtn = row.querySelector(".cancion-item");
+        if (hiddenBtn) hiddenBtn.click();
+      });
+      row.dataset.bound = "true";
+    }
+  });
+}
+
+// inicializar y observar cambios dinámicos
+bindRowEvents();
+const obsRows = new MutationObserver(bindRowEvents);
+obsRows.observe(document.body, { childList: true, subtree: true });
 </script>
