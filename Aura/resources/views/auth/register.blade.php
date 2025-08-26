@@ -84,38 +84,6 @@
           
       </div>
     </div>
-
-    <div class="plans-section">
-      <h2>Elige tu plan</h2>
-      <div class="plans">
-        <div class="plan-card basic">
-          <h3>Gratis</h3>
-          <p>$0/mes</p>
-          <ul>
-            <li>Escucha aleatoria</li>
-            <li>Con anuncios</li>
-            <li>Calidad estándar</li>
-          </ul>
-        </div>
-        <div class="plan-card premium">
-          <h3>Premium</h3>
-          <p>$4.99/mes</p>
-          <ul>
-            <li>Sin anuncios</li>
-            <li>Modo offline</li>
-            <li>Mejor calidad</li>
-          </ul>
-        </div>
-        <div class="plan-card familia">
-          <h3>Familiar</h3>
-          <p>$7.99/mes</p>
-          <ul>
-            <li>Hasta 6 cuentas</li>
-            <li>Control parental</li>
-            <li>Sin anuncios</li>
-          </ul>
-        </div>
-      </div>
     </div>
   </div>
 
