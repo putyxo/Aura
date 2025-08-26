@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PlaylistController extends Controller
 {
+    public function canciones()
+{
+    return $this->belongsToMany(Cancion::class, 'playlist_cancion', 'playlist_id', 'cancion_id')
+                ->withTimestamps();
+}
     public function index()
     {
         $playlists = Playlist::where('user_id', Auth::id())

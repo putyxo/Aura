@@ -30,6 +30,15 @@ Route::middleware('auth')->group(function () {
     // 📂 Listar playlists del usuario autenticado
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
     Route::post('/api/playlists/create', [PlaylistController::class, 'quickStore']);
+    Route::get('/playlists', [PlaylistController::class, 'index'])->name('playlist');
+Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
+Route::post('/playlists/quick', [PlaylistController::class, 'quickStore'])->name('playlists.quickStore');
+
+Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
+Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong'])->name('playlists.addSong');
+Route::delete('/playlists/{playlist}/remove-song/{cancion}', [PlaylistController::class, 'removeSong'])->name('playlists.removeSong');
+
+Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
 
     // ➕ Agregar canción a playlist
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
