@@ -11,9 +11,9 @@ class Playlist extends Model
 
     protected $fillable = ['user_id','nombre','descripcion','cover_url'];
 
-public function canciones()
+public function songs()
 {
-    return $this->belongsToMany(Cancion::class, 'playlist_song', 'playlist_id', 'song_id')
+    return $this->belongsToMany(\App\Models\Cancion::class, 'playlist_song', 'playlist_id', 'song_id')
                 ->withTimestamps();
 }
 }

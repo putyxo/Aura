@@ -12,23 +12,22 @@
 <div class="app">
   <div class="with-sidebar">
     @include('components.sidebar')
-    @include('components.header')
+            @include('components.header')
     
     <main class="main-content">
       <div class="shell">
         {{-- ====== HEADER ====== --}}
         <section class="playlist-header">
-          <h1 class="playlist-title">Tus Playlists</h1>
-          <button id="accessPlaylistLink" class="btn">Acceder a Playlist</button>
+        <h1 class="playlist-title">Tus Playlists</h1>
+        <button id="accessPlaylistLink" class="btn">Acceder a Playlist</button>
 
-          {{-- Modal para ingresar link de compartir --}}
-          <div id="shareLinkModal" class="modal" hidden>
+        {{-- Modal for Entering Share Link --}}
+        <div id="shareLinkModal" class="modal" hidden>
             <button class="modal-close" id="closeShareLinkModal">×</button>
             <h3 class="modal-title">Acceder a Playlist</h3>
             <input type="text" id="shareLinkInput" placeholder="Pega el enlace aquí" />
             <button id="submitShareLink">Acceder</button>
-          </div>
-
+        </div>
           <p class="playlist-subtitle">Organiza tu música y crea la banda sonora perfecta para cada momento</p>
         </section>
 
@@ -38,9 +37,9 @@
           </div>
         @endif
 
-        {{-- ====== GRID DE PLAYLISTS ====== --}}
+       
         <section class="playlist-grid">
-          {{-- Crear nueva playlist --}}
+          {{-- Tile 0: Nueva playlist (abre modal) --}}
           <button type="button" class="tile tile-create" id="btnOpenPlaylistModal">
             <div class="tile-cover create-cover">
               <i class="fa-solid fa-plus"></i>
@@ -48,23 +47,24 @@
             <div class="tile-name traducible">Nueva playlist</div>
           </button>
 
-          {{-- Playlists del usuario --}}
+          {{-- Tiles 1..N: Playlists desde BD (últimas primero) --}}
           @forelse($playlists as $pl)
-            <a href="{{ route('playlists.show', $pl->id) }}" class="tile">
-              <div class="tile-cover">
-                @if($pl->cover_url)
-                  <img src="{{ $pl->cover_url }}" alt="Portada de {{ $pl->nombre }}">
-                @else
-                  <div class="cover-placeholder traducible">Sin portada</div>
-                @endif
-                <div class="play-btn">
-                  <i class="fa-solid fa-play"></i>
-                </div>
+          <a href="{{ route('playlists.show', $pl->id) }}" class="tile">
+            <div class="tile-cover">
+              @if($pl->cover_url)
+                <img src="{{ $pl->cover_url }}" alt="Portada de {{ $pl->nombre }}">
+              @else
+                <div class="cover-placeholder traducible">Sin portada</div>
+              @endif
+              <div class="play-btn">
+                <i class="fa-solid fa-play"></i>
               </div>
-              <div class="tile-name" title="{{ $pl->nombre }}">{{ $pl->nombre }}</div>
-              <div class="tile-count">{{ $pl->canciones_count ?? 0 }} canciones</div>
-            </a>
+            </div>
+            <div class="tile-name" title="{{ $pl->nombre }}">{{ $pl->nombre }}</div>
+            <div class="tile-count">{{ $pl->canciones_count ?? 0 }} canciones</div>
+          </a>
           @empty
+            {{-- Estado vacío --}}
             <div class="tile traducible" style="grid-column: 1 / -1; text-align: center; padding: 40px; background: var(--panel); border-radius: var(--r-lg);">
               <i class="fa-solid fa-music" style="font-size: 48px; color: var(--dim); margin-bottom: 16px;"></i>
               <h3 style="color: var(--text); margin-bottom: 8px;">Aún no tienes playlists</h3>
@@ -73,101 +73,320 @@
           @endforelse
         </section>
 
-        {{-- ====== DETALLE DE PLAYLIST ====== --}}
-        @isset($playlist)
-        <div id="playlistDetail" class="playlist-card">
+        <script>
+            const paginationButtons = document.querySelectorAll('.pagination-btn');
+            paginationButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const pageNumber = this.id.replace('page', '');
+                    // Redirect to the corresponding playlist section
+                    window.location.href = `/playlists?page=${pageNumber}`;
+                });
+            });
+        </script>
+
+        {{-- Detalle de Playlist --}}
+        <div id="playlistDetail" class="playlist-card" hidden>
+            <input type="text" id="pl_share_link" readonly>
+            <button id="copyShareLink">Copy Link</button>
           <div class="cover">
-            <img id="detailCover" src="{{ $playlist->cover_url ?? asset('img/default-cancion.png') }}" alt="Portada Playlist">
+            <img id="detailCover" src="" alt="Portada Playlist">
           </div>
           <div class="info">
-            <h2 id="detailTitle" class="title">{{ $playlist->nombre }}</h2>
-            <h3 id="detailSubtitle" class="subtitle">{{ $playlist->user->nombre ?? 'Usuario' }}</h3>
-            <span id="detailUpdate" class="update">Actualizado {{ $playlist->updated_at->diffForHumans() }}</span>
-            <p id="detailDescription" class="description">{{ $playlist->descripcion ?? '(Sin descripción)' }}</p>
+            <h2 id="detailTitle" class="title"></h2>
+            <h3 id="detailSubtitle" class="subtitle"></h3>
+            <span id="detailUpdate" class="update"></span>
+            <p id="detailDescription" class="description"></p>
             <div class="actions">
-              <button class="btn play"><i class="fa-solid fa-play"></i> Reproducir</button>
-              <button class="btn shuffle"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
+              <button class="btn play"><i class="fa-solid fa-play traducible"></i> Reproducir</button>
+              <button class="btn shuffle"><i class="fa-solid fa-shuffle traducible"></i> Aleatorio</button>
             </div>
           </div>
         </div>
-
-        {{-- ====== CANCIONES DE LA PLAYLIST ====== --}}
-        <section class="likes-section">
-          <h3 class="likes-header"><i class="fa-solid fa-music"></i> Canciones en esta playlist</h3>
-
-          <div class="songs-list">
-            @forelse($playlist->canciones as $song)
-              @php
-                $coverUrl = $song->cover_url
-                    ? drive_img_url($song->cover_url, 300)
-                    : asset('img/default-cancion.png');
-
-                $rawAudio = $song->audio_url;
-                $audioUrl = null;
-                if ($rawAudio) {
-                    if (Str::contains($rawAudio, 'drive.google')) {
-                        if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
-                            $id = $m[1];
-                        } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
-                            $id = $m[1];
-                        } else {
-                            $id = null;
-                        }
-                        $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
-                    } else {
-                        $audioUrl = $rawAudio;
-                    }
-                }
-              @endphp
-
-              <div class="song-row">
-                <div class="song-left">
-                  <img src="{{ $coverUrl }}" alt="cover">
-                  <div class="song-info">
-                    <h4>{{ $song->title }}</h4>
-                    <p>{{ $song->artist ?? 'Artista desconocido' }}</p>
-                  </div>
-                </div>
-
-                <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
-
-                <!-- botón invisible para el reproductor -->
-                <button class="cancion-item"
-                        style="display:none"
-                        data-id="{{ $song->id }}"
-                        data-src="{{ $audioUrl }}"
-                        data-title="{{ $song->title }}"
-                        data-artist="{{ $song->artist ?? 'Desconocido' }}"
-                        data-cover="{{ $coverUrl }}">
-                </button>
-
-                <!-- Botón para quitar canción -->
-                <form action="{{ route('playlists.removeSong', [$playlist->id, $song->id]) }}"
-                      method="POST"
-                      onsubmit="return confirm('¿Quitar esta canción de la playlist?')">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </form>
-              </div>
-            @empty
-              <p class="empty-msg"><i class="fa-solid fa-circle-exclamation"></i> Esta playlist aún no tiene canciones.</p>
-            @endforelse
-          </div>
-        </section>
-        @endisset
       </div>
 
-      {{-- ====== MODAL CREAR PLAYLIST ====== --}}
+      {{-- ====== MODAL ====== --}}
       <div id="playlistModalBackdrop" class="modal-backdrop" hidden></div>
+
       <div id="playlistModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <button class="modal-close" id="btnClosePlaylistModal" aria-label="Cerrar">×</button>
         <h3 id="modalTitle" class="modal-title traducible">Añadir Playlist</h3>
+
         <form id="playlistForm" action="{{ route('playlists.store') }}" method="POST" enctype="multipart/form-data" novalidate>
           @csrf
-          {{-- ... inputs de nombre, portada, descripción y link (igual a tu código anterior) ... --}}
+
+          <div class="modal-grid">
+            <!-- Columna izquierda -->
+            <div class="field" aria-live="polite">
+              <label for="pl_nombre" class="label traducible">Nombre del álbum</label>
+              <input id="pl_nombre" name="nombre" type="text" class="input" placeholder="(NOMBRE DEL ÁLBUM)" required>
+              <small class="field-msg" id="nameMsg"></small>
+            </div>
+
+            <!-- Columna derecha: Portada -->
+            <div class="cover-field">
+              <label class="label traducible" >Portada</label>
+
+              <!-- Zona de arrastre -->
+              <label for="pl_cover"
+                    class="cover-uploader"
+                    id="coverDrop"
+                    tabindex="0"
+                    aria-label="Arrastra y suelta una imagen o presiona para seleccionar">
+                <input id="pl_cover" name="portada" type="file" accept="image/*" hidden>
+
+                <!-- Vista previa -->
+                <img id="coverPreview" alt="Vista previa de la portada" />
+
+                <!-- UI vacía / instrucciones -->
+                <div class="uploader-hint" id="uploaderHint">
+                  <div class="uploader-icon">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                  </div>
+                  <div class="uploader-text traducible">
+                    <strong>Arrastra y suelta</strong> la imagen<br>
+                    <span class="muted">o haz clic para seleccionar</span>
+                  </div>
+                  <div class="uploader-meta">
+                    <span class="badge">PNG/JPG</span>
+                    <span class="badge">Máx 5MB</span>
+                  </div>
+                </div>
+
+                <!-- Overlay de estado (dragover) -->
+                <div class="uploader-overlay traducible" id="uploaderOverlay" aria-hidden="true">
+                  Suelta la imagen aquí
+                </div>
+              </label>
+
+              <small class="hint traducible">PNG/JPG hasta 5MB</small>
+              <small class="field-msg" id="coverMsg"></small>
+            </div>
+
+            <div class="field field-span2" aria-live="polite">
+              <label for="pl_desc" class="label traducible">Descripción</label>
+              <textarea id="pl_desc" name="descripcion" class="textarea" rows="4" placeholder="(Descripción)"></textarea>
+              <small class="field-msg" id="descMsg"></small>
+            </div>
+
+            <!-- Campo para link de compartir -->
+<div class="field field-span2" aria-live="polite">
+  <label for="pl_share_link" class="label traducible">Link de compartir</label>
+  <div class="share-link-container">
+    <input id="pl_share_link" name="share_link" type="text" class="input" placeholder="Generar link automáticamente" readonly>
+    <button type="button" class="btn-generate-link" id="btnGenerateLink" onclick="copyLink()">
+      <i class="fa-solid fa-link"></i>
+      <span class="traducible">Copiar Link</span>
+    </button>
+  </div>
+  <small class="hint traducible">Este link permitirá a otros acceder a tu playlist</small>
+  <small class="field-msg" id="shareLinkMsg"></small>
+</div>
+
+<script>
+function copyLink() {
+  const linkInput = document.getElementById('pl_share_link');
+  linkInput.select();
+  document.execCommand('copy');
+  alert('Link copiado: ' + linkInput.value);
+}
+</script>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn-secondary traducible" id="btnCancelPlaylist">Cancelar</button>
+            <button type="submit" class="btn-primary traducible" id="btnSubmit">Guardar</button>
+          </div>
         </form>
       </div>
+
+      <script>
+      /* ====== Apertura/Cierre de modal ====== */
+      const openBtn   = document.getElementById('btnOpenPlaylistModal');
+      const closeBtn  = document.getElementById('btnClosePlaylistModal');
+      const cancelBtn = document.getElementById('btnCancelPlaylist');
+      const backdrop  = document.getElementById('playlistModalBackdrop');
+      const modal     = document.getElementById('playlistModal');
+
+      function openModal(){
+        backdrop.hidden=false; modal.hidden=false;
+        document.documentElement.style.overflow='hidden';
+        document.getElementById('pl_nombre').focus();
+      }
+      function closeModal(){
+        backdrop.hidden=true; modal.hidden=true;
+        document.documentElement.style.overflow='';
+      }
+
+      openBtn?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+      [closeBtn, cancelBtn, backdrop].forEach(el => el?.addEventListener('click', closeModal));
+      document.addEventListener('keydown', e => { if(e.key==='Escape' && !modal.hidden) closeModal(); });
+
+      /* ====== Uploader con Drag & Drop + Validación ====== */
+      const fileInput = document.getElementById('pl_cover');
+      const dropArea  = document.getElementById('coverDrop');
+      const overlay   = document.getElementById('uploaderOverlay');
+      const hint      = document.getElementById('uploaderHint');
+      const preview   = document.getElementById('coverPreview');
+      const coverMsg  = document.getElementById('coverMsg');
+      const btnSubmit = document.getElementById('btnSubmit');
+
+      const MAX_MB = 5;
+      function showError(el, msg){
+        el.textContent = msg;
+        el.classList.add('msg-error');
+      }
+      function clearMsg(el){
+        el.textContent = '';
+        el.classList.remove('msg-error', 'msg-ok');
+      }
+      function validType(file){
+        return /^image\/(png|jpe?g|webp)$/i.test(file.type);
+      }
+      function validSize(file){
+        return file.size <= MAX_MB*1024*1024;
+      }
+      function setPreview(file){
+        const url = URL.createObjectURL(file);
+        preview.src = url;
+        preview.style.display='block';
+        hint.style.display='none';
+        dropArea.classList.add('has-preview');
+      }
+
+      ['dragenter','dragover'].forEach(evt => {
+        dropArea.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          dropArea.classList.add('is-dragover');
+          overlay.style.opacity = '1';
+        });
+      });
+      ['dragleave','drop'].forEach(evt => {
+        dropArea.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          dropArea.classList.remove('is-dragover');
+          overlay.style.opacity = '0';
+        });
+      });
+
+      dropArea.addEventListener('drop', e => {
+        const file = e.dataTransfer.files?.[0]; if(!file) return;
+        clearMsg(coverMsg);
+        if(!validType(file)){ showError(coverMsg, 'Formato no permitido. Usa PNG/JPG.'); return; }
+        if(!validSize(file)){ showError(coverMsg, `El archivo supera ${MAX_MB}MB.`); return; }
+        const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
+        setPreview(file);
+      });
+
+      fileInput?.addEventListener('change', e => {
+        const file = e.target.files?.[0]; if(!file) return;
+        clearMsg(coverMsg);
+        if(!validType(file)){ showError(coverMsg, 'Formato no permitido. Usa PNG/JPG.'); fileInput.value=''; return; }
+        if(!validSize(file)){ showError(coverMsg, `El archivo supera ${MAX_MB}MB.`); fileInput.value=''; return; }
+        setPreview(file);
+      });
+
+      /* ====== Validación mínima del formulario ====== */
+      document.getElementById('playlistForm')?.addEventListener('submit', (e)=>{
+        let ok = true;
+        const name = document.getElementById('pl_nombre');
+        const nameMsg = document.getElementById('nameMsg');
+        clearMsg(nameMsg); clearMsg(coverMsg);
+
+        if(!name.value.trim()){
+          showError(nameMsg, 'Ingresa un nombre.'); ok = false;
+        }
+        if(fileInput.files.length===0){
+          showError(coverMsg, 'Agrega una portada.'); ok = false;
+        }
+        if(!ok){ e.preventDefault(); }
+      });
+
+
+      /* ====== Mostrar detalle de playlist ====== */
+      document.querySelectorAll('.tile').forEach(tile => {
+        tile.addEventListener('click', () => {
+          if(tile.classList.contains('tile-create')) return; // no abrir en "nueva playlist"
+
+          const nombre = tile.dataset.nombre;
+          const cover  = tile.dataset.cover;
+          const desc   = tile.dataset.desc;
+          const updated= tile.dataset.updated;
+          const sub    = tile.dataset.subtitle;
+
+          document.getElementById('detailTitle').textContent = nombre;
+          document.getElementById('detailSubtitle').textContent = sub;
+          document.getElementById('detailUpdate').textContent = updated;
+          document.getElementById('detailDescription').textContent = desc || '(Sin descripción)';
+          document.getElementById('detailCover').src = cover || 'https://via.placeholder.com/250x250.png?text=Cover';
+
+          document.getElementById('playlistDetail').hidden = false;
+        });
+      });
+      </script>
+
+      <script>
+      /* ====== Modal for Accessing Playlist via Share Link ====== */
+      const accessPlaylistBtn = document.getElementById('accessPlaylistLink');
+      const closeShareLinkModal = document.getElementById('closeShareLinkModal');
+      const submitShareLink = document.getElementById('submitShareLink');
+      const shareLinkModal = document.getElementById('shareLinkModal');
+      const shareLinkInput = document.getElementById('shareLinkInput');
+
+      accessPlaylistBtn?.addEventListener('click', function() {
+          console.log('Access Playlist button clicked'); // Debugging
+          shareLinkModal.hidden = false;
+          shareLinkInput.focus();
+      });
+
+      closeShareLinkModal?.addEventListener('click', function() {
+          shareLinkModal.hidden = true;
+          shareLinkInput.value = '';
+      });
+
+      submitShareLink?.addEventListener('click', function() {
+          const link = shareLinkInput.value.trim();
+          
+          if (!link) {
+              alert('Por favor, ingresa un enlace válido');
+              return;
+          }
+
+          // Extract the share code from the URL (handle both full URL and just the code)
+          let shareCode = link;
+          if (link.includes('/')) {
+              const parts = link.split('/');
+              shareCode = parts[parts.length - 1];
+          }
+
+          // Make an AJAX request to fetch the playlist using the share code
+          fetch(`/api/playlists/share/${shareCode}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Playlist no encontrada');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  if (data.success) {
+                      // Redirect to the playlist view
+                      window.location.href = `/playlists/${data.playlist.id}`;
+                  } else {
+                      alert('Error al acceder a la playlist: ' + (data.error || 'Error desconocido'));
+                  }
+              })
+              .catch(error => {
+                  console.error('Error fetching playlist:', error);
+                  alert('No se pudo encontrar la playlist. Verifica que el enlace sea correcto.');
+              });
+      });
+
+      // Allow pressing Enter to submit
+      shareLinkInput?.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+              submitShareLink.click();
+          }
+      });
+      </script>
     </main>
     @include('components.footer')
   </div>
