@@ -151,70 +151,32 @@
   text-overflow:ellipsis;
 }
 
-/* Link clickeable sin borde real */
-.profile-card-link{
+.profile-card-link {
   display:block;
   text-decoration:none;
   color:inherit;
-  border-radius:14px;
-  /* nada de border aquí */
-  transition: box-shadow .2s, transform .1s;
+  border-radius:14px;  
+  border:2px solid transparent;          /* sin borde normal */
+  overflow:hidden;                       /* respeta esquinas */
+  transition: border-color .2s, box-shadow .2s, transform .1s;
 }
 
-/* Fondo y padding SOLO en el interior */
-.profile-grid{
-  position:relative;
+.profile-card-link:hover {
+  border-color:#a855f7;                  /* borde morado */
+  box-shadow:0 0 12px rgba(168,85,247,.6);
+  transform:translateY(-1px);
+}
+
+/* Fondo solo en el grid, sin borde */
+.profile-grid {
   display:grid;
   grid-template-columns:auto 1fr;
   gap:12px;
   align-items:center;
   padding:12px;
-  border-radius:14px;               /* igual que el link */
+  border-radius:inherit;                  /* hereda esquinas */
   background: linear-gradient(180deg,#15192a,#0f1120);
-  /* asegura que el contenido no “rompa” las esquinas */
-  overflow:hidden;
-  /* quita cualquier borde viejo que tuvieras */
-  border: none !important;
-  box-shadow: none !important;
 }
-
-/* “Borde” perfecto al hover: es un halo exterior (no invade el interior) */
-.profile-card-link:hover{
-  /* primer shadow: aro fino (borde), segundo: glow */
-  box-shadow:
-    0 0 0 2px #a855f7,                /* aro morado */
-    0 0 14px rgba(168,85,247,.55);    /* glow */
-  transform: translateY(-1px);
-}
-
-/* Avatar y textos como antes */
-.avatar-wrap{ width:52px; height:52px; flex-shrink:0; }
-.profile-avatar{
-  width:100%; height:100%;
-  border-radius:12px; object-fit:cover;
-  border:1px solid rgba(255,255,255,.1);
-  background:#222;
-}
-.id-block{ min-width:0; display:flex; flex-direction:column; justify-content:center; }
-.profile-name{
-  font-weight:700; font-size:15px; color:#f5f5f5;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.profile-email{
-  font-size:12px; color:#b6b6c8; margin-top:3px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-
-/* (Importante) el contenedor del dropdown NO debe añadir borde extra alrededor */
-.dropdown-menu{
-  padding:8px;              /* ok */
-  border:1px solid var(--color-line);
-  border-radius:14px;
-}
-
-/* Si tenías otro borde en .profile-grid o .profile-card-link en otra hoja,
-   este selector lo neutraliza para evitar el “doblez” */
-.profile-card-link .profile-grid{ border:0 !important; }
 
 
 
