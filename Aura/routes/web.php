@@ -41,8 +41,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/prueba', fn() => view('prueba'))->name('prueba');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
 
+
     // Albumes
-    Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
+// En web.php
+Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
+
     Route::get('/albumes', function () {
         $albumes = Album::with('user')->get();
         return view('album_principal', compact('albumes'));
@@ -84,9 +87,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Música
-    Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
-    Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
-    Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
+// Ruta para mostrar el formulario de subida (GET)
+Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
+
+// Ruta para manejar la subida de canciones (POST)
+Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
+
+// Ruta para manejar la subida de álbumes (POST)
+Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
+
+
     Route::delete('/album/{id}', [AlbumController::class, 'destroy'])->name('album.destroy');
     Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
 

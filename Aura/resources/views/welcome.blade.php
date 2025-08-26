@@ -1,497 +1,278 @@
-@vite('resources/css/welcome.css')
 
-
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="//db.onlinewebfonts.com/c/3d85dc16e94da9358d451666fdbc3398?family=Circular+Medium" rel="stylesheet" type="text/css"/>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA</title>
+    @vite('resources/css/welcome.css')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.mshr.app/mesh/1734362949630">
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        <title>AURA</title>
-    </head>
 
-    
-  
-    <body>
-      <div class="bg-main">
-       <div class="bg-main-img"></div>
-      </div>
-      
-      <header class="navbar navbar-dark navbar-fixed-top" role="banner">
-             <div class="container">
-                <div class="navbar-header">
-                    <a href="#">
-                        <span class="navbar-logo">Aura</span>
-                    </a>
-                </div>
-
-                <nav class="collapse navbar-collapse" id="navbar-nav" role="">
-                     <ul class="nav navbar-nav navbar-right nav-main">
-    <li class="hidden">
-        <a href="../html/menu.php" id="nav-link-Explore">menu</a>
-    </li>
-
-    <li>
-        <a href="mailto:estudiante20240341@cdb.edu.sv?subject=Consulta%20sobre%20AURA" class="nav-btn" id="nav-link-help">Ayuda</a>
-
-    </li>
-
-    <li>
-        <a href="login" class="nav-btn" id="header-login-link">Iniciar Sesión</a>
-    </li>
-
-    <li>
-        <a href="seleccionar-tipo" class="nav-btn" id="header-register-link">Registrarse</a>
-    </li>
-</ul>
+</head>
+        <!-- Nueva sección de auriculares -->
+        <section class="aurionas-section">
+            <div class="aurionas-container">
+                <nav class="aurionas-nav">
+                    <div class="aurionas-logo">
+                        <img src="img/logo 2.png" alt="AURA Logo" class="nav-logo-image">
+                        <span class="logo-text"></span>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                    <a href="login" class="nav-btn" id="header-login-link">Iniciar Sesión</a>
+                    <a href="seleccionar-tipo" class="nav-btn" id="header-login-link">Registrate</a>
+                    </div>
                 </nav>
-            </div>
-        </header>
-      
-      <div class="jumbotron">
-            <div class="container">
-                <div id="carousel-tour" class="carousel slide" data-ride="carousel" data-interval="false">
-
-                    <!-- Indicators -->
-                    <ol class="carousel-indicators">
-                        <li data-target="#carousel-tour" data-slide-to="0" class="active js-button-hero-carousel-dots"></li>
-                        <li data-target="#carousel-tour" data-slide-to="1" class="js-button-hero-carousel-dots"></li>
-                        <li data-target="#carousel-tour" data-slide-to="2" class="js-button-hero-carousel-dots"></li>
-                        <li data-target="#carousel-tour" data-slide-to="3" class="js-button-hero-carousel-dots"></li>
-                    </ol>
-                    <div class="carousel-inner" role="listbox" style="height: 307px;">
-                        <div class="item active">
-                            <h1>
-                                <span class="text-white">
-                                    3 Meses Premium por $0.99.
-                                </span>
-                            </h1>
-                            <a href="../AURA_V4/html/register.php" class="btn btn-lg btn-solid js-button-hero-get-premium">
-                                Leer más
-                            </a>
-                            <p class="text-center text-white text-signup">
-                                O regístrate en nuestro <a href="../AURA_V4/html/register.php" class="js-goto-signup">servicio gratuito</a>
-                            </p>
+                
+                <div class="aurionas-content">
+                    <div class="content-left">
+                        <h1 class="main-title">AURA</h1>
+                        <p class="description">Tu arte merece ser escuchado, tu talento merece brillar.</p>
+                        <button class="preorder-btn">Inicia ya!</button>
+                    </div>
+                    
+                   <div class="content-center">
+                        <div class="headphones-container">
+                            <img src="img/auriculares.pgn.png" alt="Auriculares Aurionas" class="headphones-image">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="battery-info">
+                            <div class="battery-circle">
+                                <div class="battery-progress"></div>
+                                <div class="battery-number">60</div>
+                                <div class="battery-label">Hours</div>
+                            </div>
+                            <h3>Extended<br>Battery Life</h3>
+                            <p>A powerful battery that keeps the music playing.</p>
                         </div>
                         
-                        <div class="item">
-                            <h1>
-                                <span class="text-white">
-                                    Plan Premium familiar por<br>por solo $14.00.
-                                </span>
-                            </h1>
-                            <a href="../AURA_V4/html/register.php" class="btn btn-lg btn-solid js-button-hero-family">
-                                Leer más
+                        <div class="charging-info">
+                            <span class="charging-icon">⚡</span>
+                            <span class="charging-text">Fast Charging</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <main>
+
+            <section class="ai-solutions">
+                <div class="ai-content">
+                    <div class="animated-text-container">
+                        <h2 class="overlay-text">Donde la nueva generación de artistas salvadoreños encuentra su escenario digital</h2>
+                        <span class="animated-letter">A</span>
+                        <span class="animated-letter">U</span>
+                        <span class="animated-letter">R</span>
+                        <span class="animated-letter">A</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-number">Música</div>
+                        <div class="stat-label">Artistas nuevos cada semana</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">Playlist</div>
+                        <div class="stat-label">Escoge a tus favoritos</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">Nuevos lanzamientos</div>
+                        <div class="stat-label">Lo más nuevo del momento</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Business Section -->
+            <section class="business-section">
+                <div class="business-container">
+                    <div class="business-content">
+                        <div class="business-text">
+                            <h2>AURA<br>¿Qué somos?</h2>
+                            <p>Nos enfocamos en ayudar al talento emergente de El Salvador, apoyando a pequeños artistas permitiendole subir música y albumnes, asi tmabién brindale beneficios a los usuarios</p>
+                            <a href="#" class="btn-get-started">Get Started</a>
+                        </div>
+                        <div class="business-features">
+                            <div class="feature-item">
+                                <div class="feature-icon rewards">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Reconocimiento a artistas internacionales</h3>
+                                    <p>Contamos con algunos artistas internacionales, para que siempre estes en sintonia</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon secured">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Seguridad</h3>
+                                    <p>Ofrecemos seguridad a los usuarios brindandole proteción en todo momento, incluso a la hora del pago</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon transfer">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M9 11H15L12 8L9 11ZM12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12S7.59 4 12 4 20 7.59 20 12 16.41 20 12 20Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Planes</h3>
+                                    <p>Contamos con planes para que puedas disfrutar de más beneficios</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Billing Section -->
+            <section class="billing-section">
+                <div class="billing-container">
+                    <div class="billing-mockup">
+                        <div class="paypal-card">
+                            <div class="paypal-header">
+                                <div class="paypal-logo">Analu Dada</div>
+                                <div class="paypal-balance">12 meses</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="transaction-list">
+                            <div class="transaction-header">Popular Hot Artist</div>
+                            <div class="transaction-item">
+                                <div class="transaction-icon dribbble"></div>
+                                <div class="transaction-info">
+                                    <div class="transaction-name">Analu Dada</div>
+                                    <div class="transaction-date">Singer</div>
+                                </div>
+                                <div class="transaction-amount">86.6k</div>
+                            </div>
+                            <div class="transaction-item">
+                                <div class="transaction-icon netflix"></div>
+                                <div class="transaction-info">
+                                    <div class="transaction-name">Dasokeii</div>
+                                    <div class="transaction-date">Singer</div>
+                                </div>
+                                <div class="transaction-amount">10.6k</div>
+                            </div>
+                            <div class="transaction-item">
+                                <div class="transaction-icon cash"></div>
+                                <div class="transaction-info">
+                                    <div class="transaction-name">Fuerza Regida</div>
+                                    <div class="transaction-date">Artist</div>
+                                </div>
+                                <div class="transaction-amount">36.4M</div>
+                            </div>
+                            <div class="success-message">
+                                <div class="success-icon">✓</div>
+                                Artistas verificados 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="billing-content">
+                        <h2>Hot Top<br>Artist</h2>
+                        <p>Nuestros artistas verificados más escuchados y seleccionados por los usuarios.</p>
+                        <div class="app-downloads">
+                            <a href="#" class="app-store-btn">
+                                <img src="img/artista 1.jpeg" alt="App Store">
+                            </a>
+                            <a href="#" class="google-play-btn">
+                                <img src="img/artista 2.jpeg" alt="Google Play">
                             </a>
                         </div>
-
-                        <div class="item">
-                            <h1>
-                                <span class="text-white">
-                                    Los estudiantes tienen un 50% de descunento en plan premium
-                                </span>
-                            </h1>
-                            <a href="../AURA_V4/html/register.php" class="btn btn-lg btn-solid js-button-hero-premium">
-                                Leer más
-                            </a>
-                        </div>
-
-                        <div class="item">
-                            <h1>
-                                <span class="text-white">
-                                   Escucha AURA en todas partes y se parte de una grandiosa experiencia musical
-                                </span>
-                            </h1>
-                            <a href="../AURA_V4/html/register.php" class="btn btn-lg btn-solid js-button-hero-playstation">
-                                Leer más 
-                            </a>
-                        </div>
-                    </div>
-
-                     <!--Controls-->
-                     <a class="left carousel-control js-button-hero-carousel-left-arrow" href="#carousel-tour" data-slide="prev">
-                        <span class="icon-prev"></span>
-                        <span class="sr-only">Previous</span>
-                     </a>
-                     <a class="right carousel-control js-button-hero-carousel-right-arrow" href="#carousel-tour" data-slide="next">
-                        <span class="icon-next"></span>
-                        <span class="sr-only">Next</span>  
-                     </a>
-                </div>
-            </div>
-        </div>
-
-      <div class="container">
-        <a class="btn-scroll" name="whats-on-spotify" href="#whats-on-spotify">
-          <span class="btn-scroll-text">Leer más acerca de AURA</span>
-        </a>
-      </div>
-      
-      <div class="jumbotron jumbotron-whats-on bg-white">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-7 col-sm-push-5 col-md-5 col-md-push-7">
-                        <h2 class="text-klein-purple">
-                        Que es AURA?
-                        </h2>
-                        <div>
-                            <h3 class="text-klein-purple">
-                            Música
-                            </h3>
-                            <p>
-                                Hay millones de canciones en Aura. Escucha tus favoritas, descubre nuevos temas y apoya a los artistas salvadoreños que están comenzando.
-                            </p>
-                        </div>
-                        <div>
-                            <h3 class="text-klein-purple">
-                                Playlists
-                            </h3>
-                            <p>
-                                Álbumes de tus artistas favoritos, con sugerencias de artistas salvadoreños y talentos similares según tus gustos.
-                            </p>
-                        </div>
-                        <div>
-                            <h3 class="text-klein-purple">
-                                Nuevos lanzamientos
-                            </h3>
-                            <p>
-                                Los nuevos lanzamientos que no te puedes perder: descubre la música más reciente de artistas salvadoreños y encuentra tu próxima canción favorita.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-5 col-sm-pull-7 col-md-6 col-md-pull-5">
-                        <div class="albums row">
-                            <img src="../AURA_V4//img/2l.jpg"
-                            class="album-img col-sm-6"/>
-
-                            <img src="../AURA_V4/img/1l.webp"
-                                class="album-img col-sm-6"/>
-                            <img src="../AURA_V4/img/3l.avif"
-                                class="album-img col-sm-6"/>
-                            <img src="../AURA_V4/img/l4.jpg"
-                                class="album-img col-sm-6"/>
-                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="jumbotron">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-4 text-lef text-white">
-                        <div>
-                            <h2>
-                                Es fácil.
-                            </h2>
-                        </div>
-                        <div>
-                            <h3 class="text-aquamarine">
-                                Buscar
-                            </h3>
-                            <p>
-                                ¿Ya sabes qué quieres escuchar? Solo búscalo y dale play.
-                            </p>
-                        </div>
-                        <div>
-                            <h3 class="text-aquamarine">
-                                Explorar
-                            </h3>
-                            <p>
-                                Revisa los rankings más recientes, nuevos lanzamientos de artistas salvadoreños y playlists creadas para ti.
-                            </p>
-                        </div>
-                        <div>
-                            <h3 class="text-aquamarine">
-                                Descubrir
-                            </h3>
-                            <p>
-                                Cada semana, disfruta música nueva con tu playlist personalizada o relájate escuchando Radio, descubriendo talentos salvadoreños y artistas similares a tus gustos.
-                            </p>
-                        </div>
+            </section>
+
+            <!-- Card Deal Section -->
+            <section class="card-deal-section">
+                <div class="card-deal-container">
+                    <div class="card-deal-content">
+                        <h2>Conoce <br>más sobre el talento salvadoreño.</h2>
+                        <p>Registrate / Inicia sesión con nostros para conocer más sobre la música de los talentos salvadoreños </p>
+                        <a href="#" class="btn-get-started">Inicia ya!</a>
                     </div>
-                    <div class="devices-container grid-overflow">
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <div class="iphone iphone-1">
-                                    <img src="../AURA_V4/img/fgdsgrsdgsrd.jpg">
-                                </div>
+                    <div class="card-deal-mockup">
+                        <div class="online-analysis">
+                            <div class="analysis-header">
+                                <div class="analysis-icon"></div>
+                                <span>Fuerza Regida</span>
                             </div>
-                            <div class="col-xs-4">
-                                <div class="iphone iphone-2">
-                                    <img src="../AURA_V4/img/iqqaj3p3t4w61.jpg">
+                            <div class="analysis-content">
+                                <div class="analysis-item">
+                                    <span>Tu sancho</span>
+                                    <span>261,627,981</span>
                                 </div>
-                                <div class="iphone iphone-3">
-                                    <img src="https://imag.malavida.com/mvimgbig/download-fs/spotify-10503-10.jpg">
+                                <div class="analysis-item">
+                                    <span>Malboro Rojo</span>
+                                    <span>242,467,608</span>
                                 </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="iphone iphone-4">
-                                    <img src="https://imag.malavida.com/mvimgbig/download-fs/spotify-10503-4.jpg">
+                                <div class="analysis-item">
+                                    <span>Coqueta</span>
+                                    <span>256,944,845</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-<!-- section: all devices -->
-        <div class="jumbotron jumbotron-devices">
-            <div class="container">
-                <img class="center-block" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Different_devices_light.svg/748px-Different_devices_light.svg.png?20170306214050">
-                <div>
-                    <h2>
-                        <span class="text-white">
-                            Una cuenta. Escucha en todos lados.
-                        </span>
-                    </h2>
+            </section>
+            
+            </section>
+            
+            </section>
+            
+            
+            <!-- Footer -->
+            <footer class="main-footer">
+                <div class="footer-container">
+                    <div class="footer-content">
+                        <!-- Logo y descripción -->
+                        <div class="footer-section">
+                            </div>
+                        
+                        <!-- Enlaces rápidos -->
+                        <div class="footer-section">
+                        <!-- Contacto -->
+                        <div class="footer-section">
+                            <h4 class="footer-title">Contacto</h4>
+                            <div class="contact-info">
+                                <p>📧 aura@gmail.com</p>
+                                <p>📞 +503 2222-3333</p>
+                                <p>📍 San Salvador, El Salvador</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Copyright -->
+                    <div class="footer-bottom">
+                        <div class="footer-divider"></div>
+                        <div class="copyright">
+                            <p>&copy; 2025 AURA. Todos los derechos reservados. Hecho con amor en El Salvador.</p>
+                        </div>
+                    </div>
                 </div>
-                <ul class="device-list text-white">
-                    <li>MÓVIL</li>
-                    <li>COMPUTADORA</li>
-                    <li>TABLETA</li>
-                    <li>PARLANTE</li>
-                    <li> SITIO WEB</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="jumbotron jumbotron-subscriptions">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-10">
-                        <div class="row">
-                            <div class="col-sm-10 col-lg-8">
-                                <div>
-                                    <h1>
-                                        <span class="text-white">
-                                            Ve por la música.
-                                        </span>
-                                    </h1>
-                                </div>
-                                <div>
-                                    <p class="text-white">
-                                        Escucha gratis.
-                                        <br>
-                                        O hazte Premium para escuchar a demanda, en cualquier lugar.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-10">
-                                <div>
-                                    <h3 class="price-title text-aquamarine">AURA</h3>
-                                    <h3 class="price text-white">
-                                        $0.00 <span class="month text-aquamarine"> / MES</span>                                        
-                                    </h3>
-                                    <div class="clearfix"></div>
-                                    <ul class="details-subscriptions text-white">
-                                        <li>
-                                            Disfruta tus álbumes y artistas favoritos, con anuncios ocasionales.
-                                        </li>
-                                    </ul>
-                                    <a href="../AURA_V4/html/register.php" class="btn btn-solid">
-                                        OBTEN AURA GRATIS
-                                    </a>
-                                </div>
-                            
-                            <div class="clearfix"></div>
-
-
-
-                                <div class="animated animatedFadeInUp fadeInUp">
-                                    <h3 class="price-title text-aquamarine">
-                                        AURA Premium
-                                    </h3>
-                                    <h3 class="price text-white">
-                                        $0.99 <span class="month text-aquamarine"> /3 MESES</span>
-                                    </h3>
-                                    <div class="clearfix"></div>
-                                    <div class="tour-variation">
-                                        <p class="h3-sub text-white"><a href="/us/family">Ofertas para Familiares </a> y <a href="/us/studants">Estudiantes</a> disponibles</p>
-                                        
-                                        <p class="h3-sub text-white">Solo $9.99/mes después.</p>
-                                    </div>
-                                    <div class="clearfix"></div>
-
-                                    <ul class="details-subscriptions text-white">
-                                        <li>
-                                            Escucha a demanda.
-                                        </li>
-                                        <li>
-                                            Escucha sin conexión.
-                                        </li>
-                                        <li>
-                                            Sin anuncios.
-                                        </li>
-                                        <li>
-                                            Audio de alta calidad.
-                                        </li>
-                                    </ul>
-                                    <a href="#" class="btn btn-solid">
-                                        OBTEN AURA PREMIUM
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid-overflow hidden-xs hidden-sm">
-                        <div class="animated animatedFadeInUp fadeInUp">
-                            <div class="nexus">
-                                <img src="../AURA_V4/img/kizao.webp">
-                            </div>
-                        </div>
-                    </div>                        
-                </div>
-                <p class="text-center legal text-white">
-                    Solo $9.99/mes después. Oferta no disponible para usuarios.
-                </p>
-            </div>
-        </div>
-
-        <!-- section: footer -->
-        <footer role="contentinfo" class="footer footer-highlight-aquamarine">
-            <div class="container">
-                <nav class="row">
-        <!-- section: footer: icon -->
-                    <div class="col-xs-12 col-md-2">
-                        <div class="footer-logo">
-                            <a href="#">AURA</a>
-                        </div>
-                    </div>
-        <!-- section: footer: 1st column -->
-                    <div class="col-xs-6 col-sm-4 col-md-2">
-                        <h3 class="nav-title">EMPRESA</h3>
-                        <ul class="nav">
-                            <li>
-                                <a href="#" id="nav-link-about">
-                                    Acerca de
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" id="nav-link-jobs">
-                                    Empleos
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" id="nav-link-press">
-                                    Prensa
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" id="nav-link-news">
-                                    Noticias
-                                </a>
-                            </li>       
-                        </ul>
-                    </div>
-        <!-- section: footer: 2nd column -->
-                    <div class="col-xs-6 col-sm-4 col-md-2">
-                        <h3 class="nav-title">COMUNIDADES</h3>
-                        <ul class="nav">
-                            <li>
-                                <a href="#" id="nav-link-artists">
-                                    Para Artistas
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#" id="nav-link-developers">
-                                    Desarrolladores    
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="#" id="nav-link-brands">
-                                    Marcas    
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-        <!-- section: footer: 3rd column -->
-                    <div class="col-xs-6 col-sm-4 col-md-2">
-                        <h3 class="nav-title">ENLACES ÚTILES</h3>
-                        <ul class="nav">
-                            <li>
-                                <a href="#" id="nav-link-help">
-                                    Ayuda
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" id="nav-link-gift">
-                                    Regalos   
-                                </a>
-                            </li>
-                            <li class="hidden-xs">
-                                <a href="#" id="nav-link-play">
-                                    Web Player    
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-            <!-- section: footer: social -->
-                    <div class="col-xs-12 col-md-4 col-social">
-                        <ul class="nav">
-                            <li>
-                              <a href="#">
-                                <img alt="instagram" src="https://cdn-icons-png.flaticon.com/512/87/87390.png"></a>
-                            </li>
-                            <li>
-                              <a href="#">
-                                <img alt="twitter" src="https://cdn-icons-png.flaticon.com/512/733/733635.png"></a>
-                            </li>
-                            <li>
-                                <a href="#">
-                                    <img alt="facebook" src="https://cdn-icons-png.flaticon.com/512/59/59439.png">
-                                </a>
-                            </li>
-          
-                        </ul>
-                    </div>
-                </nav>
-            <!-- section: footer: small social -->
-                    <nav class="row row-small">
-                        <div class="col-xs-8 col-md-6">
-
-                            <ul class="nav nav-small">
-                                <li>
-                                    <a href="#">Legal</a>
-                                </li>
-                                <li>
-                                    <a href="#">Privacidad</a>
-                                </li>
-                                <li>
-                                    <a href="#">Cookies</a>
-                                </li>
-                                <li>
-                                    <a href="#">Acerca de los Anuncios</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-xs-4 col-md-6 text-right">
-                        <a class="market" href="#" title="Click to change">
-                            <div class="media">
-                                <div class="media-body media-middle">
-                                    SV
-                                </div>
-                                <div class="media-right media-middle">
-                                  <span class="media-object flag-icon flag-icon-us"></span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <small class="copyright">&copy; 2025 AURA</small>
-                    </div>
-                </nav>
-            </div>
-        </footer>
-
-            <!-- jQuery library -->
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-        </body>
-    </html>
+            </footer>
+            
+<script src="hero-bubbles.js"></script>    
+</body>
+</html>

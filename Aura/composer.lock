@@ -3436,16 +3436,16 @@
         },
         {
             "name": "pragmarx/countries",
-            "version": "v1.0.0",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/antonioribeiro/countries.git",
-                "reference": "5177d210d1c25765f3d96131d20abe0772f433b4"
+                "reference": "ac65c3ca0c4f2578e99aaeebb772fb0df009f71c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/antonioribeiro/countries/zipball/5177d210d1c25765f3d96131d20abe0772f433b4",
-                "reference": "5177d210d1c25765f3d96131d20abe0772f433b4",
+                "url": "https://api.github.com/repos/antonioribeiro/countries/zipball/ac65c3ca0c4f2578e99aaeebb772fb0df009f71c",
+                "reference": "ac65c3ca0c4f2578e99aaeebb772fb0df009f71c",
                 "shasum": ""
             },
             "require": {
@@ -3499,9 +3499,9 @@
             ],
             "support": {
                 "issues": "https://github.com/antonioribeiro/countries/issues",
-                "source": "https://github.com/antonioribeiro/countries/tree/v1.0.0"
+                "source": "https://github.com/antonioribeiro/countries/tree/v1.0.1"
             },
-            "time": "2025-07-23T23:56:56+00:00"
+            "time": "2025-08-19T12:13:51+00:00"
         },
         {
             "name": "psr/cache",

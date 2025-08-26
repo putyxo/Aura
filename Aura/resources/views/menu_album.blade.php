@@ -23,7 +23,8 @@
         <button class="edit-btn"><i class="fa-solid fa-pen"></i> Editar</button>
 
         <div class="cover traducible">
-          <img src="{{ $album->cover_path ? Storage::url($album->cover_path) : 'https://via.placeholder.com/250x250.png?text=Cover' }}" 
+<img src="{{ $album->cover_path ? drive_img_url($album->cover_path, 300) : 'https://via.placeholder.com/250x250.png?text=Cover' }}" alt="Portada Álbum">
+
                alt="Portada Álbum">
         </div>
 
@@ -34,7 +35,7 @@
           <p class="description traducible">{{ $album->genre ?? '(Sin género)' }}</p>
 
           <div class="actions">
-            <button class="btn play traducible"><i class="fa-solid fa-play"></i> Reproducir</button>
+            <button class="btn play traducible" id="playAlbumBtn"><i class="fa-solid fa-play"></i> Reproducir</button>
             <button class="btn shuffle traducible"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
           </div>
         </div>
@@ -53,7 +54,9 @@
                     <span class="song-title">{{ $song->title }}</span>
                     <span class="song-artist">{{ $song->artist ?? 'Artista desconocido' }}</span>
                   </div>
-                  <button class="song-play"><i class="fa-solid fa-play"></i></button>
+                  <button class="song-play" onclick="playSong('{{ $song->audio_url }}', '{{ $song->cover_path }}', '{{ $song->title }}', '{{ $song->artist ?? 'Artista desconocido' }}')">
+                    <i class="fa-solid fa-play"></i>
+                  </button>
                 </li>
               @endforeach
             </ul>
@@ -64,5 +67,22 @@
       </section>
     </main>
   </div>
+
+  <script>
+    function playSong(audioUrl, coverUrl, title, artist) {
+      const footerPlayer = document.querySelector('.fusion-player'); // El contenedor del reproductor en el footer
+      const audioElement = footerPlayer.querySelector('audio');
+      const coverElement = footerPlayer.querySelector('.fusion-player-img img');
+      const titleElement = footerPlayer.querySelector('.fusion-player-title');
+      const artistElement = footerPlayer.querySelector('.fusion-player-artist');
+
+      audioElement.src = audioUrl; // Establece la URL del audio
+      coverElement.src = coverUrl ? `{{ Storage::url('${coverUrl}') }}` : 'https://via.placeholder.com/250x250.png?text=Cover'; // Establece la imagen de la portada
+      titleElement.innerText = title; // Establece el título de la canción
+      artistElement.innerText = artist; // Establece el artista
+
+      audioElement.play(); // Reproduce la canción
+    }
+  </script>
 </body>
 </html>
