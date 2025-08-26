@@ -90,4 +90,10 @@ class User extends Authenticatable
             ? route('media.drive', ['id' => $this->imagen_portada])
             : asset('img/default-cover.png');
     }
+
+public function likes()
+{
+    return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
+                ->withTimestamps();
+}
 }

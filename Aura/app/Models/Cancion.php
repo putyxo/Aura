@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Cancion extends Model
 {
-    protected $table = 'songs';  // Asegúrate que tu tabla sea la correcta
+    protected $table = 'songs'; // Tu tabla real es songs
 
     protected $fillable = [
         'user_id',
@@ -22,23 +23,37 @@ class Cancion extends Model
 
     public $timestamps = true;
 
-    // Relación con el modelo User
+    // Relación con el usuario dueño de la canción
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class);
     }
 
-    // Relación con el modelo Album
+    // Relación con el álbum
     public function album(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Album::class);
+        return $this->belongsTo(Album::class);
+    }
+
+    // ❤️ Usuarios que han dado like
+    public function likedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'likes', 'song_id', 'user_id')
+                    ->withTimestamps();
+    }
+
+    // 📂 Playlists a las que pertenece esta canción
+    public function playlists(): BelongsToMany
+    {
+        return $this->belongsToMany(Playlist::class, 'playlist_song', 'song_id', 'playlist_id')
+                    ->withTimestamps();
     }
 
     // Accesor para la portada
     public function getCoverUrlAttribute(): string
     {
         return $this->cover_path 
-            ? asset('storage/'.$this->cover_path) 
+            ? $this->cover_path // ya guardas URL completa en DB
             : asset('img/default-song.png');
     }
 
@@ -46,7 +61,7 @@ class Cancion extends Model
     public function getAudioUrlAttribute(): string
     {
         return $this->audio_path 
-            ? asset('storage/'.$this->audio_path) 
+            ? $this->audio_path // igual, ya guardas URL completa
             : '';
     }
 }
