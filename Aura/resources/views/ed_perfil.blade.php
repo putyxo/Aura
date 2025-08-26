@@ -119,35 +119,57 @@
             $coverUrl = $song->cover_url
                 ? drive_img_url($song->cover_url, 300)
                 : asset('img/default-cancion.png');
-            $audioUrl = $song->audio_url ? route('media.drive', ['id' => $song->audio_url]) : null;
+              $rawAudio = $song->audio_url;
+            $audioUrl = null;
+
+            if ($rawAudio) {
+                if (Str::contains($rawAudio, 'drive.google')) {
+                    if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
+                        $id = $m[1];
+                    } else {
+                        $id = null;
+                    }
+                    $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
+                } else {
+                    $audioUrl = $rawAudio;
+                }
+            }
           @endphp
+@php
+  $coverUrl = $song->cover_url
+      ? drive_img_url($song->cover_url, 300)
+      : asset('img/default-cancion.png');
+@endphp
+         <div class="song-row">
+  <div class="song-left">
+    <img src="{{ $coverUrl }}" alt="cover">
+    <div class="song-info">
+      <h4>{{ $song->title }}</h4>
+      <p>{{ $user->nombre_artistico ?? 'Desconocido' }}</p>
+    </div>
+  </div>
+  <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
 
-          <div class="song-row">
-            <div class="song-left">
-              <img src="{{ $coverUrl }}" alt="cover">
-              <div class="song-info">
-                <h4>{{ $song->title }}</h4>
-                <p>{{ $user->nombre_artistico ?? 'Desconocido' }}</p>
-              </div>
-            </div>
-            <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
+  <!-- botón invisible para tu reproductor -->
+  <button class="cancion-item"
+          style="display:none"
+          data-id="{{ $song->id }}"
+          data-src="{{ $audioUrl }}"
+          data-title="{{ $song->title }}"
+          data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}"
+          data-cover="{{ $coverUrl }}">
+  </button>
 
-            <!-- botón invisible para tu reproductor -->
-            <button class="cancion-item"
-                    style="display:none"
-                    data-src="{{ $audioUrl }}"
-                    data-title="{{ $song->title }}"
-                    data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}">
-            </button>
-
-            @if(Auth::check() && Auth::id() === $user->id)
-              <form action="{{ route('cancion.destroy', $song->id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta canción?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
-              </form>
-            @endif
-          </div>
+  @if(Auth::check() && Auth::id() === $user->id)
+    <form action="{{ route('cancion.destroy', $song->id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta canción?')">
+      @csrf
+      @method('DELETE')
+      <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
+    </form>
+  @endif
+</div>
         @endforeach
       </div>
 

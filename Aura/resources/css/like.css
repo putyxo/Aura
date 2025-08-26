@@ -171,3 +171,98 @@ body {
     width: 100%;
   }
 }
+/* ===== FAVORITOS ===== */
+
+.songs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fila de canción */
+.song-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  transition: background .25s ease;
+}
+.song-row:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Lado izquierdo: portada + info */
+.song-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.song-left img {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+
+.song-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.song-info h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.song-info p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Duración */
+.song-duration {
+  font-size: 13px;
+  color: #b7b7b7;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+/* Botón de borrar / unlike */
+.delete-btn {
+  background: none;
+  border: none;
+  color: #e25555;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color .2s ease;
+}
+.delete-btn:hover {
+  color: #ff6b6b;
+}
+
+/* Mensaje vacío */
+.empty-msg {
+  text-align: center;
+  font-size: 14px;
+  color: #aaa;
+  padding: 20px 0;
+}
+.empty-msg i {
+  margin-right: 6px;
+  color: #ffb347;
+}
