@@ -2,33 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use Google_Client;
-use Google_Service_Drive;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class GoogleDriveController extends Controller
 {
-    private function baseClient(): Google_Client
+    private function baseClient(): \Google_Client
     {
-        $client = new Google_Client();
-        $client->setClientId(env('GOOGLE_DRIVE_CLIENT_ID'));
-        $client->setClientSecret(env('GOOGLE_DRIVE_CLIENT_SECRET'));
-        $client->setRedirectUri(env('GOOGLE_DRIVE_REDIRECT'));
+        $client = new \Google_Client();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri(config('services.google.redirect'));
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
-        $client->addScope(Google_Service_Drive::DRIVE_FILE);
+        $client->addScope(\Google_Service_Drive::DRIVE_FILE);
+
         return $client;
     }
 
-    // Inicia el flujo de autorización
     public function redirectToGoogle()
     {
         $client = $this->baseClient();
         return redirect()->away($client->createAuthUrl());
     }
 
-    // Callback que Google llama después de autorizar
     public function handleCallback(Request $request)
     {
         if (!$request->has('code')) {
@@ -42,24 +38,16 @@ class GoogleDriveController extends Controller
             return response('Error al obtener token: ' . $token['error'], 400);
         }
 
-        $fullPath = storage_path('app/google/token.json');
-        $dir = dirname($fullPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+        // Guardamos el token en storage/app/google/token.json
+        $path = storage_path('app/google/token.json');
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0777, true);
         }
-        file_put_contents($fullPath, json_encode($token, JSON_PRETTY_PRINT));
-        
-        // Para confirmar la ruta exacta que se usó:
-        return response()->json([
-            'message' => '✅ Token guardado',
-            'path' => $fullPath,
-            'exists' => file_exists($fullPath),
-            'token' => $token,
-        ]);
+        file_put_contents($path, json_encode($token, JSON_PRETTY_PRINT));
 
-        // Mostrar el token en pantalla para confirmar
         return response()->json([
-            'message' => '✅ Token guardado correctamente en storage/app/google/token.json',
+            'message' => '✅ Token guardado correctamente',
+            'path' => $path,
             'token' => $token
         ]);
     }

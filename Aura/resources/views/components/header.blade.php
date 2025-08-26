@@ -4,10 +4,7 @@
   <div class="header-search-group">
     <span class="search-icon"></span>
     <input class="search" type="text" placeholder="Buscar..." />
-    <button class="filter-btn" type="button" title="Filtros">
-      <i class="fa-solid fa-sliders"></i>
-      <span class="btn-label">Filtros</span>
-    </button>
+   
 
     <!-- 🔎 Caja de resultados -->
     <div id="searchResults" class="search-results"></div>
@@ -39,38 +36,28 @@
 
     <div class="dropdown-menu" id="userDropdown" aria-hidden="true">
       <!-- Avatar + editar -->
-      <div class="profile-grid">
-        <div class="avatar-wrap">
-          <img class="profile-avatar" src="" alt="Avatar">
-          <a href="{{ route('perfil.show', auth()->id()) }}" class="edit-chip"><i class="fa-solid fa-pen"></i><span>Editar</span></a>
-        </div>
-        <div class="id-block">
-          <div class="profile-name">{{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}</div>
-          @if(auth()->user()->email)
-            <div class="profile-email">{{ auth()->user()->email }}</div>
-          @endif
-        </div>
+       <a href="{{ route('perfil.show', auth()->id()) }}" class="profile-card-link">
+  <div class="profile-grid">
+    <div class="avatar-wrap">
+      <img class="profile-avatar" 
+           src="{{ auth()->user()->avatar ?? asset('img/default-avatar.png') }}" 
+           alt="Avatar">
+    </div>
+    <div class="id-block">
+      <div class="profile-name">
+        {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
       </div>
+      @if(auth()->user()->email)
+        <div class="profile-email">{{ auth()->user()->email }}</div>
+      @endif
+    </div>
+  </div>
+</a>
 
-      <!-- Botones -->
-      <div class="actions-two">
-        @auth
-          @if(auth()->user()->es_artista)
-            <a class="pill-btn" href="{{ route('musica.subir') }}"><i class="fa-solid fa-upload"></i><span>Subir música</span></a>
-          @endif
-        @endauth
-        <button class="pill-btn" type="button" id="translatorBtn"><i class="fa-solid fa-language"></i><span>Traductor</span></button>
-      </div>
-
-      <!-- Configuración -->
-      <div class="center-config">
-        <a href="{{ route('perfil.show', auth()->id()) }}" class="center-btn"><i class="fa-solid fa-gear"></i><span>Configuración</span></a>
-      </div>
+      
 
       <!-- Perfil / Salir -->
       <ul class="dropdown-list list-bottom">
-        <li><a href="{{ route('perfil.show', auth()->id()) }}" class="dropdown-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a></li>
-        <li class="dropdown-sep"></li>
         <li>
           <form method="POST" action="{{ route('logout') }}">@csrf
             <button type="submit" class="logout-wide"><i class="fa-solid fa-right-from-bracket"></i><span>Salir</span></button>
@@ -101,6 +88,96 @@
 .header-search-group{ grid-area: search; }
 .quick-actions{ grid-area: actions; }
 .user-menu{ grid-area: user; }
+
+/* Contenedor clickeable */
+.profile-card-link {
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  border-radius:12px;
+  transition: transform .1s ease, box-shadow .2s ease;
+}
+.profile-card-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
+
+/* Grid interno */
+.profile-grid {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  background: linear-gradient(180deg,#15192a,#0f1120);
+}
+
+/* Avatar */
+.avatar-wrap {
+  width:52px; height:52px;
+  flex-shrink:0;
+}
+.profile-avatar {
+  width:100%; height:100%;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(255,255,255,.1);
+  background:#222;
+}
+
+/* Texto */
+.id-block {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.profile-name {
+  font-weight:700;
+  font-size:15px;
+  color:#f5f5f5;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.profile-email {
+  font-size:12px;
+  color:#b6b6c8;
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.profile-card-link {
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  border-radius:14px;  
+  border:2px solid transparent;          /* sin borde normal */
+  overflow:hidden;                       /* respeta esquinas */
+  transition: border-color .2s, box-shadow .2s, transform .1s;
+}
+
+.profile-card-link:hover {
+  border-color:#a855f7;                  /* borde morado */
+  box-shadow:0 0 12px rgba(168,85,247,.6);
+  transform:translateY(-1px);
+}
+
+/* Fondo solo en el grid, sin borde */
+.profile-grid {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border-radius:inherit;                  /* hereda esquinas */
+  background: linear-gradient(180deg,#15192a,#0f1120);
+}
+
 
 
 /* Grupo de búsqueda */
@@ -490,13 +567,78 @@
 .search-item div { display: flex; flex-direction: column; line-height: 1.2; }
 .search-item strong { font-size: 14px; font-weight: 600; }
 .search-item small { font-size: 12px; color: var(--color-dim); }
-
-
-
-
-
-
 </style>
+
+<script>
+// ===================== USER MENU DROPDOWN =====================
+(function initUserMenu(){
+  const root      = document.querySelector('.user-menu');
+  const btn       = document.getElementById('userMenuBtn');
+  const dropdown  = document.getElementById('userDropdown');
+
+  if (!root || !btn || !dropdown) return;
+
+  // Evita doble-bind al recargar con PJAX
+  if (btn.dataset.bound === 'true') return;
+  btn.dataset.bound = 'true';
+
+  function openMenu(){
+    root.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    dropdown.setAttribute('aria-hidden', 'false');
+  }
+  function closeMenu(){
+    root.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    dropdown.setAttribute('aria-hidden', 'true');
+  }
+  function toggleMenu(){
+    if (root.classList.contains('open')) closeMenu(); else openMenu();
+  }
+
+  // Click en el chip: abrir/cerrar
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Cerrar al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!root.contains(e.target)) closeMenu();
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // Si el dropdown tiene links, no dejes que el click cierre antes de tiempo
+  dropdown.addEventListener('click', (e) => {
+    // Permite clicks normales en enlaces y botones, pero no cierres por burbujeo
+    e.stopPropagation();
+  });
+
+  // Soporte para PJAX: re-inicializar tras navegación parcial
+  if (window.$ && $.pjax) {
+    $(document).on('pjax:success', function(){ 
+      // Re-intenta inicializar por si el header se re-renderizó
+      setTimeout(initUserMenu, 0);
+    });
+  }
+
+  // (Opcional) Autocargar avatar si usas un campo en el backend
+  try {
+    const avatarEls = root.querySelectorAll('.chip-avatar, .profile-avatar');
+    const fallback  = "{{ asset('img/default-avatar.png') }}";
+    // Si el backend ya imprime src, no hace falta esto.
+    avatarEls.forEach(img => {
+      if (!img.getAttribute('src')) img.setAttribute('src', fallback);
+    });
+  } catch (_) {}
+})();
+</script>
+
 
 <script>
 /* === Buscador === */
