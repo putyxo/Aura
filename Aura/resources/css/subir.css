@@ -1,235 +1,233 @@
-/* ===================== Estilos Generales ===================== */
+/* ===== BASE ===== */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f7f7f7;
+  background: radial-gradient(circle at top left, #1a0b2e, #0a0a12 70%);
+  font-family: 'Inter', sans-serif;
+  color: #f5f5f7;
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  line-height: 1.6;
 }
 
-.container {
+.hidden { display: none; }
+
+/* ===== TITULO ===== */
+.section-title {
+  text-align: center;
+  font-size: 2.6rem;
+  margin: 50px 0 40px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #a855f7, #9333ea, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeIn 0.6s ease;
+  text-transform: uppercase;
+}
+
+/* ===== CARDS ===== */
+.cards-container {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 20px;
+  justify-content: center;
+  gap: 30px;
   flex-wrap: wrap;
 }
 
 .card {
-  background-color: #ffffff;
+  background: linear-gradient(180deg, #1f1f2f, #151525);
+  border-radius: 16px;
+  width: 260px;
+  height: 220px;
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
   text-align: center;
-  width: 200px;
-  transition: transform 0.2s ease-in-out;
-  margin-bottom: 20px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.08);
+  transition: all .3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .card:hover {
-  transform: scale(1.05);
+  transform: translateY(-8px) scale(1.03);
+  border-color: #a855f7;
+  box-shadow: 0 14px 30px rgba(168,85,247,0.35);
 }
 
-.card img {
-  max-width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 10px;
+.card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  color: #a855f7;
 }
 
-.card p {
-  margin-top: 10px;
-  font-size: 16px;
-  color: #333;
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
-/* ===================== Formulario ===================== */
-form {
-  background-color: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+.card-desc {
+  font-size: .9rem;
+  color: #b6b6c8;
+}
+
+/* ===== FORMULARIO ===== */
+.upload-form {
+  background: rgba(35,35,54,.95);
+  border-radius: 16px;
+  padding: 30px 25px;
+  box-shadow: 0 6px 25px rgba(168,85,247,.25);
+  border: 1px solid rgba(168,85,247,0.25);
+  margin: 20px auto 40px;
+  max-width: 680px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-button[type="submit"] {
-  background-color: #aa029c;
-  color: white;
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+/* Labels + Inputs */
+.upload-form label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #e1e1e9;
 }
 
-button[type="submit"]:hover {
-  background-color: #8c017a;
+.upload-form input[type="text"] {
+  width: 100%;
+  background: #181828;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  transition: border .25s, box-shadow .25s;
 }
 
-/* ===================== Estilos Dropzone ===================== */
+.upload-form input:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 8px rgba(168,85,247,.4);
+  outline: none;
+}
+
+/* ===== DROPZONES ===== */
 .dropzone {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  border: 2px dashed #ddd;
-  border-radius: 10px;
-  background-color: #fafafa;
-  transition: background-color 0.3s, border 0.3s;
+  background: #1a1a28;
+  border: 2px dashed rgba(168,85,247,0.6);
+  border-radius: 12px;
+  padding: 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s ease;
+  position: relative;
 }
 
-.dropzone-icon {
-  font-size: 36px;
-  margin-right: 10px;
+.dropzone:hover, .dropzone.dragover {
+  background: rgba(168,85,247,0.1);
+  border-color: #ec4899;
+  box-shadow: 0 0 10px rgba(236,72,153,.3);
 }
 
-.dropzone-text {
-  font-size: 16px;
-  color: #666;
+.dz-content {
+  pointer-events: none;
 }
 
-.dropzone.dragover {
-  background-color: #e1e1e1;
-  border: 2px solid #aa029c;
+.dz-icon {
+  font-size: 2rem;
+  margin-bottom: 6px;
+  color: #ec4899;
 }
 
-input[type="file"] {
-  display: none;
+.dz-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f5f5f7;
 }
 
+.dz-sub {
+  font-size: .85rem;
+  color: #bbb;
+  margin-top: 4px;
+}
+
+/* ===== PREVIEWS ===== */
 .preview {
-  margin-top: 10px;
+  background: #1a1a2d;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  margin-top: 8px;
 }
 
 .preview img {
+  width: 80%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.preview audio {
   max-width: 100%;
-  border-radius: 10px;
-  object-fit: cover;
-  max-height: 200px;
+  border-radius: 6px;
 }
 
-.preview audio,
-.preview video {
-  width: 100%;
-  max-width: 520px;
-  border-radius: 10px;
-}
-
-/* ===================== Formulario Canción y Álbum ===================== */
-#form-cancion, #form-album {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-}
-
-input[type="text"], input[type="date"], select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-select {
-  cursor: pointer;
-}
-
-#album-dropzones {
-  display: none;
-  gap: 20px;
-  flex-direction: column;
-}
-
-#album-dropzones .dropzone {
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #f4f4f4;
-}
-
-#album-dropzones .dropzone:hover {
-  background-color: #f0f0f0;
-}
-
+/* ===== LISTA DE TRACKS (ÁLBUM) ===== */
 #tracks-list {
-  display: none;
-  gap: 10px;
-  flex-direction: column;
-}
-
-#tracks-list div {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.track-row {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  background: #1b1b29;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
-#tracks-list input {
-  width: 70%;
+.track-row audio {
+  flex: 1;
+  max-width: 200px;
+}
+
+.track-row input[type="text"] {
+  flex: 2;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 6px;
+  background: #181828;
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff;
 }
 
-/* ===================== Mostrar/Ocultar Formulario ===================== */
+/* ===== BOTONES ===== */
+#btn-submit, .btn-volver {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .3s;
+}
+
+#btn-submit:hover, .btn-volver:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(168,85,247,.45);
+}
+
+.btn-volver {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  align-self: flex-start;
+}
+
+/* ===== ANIMACIÓN ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .hidden {
-  display: none;
-}
-
-#album-dropzones.hidden {
-  display: none;
-}
-
-#form-album.hidden {
-  display: none;
-}
-
-#form-cancion.hidden {
-  display: none;
-}
-
-/* ===================== Estilos de Hover y Estado Activo ===================== */
-#dropzone-single:hover {
-  background-color: #f4f4f4;
-}
-
-#dz-cover:hover {
-  background-color: #e0e0e0;
-}
-
-#dz-tracks:hover {
-  background-color: #e0e0e0;
-}
-
-/* ===================== Responsividad ===================== */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .card {
-    width: 100%;
-    max-width: 300px;
-  }
-
-  form {
-    width: 100%;
-    max-width: 400px;
-  }
-
-  button[type="submit"] {
-    width: 100%;
-  }
+  display: none !important;
 }
