@@ -13,60 +13,70 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
 use App\Models\Album;
 
-
-/*
-|--------------------------------------------------------------------------|
-| Web Routes                                                               |
-|--------------------------------------------------------------------------|
-*/
-
 // ===== Página principal =====
-Route::get('/', fn() => view('welcome'))->name('welcome'); // ahora abre index
-
-// ===== Páginas públicas =====
-Route::get('/welcome', fn() => view('welcome'))->name('welcome');
+Route::get('/', fn() => view('welcome'))->name('welcome');
 
 // ===== Rutas protegidas (requieren login) =====
 Route::middleware('auth')->group(function () {
+ // ❤️ Like de canciones
+    Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])
+        ->name('canciones.like');
+    
+        Route::get('/canciones/{cancion}/liked', [CancionController::class, 'liked'])
+    ->name('canciones.liked');
+
+    Route::get('/like', [CancionController::class, 'like'])
+     ->name('like');
+    // 📂 Listar playlists del usuario autenticado
+    Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
+    Route::post('/api/playlists/create', [PlaylistController::class, 'quickStore']);
+
+    // ➕ Agregar canción a playlist
+    Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
+    // Vistas principales
     Route::get('/menu', fn() => view('menu'))->name('menu');
-Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
-Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
-Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
-Route::get('/like', fn() => view('like'))->name('like');
-Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
-Route::get('/prueba', fn() => view('prueba'))->name('prueba');
-Route::get('/recientes', fn() => view('recientes'))->name('recientes');
-Route::get('/albumes', function () {
-    $albumes = Album::with('user')->get();
-    return view('album_principal', compact('albumes'));
-});
+    Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
+    Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
+    Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
+    Route::get('/prueba', fn() => view('prueba'))->name('prueba');
+    Route::get('/recientes', fn() => view('recientes'))->name('recientes');
 
-Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
+    // Albumes
+    Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
+    Route::get('/albumes', function () {
+        $albumes = Album::with('user')->get();
+        return view('album_principal', compact('albumes'));
+    });
 
-// Playlist show individual
-Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
+    // ❤️ Like canciones
+    Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
 
-// Vista de playlists (blade directo)
-Route::get('/playlist', fn() => view('playlist'))->name('playlist');
+    // 📂 Playlists API
+    Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
+    Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
 
-// ===== Perfil =====
-Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
-Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
-Route::post('/perfil/song', [PerfilController::class, 'storeSong'])->name('perfil.storeSong');
-// Ruta para seguir a un usuario
-Route::post('/perfil/follow/{userId}', [PerfilController::class, 'follow'])->name('perfil.follow');
+    // Media desde Drive
+    Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
 
-// Ruta para dejar de seguir a un usuario
-Route::post('/perfil/unfollow/{userId}', [PerfilController::class, 'unfollow'])->name('perfil.unfollow');
+    // Playlist show individual
+    Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
 
+    // Playlist (grilla y creación)
+    Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
+    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
 
-// ===== Buscador =====
-Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
+    // Perfil
+    Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
+    Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
+    Route::post('/perfil/song', [PerfilController::class, 'storeSong'])->name('perfil.storeSong');
+    Route::post('/perfil/follow/{userId}', [PerfilController::class, 'follow'])->name('perfil.follow');
+    Route::post('/perfil/unfollow/{userId}', [PerfilController::class, 'unfollow'])->name('perfil.unfollow');
+
+    // Buscador
+    Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
 
     // Dashboard
-    Route::get('/dashboard', fn() => view('dashboard'))
-        ->middleware(['verified'])
-        ->name('dashboard');
+    Route::get('/dashboard', fn() => view('dashboard'))->middleware(['verified'])->name('dashboard');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -81,19 +91,12 @@ Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
     Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
 
     // Búsqueda
-    Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
-    Route::get('/busqueda_album', fn() => view('busqueda_album'))->name('busqueda_album');
-    Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual']);
-    Route::get('/busqueda_individual', fn() => view('busqueda_individual'))->name('busqueda_individual');
+    Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
+    Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
-
-
-    // Playlist (grilla y creación)
-    Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
-    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
 });
 
-// ===== Recursos de Playlist =====
+// ===== Recursos de Playlist (RESTful) =====
 Route::resource('playlists', PlaylistController::class);
 
 // ===== Google Drive =====
@@ -101,32 +104,13 @@ Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogl
 Route::get('/google-drive/callback', [GoogleDriveController::class, 'handleCallback']);
 Route::post('/google-drive/upload', [GoogleDriveController::class, 'upload'])->name('google.upload');
 
-// ===== Media =====
-Route::get('/media/drive/{id}', [DriveMediaController::class, 'stream'])
-    ->name('media.drive');
-
 // ===== Debug =====
 Route::get('/phpinfo', fn() => dd(PHP_BINARY, php_ini_loaded_file()));
 
 // ===== Auth =====
 require __DIR__.'/auth.php';
 
-
-Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista']);
-
-
-Route::get('/busqueda_album', function () {
-    return view('busqueda_album'); // resources/views/nombre_de_la_vista.blade.php
-})->name('busqueda_album');
-
-Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual']);
-
-
-Route::get('/busqueda_individual', function () {
-    return view('busqueda_individual'); // resources/views/nombre_de_la_vista.blade.php
-})->name('busqueda_individual');
-
-
-    Route::get('/test-helper', function () {
+// ===== Test helper =====
+Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });

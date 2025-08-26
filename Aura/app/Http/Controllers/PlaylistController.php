@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cancion;
 use App\Models\Playlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,4 +47,47 @@ class PlaylistController extends Controller
 
         return redirect()->route('playlist')->with('ok', 'Playlist creada correctamente.');
     }
+
+    /**
+     * Devuelve las playlists del usuario autenticado en JSON
+     */
+    public function myPlaylists()
+    {
+        return response()->json(
+            Playlist::where('user_id', Auth::id())
+                ->get(['id', 'nombre'])
+        );
+    }
+
+    /**
+     * Agregar canción a una playlist
+     */
+    public function addSong(Playlist $playlist, Cancion $cancion)
+    {
+        if ($playlist->user_id !== Auth::id()) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $playlist->songs()->syncWithoutDetaching([$cancion->id]);
+
+        return response()->json(['message' => 'Canción agregada a la playlist']);
+    }
+
+    public function quickStore(Request $request)
+{
+    $data = $request->validate([
+        'nombre' => ['required','string','max:120'],
+    ]);
+
+    $playlist = Playlist::create([
+        'user_id' => Auth::id(),
+        'nombre'  => $data['nombre'],
+    ]);
+
+    return response()->json([
+        'id'     => $playlist->id,
+        'nombre' => $playlist->nombre,
+        'message'=> 'Playlist creada correctamente'
+    ]);
+}
 }
