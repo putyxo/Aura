@@ -30,7 +30,15 @@
   <!-- Usuario -->
   <div class="user-menu">
     <button class="user-chip" id="userMenuBtn" type="button" aria-expanded="false">
-      <img class="chip-avatar" src="" alt="Avatar">
+     {{-- Avatar pequeño en la barra superior --}}
+<img class="chip-avatar"
+     src="@if(auth()->user()->avatar)
+             {{ drive_img_url(auth()->user()->avatar, 100) }}&v={{ time() }}
+           @else
+             {{ asset('img/default-user.png') }}
+           @endif"
+     alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
+
       <span class="chip-name">
         {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
       </span>
@@ -41,7 +49,13 @@
       <!-- Avatar + editar -->
       <div class="profile-grid">
         <div class="avatar-wrap">
-          <img class="profile-avatar" src="" alt="Avatar">
+         <img class="profile-avatar"
+     src="@if(auth()->user()->avatar)
+             {{ drive_img_url(auth()->user()->avatar, 300) }}&v={{ time() }}
+           @else
+             {{ asset('img/default-user.png') }}
+           @endif"
+     alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
           <a href="{{ route('perfil.show', auth()->id()) }}" class="edit-chip"><i class="fa-solid fa-pen"></i><span>Editar</span></a>
         </div>
         <div class="id-block">
