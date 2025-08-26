@@ -1,4 +1,5 @@
 import './bootstrap';
+import '../css/follow_artist.css';
 
 import Alpine from 'alpinejs';
 

@@ -1,479 +1,1769 @@
-@font-face {
-    font-family: 'Circular';
-    src: url('circular-medium.woff2');
-    :root { --fake: 1; }
-  }
-  body {
-      font-family: 'Circular',Helvetica,Arial,sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      color: #222326;
-  }
- /*menu*/ 
- a{
-    text-decoration: none;
-    color: white;
-    text-transform: none;
-    transition: 0.25 ease;
- }
- ul{
-    display: flex;
-    flex-wrap: wrap;
-    list-style: none;
- }
 
- ul li{
-    text-decoration: none;
-    margin: 0 0.75em 0 0.75em;
- }
- ul:hover a{
-    color: blueviolet;
- }
- ul:hover a:hover{
-    color:#6207e3;
-    box-shadow: 0 2px 0 0 currentColor;
- }
-  /*logo*/
-  .navbar-logo {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    width: 140px;     /* antes: 200px */
-    height: 42px;     /* antes: 60px */
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    font: 0/0 a;
-    color: transparent;
-    text-shadow: none;
-    background-color: transparent;
-    border: 0;
-    float: left;
-    background-image: url(..//img/Aura\ LOGO.png);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
- /*fondo*/ 
-  .bg-main {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(50deg, #3a1b21 0, #19003b 100%);
-      position: fixed;
-      left: 0;
-      top: 0;
-      z-index: -1;
-  }
-  
-  .bg-main-img {
-      display: block;
-      background-image: url('https://umomag.com/wp-content/uploads/2020/12/reportaje-los-50-discos-del-2020-diciembre-umomag-1024x683.jpg');
-      width: 100%;
-      height: 100%;
-      background-position: center;
-    opacity: 0.1;
-  }
-  /*textos grandes*/
-  .text-white {
-      color: white;
-  }
-  
-  .text-klein-purple {
-      color: #7c25f8;
-  }
-  
-  .text-aquamarine {
-      color: #a544c9;
-  }
- /*galeria de fotos*/ 
-  body .jumbotron {
-      background: none;
-      padding: 100px 0;
-      text-align: center;
-      margin: 0;
+/* Prevenir scroll horizontal */
+body {
+    font-family: 'Inter', sans-serif;
+    color: #ffffff; /* Cambiar de transparent a blanco */
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden; /* Asegurar que no haya scroll horizontal */
+}
+
+html {
+    overflow-x: hidden; /* También en html para mayor seguridad */
+}
+/* Add an overlay to ensure text remains readable over any background */
+
+
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 5%;
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 0;
+    width: 100%;
+}
+/* Aurionas Section */
+.aurionas-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    flex-direction: column;
     position: relative;
     overflow: hidden;
-    color: white;
-  }
-  
-  .jumbotron.bg-white {
-    background: linear-gradient(135deg, #000000, #0f0116, #110011);
 }
-  
-  .carousel-control.right, .carousel-control.left {
-      background: none;
-  }
-  
-  .btn {
-      padding: 17px 48px;
-      font-size: 14px;
-      line-height: 1;
-      border-radius: 500px;
-      padding: 18px 48px 16px;
-      transition-property: background-color,border-color,color,box-shadow,filter;
-      transition-duration: .3s;
-      border-width: 0;
-      letter-spacing: 2px;
-      min-width: 160px;
-      text-transform: uppercase;
-      white-space: normal;
-  }
-  
-  .jumbotron h1 {
-      font-weight: 900;
-  }
-  
-  .jumbotron .btn {
-      margin: 20px 10px 30px;
-  }
-  
-  .btn.btn-solid {
-      color: #fff;
-      background-color: #7c25f8;
-    border-radius: 500px;
-  }
-  .btn.btn-solid:hover {
-      color: #fff;
-      background-color: #6207e3;
-  }
-  
-  .btn.btn-lg {
-      font-size: 16px;
-      line-height: 1;
-      border-radius: 500px;
-      padding: 21px 56px 19px;
-  }
 
-  .p{
+.aurionas-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.aurionas-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    margin: 20px 0;
+    padding: 15px 30px;
+}
+
+.aurionas-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     color: white;
-  }
-  
-  .item h1 {
-      font-weight: 900;
-  }
-  
-  .text-signup a {
-      color: #fff;
-      text-decoration: underline;
-  }
-  
-  #carousel-tour {
-      margin-top: 50px;
-  }
-  /*center-btn learn about spotify*/
-  a.btn-scroll {
-      color: white;
-      display: block;
-      text-align: center;
-  }
-  
-  a.btn-scroll:hover {
-      color: #9bf0e1;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.nav-logo-image {
+    width: 200px; /* Aumentar tamaño */
+    height: 80px; /* Aumentar tamaño */
+    object-fit: contain;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-logo-image:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 10px 20px rgba(168, 85, 247, 0.4));
+}
+
+.logo-text {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    font-size: 28px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 35px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
-  }
-  
-  .btn-scroll-text {
-      text-decoration: none;
-      transition: color .3s ease-in-out;
-      display: block;
-      font-weight: 700;
-      letter-spacing: .1em;
-      margin-bottom: 20px;
-  }
-  
-  .container h2 {
-      font-size: 50px;
-      font-weight: 900;
-      line-height: 1;
-      margin: 0 0 .75em;
-  }
-  
-  .container h3 {
-      font-size: 40px;
-      font-weight: 900;
-      line-height: 1.4;
-  }
-  
-  .jumbotron.jumbotron-whats-on {
-      text-align: left;
-      padding: 180px 0;
-  }
-  
-   .jumbotron p {
-      font-weight: 500;
-      font-size: 18px;
-      margin: 1em 0;
-  }
-  
-  .albums .album-img {
-      padding: 0;
-  }
-  /*middle section: iphones*/
-  .iphone {
-      width: 380px;
-      height: 730px;
-      padding: 80px 22px 0;
-      margin-bottom: 30px;
-      background: url('https://raw.githubusercontent.com/iAmCaroly/Spotify-homepage-clone/main/img/iphone-klein-purple.png') no-repeat;
-      background-size: cover;
-  }
-  
-  .iphone-1, .iphone-4 {
-      margin-top: 200px;
-  }
-  .devices-container {
-      margin-top: -300px;
-      margin-bottom: -620px;
-      transform: rotate(30deg) translate3d(0,40px,0);
-  }
-  /*section 4: subscribing*/
-  .grid-overflow {
-      margin-right: -100%;
-      float: left;
-  }
-  .devices-container img {
-      max-width: 85%;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 8px 16px;
     border-radius: 20px;
-  }
-  
-  /*section 3: all devices*/
-  body .jumbotron-devices {
-      background: #000000;
-  }
-  
-  .jumbotron-devices img{
-      margin-bottom: 60px;
-  }
-  
-  .jumbotron-devices .device-list {
-      display: inline;
-      padding-left: 0;
-      list-style: none;
-      margin-left: -5px;
-      text-transform: uppercase;
-      font-weight: 700;
-  }
-  
-  .jumbotron-devices .device-list li{
-      display: inline-block;
-      padding-left: 5px;
-      padding-right: 5px;
-      margin: 1em 0;
-  }
-  
-  .jumbotron-devices .device-list li:after {
-      content: '-';
-      padding-left: 14px;
-      color: #7c25f8;
-  }
-  
-  .jumbotron-devices .device-list li:last-child:after {
-      content: '';
-  }
-  
-  .jumbotron-devices.device-list a {
-      color: white;
-      border-bottom: 1px solid white;
-      text-decoration: none;
-  }
-  
-  .jumbotron.jumbotron-subscriptions {
-      padding: 150px 0 0;
-      text-align: left;
-  }
-  
-  .jumbotron.jumbotron-subscriptions .btn {
-      margin-top: 30px;
-      margin-bottom: 70px;
-  }
-  
-  .price-title {
-      float: left;
-      margin: 0;
-  }
-  
-  
-  .price {
-      float: right;
-      margin: 0 0 12px;
-  }
-  
-  .details-subscriptions {
-      border: 1px solid white;
-      border-left: 0;
-      border-right: 0;
-      padding: 16px 0;
-      padding-left: 0;
-      list-style: none;
-      font-weight: 700;
-      margin-bottom: 0;
-  }
-  
-  .details-subscriptions {
-      font-size: 24px;
-  }
-  
-  .tour-variation p:first-child {
-      float: left;
-  }
-  
-  .tour-variation p:last-child {
-      float: right;
-  }
-  
-  .tour-variation a {
-      color: #9bf0e1;
-      text-decoration: none;
-  }
-  
-  .tour-variation a:hover {
-      color: #42e3c6;
-  }
-  
-  p.legal {
-      font-size: 12px;
-      margin-top: 8px;
-  }
-  
-  p.legal a {
-      text-decoration: underline;
-  }
-  p.legal a:hover {
-      color: #42e3c6
-  }
-  
-  .nexus {
-      width: 458px;
-      height: 873px;
-      padding: 60px 24px 0 180px;
-      background: url('https://raw.githubusercontent.com/iAmCaroly/Spotify-homepage-clone/main/img/iphone-klein-purple.png') no-repeat;
-      background-size: cover;
-      margin-bottom: -50%;
-  }
-  .nexus img {
-      width: 375px;
-      height: 770px;
-  margin-left: -138px;
-    border-radius: 20px;
-  }
-  
-  .footer {
-      background-color: black;
-      color: white;
-      padding: 80px 0 50px;
-      text-align: left;
-  }
-  
-  .footer-highlight-aquamarine a {
-      color: white;
-  }
-  
-  .footer-highlight-aquamarine a:hover {
-      color: #9bf0e1;
-  }
-  
-  .footer-logo a {
-      display: block;
-      width: 132px;
-      height: 60px;
-      font: 0/0 a;
-      color: transparent;
-      border: 0;
-      background-image: url(..//img/Aura\ LOGO.png);
-      background-repeat: no-repeat;
-      background-size: 100% 100%;
-      margin-bottom: 50px;
-  }
-  
-  .footer .nav-title {
-      color: #919496;
-      font-size: 12px;
-      letter-spacing: .08em;
-      margin: 20px 0;
-      text-transform: uppercase;
-  }
-  
-  .footer .nav li a {
-      padding: 3px 0;
-      margin: 0 0 12px;
-  }
-  
-  .col-social {
-      margin-top: 20px;
-  }
-  
-  .footer .col-social ul {
-      float: right;
-  }
-  
-  .footer .col-social li {
-      display: inline-block;
-  }
-  
-  .footer .col-social li a {
-      padding: 15px;
-      margin-bottom: 12px;
-      background-color: #919496;
-      border-radius: 30px;
-  }
-  
-  .footer .col-social a:hover {
-      background-color: white;
-  }
-  
-  .col-social a img {
-      width: 24px;
-      height: 24px;
-  }
-  
-  .footer .nav-small a {
-      color: #919496;
-  }
-  
-  .footer .nav-small li a {
-      float: left;
-      font-size: 12px;
-      font-weight: 400;
-      padding: 12px;
-      margin: 0;
-  }
-  
-  .row-small {
-      margin-top: 100px;
-  }
-  
-  .footer .nav-small li:first-child a {
-      padding-left: 0;
-  }
-  
-  .flag-icon-us {
-      background-image: url(..//img/Flag_of_El_Salvador.svg.webp);
-  }
-  
-  .flag-icon {
-      background-position: 50%;
-      background-repeat: no-repeat;
-      background-size: contain;
-      display: inline-block;
-      font-size: 18px;
-      height: 1em;
-      width: 1.33333333em;
-  }
-  
-  .market, .copyright {
-      color: #919496;
-      font-size: 12px;
-  }
-  
-  a.market {
-      color:#919496;
-      text-decoration: none;
-  }
+}
+
+.nav-links a:hover {
+    color: #a855f7;
+    background: rgba(168, 85, 247, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-links a:hover::after {
+    width: 80%;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
 
 .nav-btn {
-  color: white !important;      /* Letra blanca */
-  font-weight: 600;             /* Negrita */
-  text-decoration: none !important;
-  font-size: 14px;
-  transition: color 0.2s ease;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    text-decoration: none;
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.3);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+}
+
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
 }
 
 .nav-btn:hover {
-  color: #a544c9 !important;    /* Color lila al pasar el mouse */
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 30px rgba(168, 85, 247, 0.5);
+    filter: brightness(1.15);
+}
+
+.nav-btn:hover::before {
+    left: 100%;
+}
+
+.nav-btn:active {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+}
+
+/* Estilos específicos para el botón de login */
+.nav-btn:first-child {
+    background: transparent;
+    border: 2px solid rgba(168, 85, 247, 0.7);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+}
+
+.nav-btn:first-child:hover {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: #a855f7;
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35);
+}
+
+.nav-btn:first-child::before {
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.1), transparent);
+}
+
+/* Responsive para el navbar */
+@media (max-width: 1024px) {
+    .nav-links {
+        gap: 25px;
+    }
+    
+    .nav-links a {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .aurionas-nav {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .nav-links {
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-buttons {
+        gap: 10px;
+    }
+    
+    .login-btn, .signup-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .aurionas-nav {
+        padding: 15px;
+    }
+    
+    .nav-links {
+        gap: 15px;
+    }
+    
+    .nav-links a {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+    
+    .nav-logo-image {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .logo-text {
+        font-size: 24px;
+    }
+}
+
+.aurionas-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.content-left {
+    color: white;
+}
+
+.main-title {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #ffffff, #e2e8f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.description {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.preorder-btn {
+    background: white;
+    color: #1a0b2e;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.preorder-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+}
+
+/* Auriculares Realistas */
+.content-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Contenedor de auriculares con imagen real - VERSIÓN 3D MEJORADA */
+.headphones-container {
+    position: relative;
+    width: 700px;
+    height: 700px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    perspective: 1000px;
+    margin-left: 80px; /* Aumentar de 50px a 80px para mover más a la derecha */
+    margin-top: -100px; /* Agregar margen negativo para mover hacia arriba */
+}
+
+.headphones-image {
+    width: 700px;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+}
+
+.headphones-image:hover {
+    transform: scale(1.05) translateY(-10px);
+    filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes float3d {
+    0%, 100% { 
+        transform: rotate(-10deg) rotateX(5deg) rotateY(-5deg) translateY(0px) translateZ(0px); 
+    }
+    25% { 
+        transform: rotate(-8deg) rotateX(8deg) rotateY(-8deg) translateY(-15px) translateZ(10px); 
+    }
+    50% { 
+        transform: rotate(-12deg) rotateX(2deg) rotateY(-2deg) translateY(-25px) translateZ(20px); 
+    }
+    75% { 
+        transform: rotate(-8deg) rotateX(8deg) rotateY(-8deg) translateY(-15px) translateZ(10px); 
+    }
+}
+
+/* Efecto de brillo 3D adicional */
+.headphones-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(
+        circle,
+        rgba(168, 85, 247, 0.1) 0%,
+        rgba(236, 72, 153, 0.05) 30%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    animation: glow3d 4s ease-in-out infinite alternate;
+    z-index: -1;
+}
+
+@keyframes glow3d {
+    0% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+/* Indicador Wireless mejorado con efecto 3D */
+.wireless-indicator {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(0, 0, 0, 0.9);
+    color: rgb(0, 0, 0);
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 10;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        0 5px 15px rgba(168, 85, 247, 0.2);
+    transform: translateZ(50px);
+    animation: pulse3d 3s ease-in-out infinite;
+}
+
+@keyframes pulse3d {
+    0%, 100% {
+        transform: translateZ(50px) scale(1);
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.5),
+            0 5px 15px rgba(168, 85, 247, 0.2);
+    }
+    50% {
+        transform: translateZ(60px) scale(1.05);
+        box-shadow: 
+            0 15px 40px rgba(0, 0, 0, 0.6),
+            0 8px 20px rgba(168, 85, 247, 0.3);
+    }
+}
+
+.wireless-icon {
+    font-size: 18px;
+    animation: signal 2s ease-in-out infinite;
+}
+
+@keyframes signal {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Eliminar los estilos CSS de auriculares anteriores */
+.headphones,
+.headphone-band,
+.headphone-left,
+.headphone-right,
+.headphone-left::before,
+.headphone-right::before {
+    display: none;
+}
+
+/* Responsive para la imagen 3D */
+@media (max-width: 1200px) {
+    .headphones-container {
+        width: 600px;
+        height: 600px;
+    }
+    
+    .headphones-image {
+        width: 520px;
+    }
+}
+
+@media (max-width: 768px) {
+    .headphones-container {
+        width: 480px;
+        height: 480px;
+    }
+    
+    .headphones-image {
+        width: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .headphones-container {
+        width: 380px;
+        height: 380px;
+    }
+    
+    .headphones-image {
+        width: 320px;
+    }
+}
+
+/* Responsive para la imagen */
+@media (max-width: 1200px) {
+    .headphones-container {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .headphones-image {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .headphones-container {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .headphones-image {
+        width: 220px;
+    }
+    
+    .wireless-indicator {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+.wireless-icon {
+    font-size: 16px;
+}
+
+/* Sección derecha - Batería */
+.content-right {
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.battery-info {
+    text-align: center;
+}
+
+.battery-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #6366f1 0deg, #8b5cf6 216deg, rgba(255, 255, 255, 0.1) 216deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.battery-circle::before {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #1a0b2e;
+    z-index: 1;
+}
+
+.battery-number {
+    font-size: 32px;
+    font-weight: 900;
+    z-index: 2;
+    position: relative;
+}
+
+.battery-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    z-index: 2;
+    position: relative;
+}
+
+.battery-info h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+.battery-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.charging-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    align-self: flex-start;
+}
+
+.charging-icon {
+    font-size: 20px;
+}
+
+.charging-text {
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .aurionas-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 40px;
+    }
+    
+    .main-title {
+        font-size: 48px;
+    }
+    
+    .headphones-container {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .headphones {
+        width: 250px;
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .aurionas-container {
+        padding: 0 20px;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+    
+    .main-title {
+        font-size: 36px;
+    }
+    
+    .headphones-container {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .headphones {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .headphone-left,
+    .headphone-right {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .headphone-band {
+        width: 140px;
+        height: 30px;
+    }
+}
+
+/* AI Solutions Section */
+.ai-solutions {
+    background: #0a0a0a; /* Agregar el mismo fondo negro */
+    color: #fff;
+    padding: 80px 20px;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    text-align: center;
+}
+
+
+.ai-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.overlay-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px; /* más grande y legible */
+    color: rgba(255, 255, 255, 0.9); /* más contraste */
+    font-weight: 700; /* negrita */
+    z-index: 10;
+    text-align: center;
+    width: 100%;
+    letter-spacing: 1.5px; /* un poco más de aire entre letras */
+}
+
+.animated-text-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+/* Modificar las letras AURA para que sean más opacas por defecto */
+.animated-letter {
+    display: inline-block;
+    font-size: 220px;
+    font-weight: 900;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    opacity: 0.4; /* Hacer las letras más opacas por defecto */
+    filter: blur(0.5px); /* Añadir un ligero desenfoque para el efecto */
+}
+
+/* Cuando el cursor está encima, las letras se vuelven completamente visibles */
+.animated-letter:hover {
+    opacity: 1; /* Completamente visible en hover */
+    filter: blur(0px); /* Quitar el desenfoque */
+    transform: translateY(-10px) scale(1.1);
+    text-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+}
+
+/* Colores iniciales con opacidad */
+.animated-letter:nth-of-type(1) {
+    color: rgba(49, 46, 46, 0.4); /* A - Rojo */
+}
+
+.animated-letter:nth-of-type(2) {
+    color: rgba(49, 46, 46, 0.4);/* U - Verde */
+}
+
+.animated-letter:nth-of-type(3) {
+    color: rgba(49, 46, 46, 0.4); /* R - Azul */
+}
+
+.animated-letter:nth-of-type(4) {
+    color: rgba(49, 46, 46, 0.4);/* A - Púrpura */
+}
+
+/* Hover: colores más intensos */
+.animated-letter:nth-of-type(1):hover {
+    color: rgb(129, 32, 148);
+}
+
+.animated-letter:nth-of-type(2):hover {
+    color: rgb(129, 32, 148);
+}
+
+.animated-letter:nth-of-type(3):hover {
+    color: rgb(129, 32, 148);
+}
+
+.animated-letter:nth-of-type(4):hover {
+    color: rgb(129, 32, 148);
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.subtitle {
+    font-size: 20px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 600px;
+}
+
+.stats-section {
+    padding: 80px 0;
+    background: #0a0a0a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 48px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #d567eb, #78279e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 40px;
+}
+
+/* Business Section */
+.business-section {
+    padding: 120px 0;
+    background: #07182c;
+}
+
+.business-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 60px;
+}
+
+.business-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+.business-text h2 {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 24px;
+    line-height: 1.2;
+}
+
+.business-text p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.btn-get-started {
+    background: linear-gradient(135deg, #e367ee, #510963);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    display: inline-block;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-get-started:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(67, 26, 100, 0.3);
+}
+
+.business-features {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(61, 9, 85, 0.2);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feature-icon.rewards {
+    background: linear-gradient(135deg, #510153, #623368);
+    color: #000;
+}
+
+.feature-icon.secured {
+    background: linear-gradient(135deg, #911ebe, #9c52af);
+    color: #000;
+}
+
+.feature-icon.transfer {
+    background: linear-gradient(135deg, #811585, #6e1c79);
+    color: #fff;
+}
+
+.feature-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.feature-content p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Billing Section */
+.billing-section {
+    padding: 120px 0;
+    background: #0a0a0a;
+}
+
+.billing-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+.billing-mockup {
+    position: relative;
+}
+
+.paypal-card {
+    background: linear-gradient(135deg, #915ab1, #86219b);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.paypal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.paypal-logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: #00d4ff;
+}
+
+.paypal-balance {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(90deg, #870a8b, #630675);
+    border-radius: 4px;
+}
+
+.transaction-list {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transaction-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.transaction-icon.dribbble {
+    background: linear-gradient(135deg, #32076b, #392170);
+}
+
+.transaction-icon.netflix {
+    background: linear-gradient(135deg, #500b88, #8027a3);
+}
+
+.transaction-icon.cash {
+    background: linear-gradient(135deg, #c231ee, #7f1494);
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.transaction-amount {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+}
+
+.success-icon {
+    width: 16px;
+    height: 16px;
+    background: #00ff88;
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.billing-content h2 {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 24px;
+    line-height: 1.2;
+}
+
+.billing-content p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.app-downloads {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.app-store-btn,
+.google-play-btn {
+    display: inline-block;
+    border: none;
+    background: transparent;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.app-store-btn img,
+.google-play-btn img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+    filter: brightness(1.1) contrast(1.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.app-store-btn:hover img,
+.google-play-btn:hover img {
+    transform: scale(1.05) translateY(-5px);
+    filter: brightness(1.2) contrast(1.2);
+    box-shadow: 0 12px 35px rgba(168, 85, 247, 0.4);
+}
+
+@media (max-width: 1024px) {
+    .app-store-btn img,
+    .google-play-btn img {
+        width: 180px;
+        height: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-downloads {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .app-store-btn img,
+    .google-play-btn img {
+        width: 160px;
+        height: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-store-btn img,
+    .google-play-btn img {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/* Card Deal Section */
+.card-deal-section {
+    padding: 120px 0;
+    background: #0a0a0a;
+}
+
+.card-deal-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+.card-deal-content h2 {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 24px;
+    line-height: 1.2;
+}
+
+.card-deal-content p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.online-analysis {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.analysis-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analysis-icon {
+    font-size: 20px;
+}
+
+.analysis-header span {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.analysis-item span:first-child {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.analysis-item span:last-child {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .stats-container {
+        padding: 0 40px;
+    }
+    
+    .business-content,
+    .billing-container,
+    .card-deal-container {
+        grid-template-columns: 1fr;
+        gap: 60px;
+        text-align: center;
+    }
+    
+    .business-container,
+    .billing-container,
+    .card-deal-container {
+        padding: 0 40px;
+    }
+    
+    .stat-divider {
+        margin: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-container {
+        flex-direction: column;
+        gap: 40px;
+        padding: 0 20px;
+    }
+    
+    .stat-divider {
+        width: 60px;
+        height: 1px;
+        margin: 0;
+    }
+    
+    .business-section,
+    .billing-section,
+    .card-deal-section {
+        padding: 80px 0;
+    }
+    
+    .business-container,
+    .billing-container,
+    .card-deal-container {
+        padding: 0 20px;
+    }
+    
+    .business-text h2,
+    .billing-content h2,
+    .card-deal-content h2 {
+        font-size: 36px;
+    }
+    
+    .stat-number {
+        font-size: 36px;
+    }
+    
+    .business-features {
+        gap: 20px;
+    }
+    
+    .feature-item {
+        padding: 20px;
+    }
+    
+    .app-downloads {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Pricing Carousel Section */
+.pricing-carousel-section {
+    padding: 120px 0;
+    background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+    overflow: hidden;
+    position: relative;
+}
+
+.pricing-carousel-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    text-align: center;
+}
+
+.pricing-title {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 16px;
+    line-height: 1.2;
+}
+
+.pricing-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 60px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pricing-carousel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.pricing-cards {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    /* Eliminamos la animación */
+    transform: none !important; /* En caso de que haya estilos aplicados por animación */
+}
+
+/* Eliminamos la animación completa */
+@keyframes slideCards {
+    /* No necesitamos animación */
+}
+
+/* Aseguramos que no haya animación activa */
+.pricing-cards {
+    animation: none;
+    transition: transform 0.3s ease; /* Opcional: para suavizar hover */
+}
+
+/* Mantenemos el hover de las tarjetas */
+.pricing-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 32px 24px;
+    width: 320px;
+    flex-shrink: 0;
+    position: relative;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
+    border: 2px solid rgba(168, 85, 247, 0.3);
+    transform: scale(1.05);
+}
+
+.pricing-card.popular:hover {
+    transform: translateY(-10px) scale(1.05);
+}
+
+/* Estilos restantes (plan-header, botones, etc.) pueden permanecer igual */
+
+
+.popular-button {
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    border: none;
+    color: white;
+}
+
+.popular-button:hover {
+    background: linear-gradient(135deg, #9333ea, #db2777);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pricing-title {
+        font-size: 36px;
+    }
+    
+    .pricing-subtitle {
+        font-size: 16px;
+    }
+    
+    .pricing-cards {
+        gap: 20px;
+    }
+    
+    @keyframes slideCards {
+        0%, 20% {
+            transform: translateX(0);
+        }
+        33%, 53% {
+            transform: translateX(-340px);
+        }
+        66%, 86% {
+            transform: translateX(-680px);
+        }
+        100% {
+            transform: translateX(0);
+        }
+    }
+    
+    .pricing-card {
+        width: 280px;
+        padding: 24px 20px;
+    }
+    
+   
+}
+
+/* Footer Styles */
+.main-footer {
+    background: #000000;
+    color: #ffffff;
+    padding: 60px 0 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #33085c, #000000, #000000, #000000);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.footer-logo-image {
+    width: 120px;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.4));
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.footer-logo-image:hover {
+    filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.6)) brightness(1.1);
+    transform: scale(1.05);
+}
+
+.footer-description {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 50%;
+    text-decoration: none;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.social-link:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: #a855f7;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+}
+
+.footer-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.footer-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+    border-radius: 1px;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+    padding-left: 0;
+}
+
+.footer-links a:hover {
+    color: #a855f7;
+    padding-left: 10px;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.footer-links a::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 2px;
+    background: #a855f7;
+    transition: width 0.3s ease;
+}
+
+.footer-links a:hover::before {
+    width: 8px;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.contact-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.newsletter p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 25px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.newsletter-form input:focus {
+    border-color: #a855f7;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.newsletter-form button {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.newsletter-form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4);
+    background: linear-gradient(135deg, #9333ea, #db2777);
+}
+
+.footer-bottom {
+    text-align: center;
+}
+
+.footer-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    margin-bottom: 20px;
+}
+
+.copyright {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.copyright p {
+    margin: 0;
+}
+
+/* Responsive Footer */
+@media (max-width: 1024px) {
+    .footer-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 40px 0 20px;
+    }
+    
+    .footer-container {
+        padding: 0 20px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        text-align: center;
+    }
+    
+    .footer-title::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .newsletter-form {
+        flex-direction: column;
+    }
+    
+    .newsletter-form button {
+        align-self: center;
+        width: fit-content;
+        padding: 12px 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer-logo-image {
+        width: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-logo-image {
+        width: 80px;
+    }
+    
+    .footer-description {
+        text-align: center;
+    }
 }
