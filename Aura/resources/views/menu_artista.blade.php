@@ -11,6 +11,7 @@
     <div class="app-container">
         <!-- Navigation Bar -->
         <nav class="navbar">
+        @include('components.traductor')
             <div class="nav-controls">
 <a href="/menu" class="nav-button">
     <i class="fas fa-chevron-left"></i>

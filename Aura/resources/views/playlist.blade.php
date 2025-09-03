@@ -13,13 +13,12 @@
   <div class="with-sidebar">
     @include('components.sidebar')
             @include('components.header')
-    
+            @include('components.traductor')
     <main class="main-content">
       <div class="shell">
         {{-- ====== HEADER ====== --}}
         <section class="playlist-header">
         <h1 class="playlist-title">Tus Playlists</h1>
-        <button id="accessPlaylistLink" class="btn">Acceder a Playlist</button>
 
         {{-- Modal for Entering Share Link --}}
         <div id="shareLinkModal" class="modal" hidden>
@@ -168,28 +167,7 @@
               <small class="field-msg" id="descMsg"></small>
             </div>
 
-            <!-- Campo para link de compartir -->
-<div class="field field-span2" aria-live="polite">
-  <label for="pl_share_link" class="label traducible">Link de compartir</label>
-  <div class="share-link-container">
-    <input id="pl_share_link" name="share_link" type="text" class="input" placeholder="Generar link automáticamente" readonly>
-    <button type="button" class="btn-generate-link" id="btnGenerateLink" onclick="copyLink()">
-      <i class="fa-solid fa-link"></i>
-      <span class="traducible">Copiar Link</span>
-    </button>
-  </div>
-  <small class="hint traducible">Este link permitirá a otros acceder a tu playlist</small>
-  <small class="field-msg" id="shareLinkMsg"></small>
-</div>
 
-<script>
-function copyLink() {
-  const linkInput = document.getElementById('pl_share_link');
-  linkInput.select();
-  document.execCommand('copy');
-  alert('Link copiado: ' + linkInput.value);
-}
-</script>
           </div>
 
           <div class="actions">

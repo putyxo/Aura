@@ -10,6 +10,8 @@
   <div class="with-sidebar">
     @include('components.sidebar')
         @include('components.header')
+        @include('components.traductor')
+
     <main class="main-content">
       
 @if (!function_exists('drive_image_view'))

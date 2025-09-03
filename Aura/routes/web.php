@@ -11,6 +11,7 @@ use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
+use App\Http\Controllers\TraductorController; // Importa TraductorController si aún no lo has hecho
 use App\Models\Album;
 
 // ===== Página principal =====
@@ -18,21 +19,19 @@ Route::get('/', fn() => view('welcome'))->name('welcome');
 
 // ===== Rutas protegidas (requieren login) =====
 Route::middleware('auth')->group(function () {
- // ❤️ Like de canciones
-    Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])
-        ->name('canciones.like');
-    
-        Route::get('/canciones/{cancion}/liked', [CancionController::class, 'liked'])
-    ->name('canciones.liked');
 
-    Route::get('/like', [CancionController::class, 'like'])
-     ->name('like');
+    // ❤️ Like de canciones
+    Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
+    Route::get('/canciones/{cancion}/liked', [CancionController::class, 'liked'])->name('canciones.liked');
+    Route::get('/like', [CancionController::class, 'like'])->name('like');
+    
     // 📂 Listar playlists del usuario autenticado
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
     Route::post('/api/playlists/create', [PlaylistController::class, 'quickStore']);
-
+    
     // ➕ Agregar canción a playlist
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
+    
     // Vistas principales
     Route::get('/menu', fn() => view('menu'))->name('menu');
     Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
@@ -40,12 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
     Route::get('/prueba', fn() => view('prueba'))->name('prueba');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
-
-
+    
     // Albumes
-// En web.php
-Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
-
+    Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
     Route::get('/albumes', function () {
         $albumes = Album::with('user')->get();
         return view('album_principal', compact('albumes'));
@@ -53,14 +49,14 @@ Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
 
     // ❤️ Like canciones
     Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
-
+    
     // 📂 Playlists API
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
-
+    
     // Media desde Drive
     Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
-
+    
     // Playlist show individual
     Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
 
@@ -74,10 +70,10 @@ Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
     Route::post('/perfil/song', [PerfilController::class, 'storeSong'])->name('perfil.storeSong');
     Route::post('/perfil/follow/{userId}', [PerfilController::class, 'follow'])->name('perfil.follow');
     Route::post('/perfil/unfollow/{userId}', [PerfilController::class, 'unfollow'])->name('perfil.unfollow');
-
+    
     // Buscador
     Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
-
+    
     // Dashboard
     Route::get('/dashboard', fn() => view('dashboard'))->middleware(['verified'])->name('dashboard');
 
@@ -87,15 +83,14 @@ Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Música
-// Ruta para mostrar el formulario de subida (GET)
-Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
+    // Ruta para mostrar el formulario de subida (GET)
+    Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
 
-// Ruta para manejar la subida de canciones (POST)
-Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
+    // Ruta para manejar la subida de canciones (POST)
+    Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
 
-// Ruta para manejar la subida de álbumes (POST)
-Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
-
+    // Ruta para manejar la subida de álbumes (POST)
+    Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
 
     Route::delete('/album/{id}', [AlbumController::class, 'destroy'])->name('album.destroy');
     Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
@@ -124,3 +119,6 @@ require __DIR__.'/auth.php';
 Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });
+
+// ===== Ruta para el traductor =====
+Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');

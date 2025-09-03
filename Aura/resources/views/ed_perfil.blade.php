@@ -30,6 +30,7 @@
 <body>
 @include('components.sidebar')
 @include('components.footer')
+@include('components.traductor')
         @include('components.header')
 @if (!function_exists('drive_image_view'))
     @php
