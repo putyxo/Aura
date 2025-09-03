@@ -35,9 +35,9 @@ return [
         ],
     ],
     'google' => [
-    'client_id'     => env('GOOGLE_DRIVE_CLIENT_ID'),
-    'client_secret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
-    'redirect'      => env('GOOGLE_DRIVE_REDIRECT'),
+    'client_id'     => env('GOOGLE_CLIENT_ID'),
+    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    'redirect'      => env('GOOGLE_REDIRECT_URI'),
 ],
 
 ];

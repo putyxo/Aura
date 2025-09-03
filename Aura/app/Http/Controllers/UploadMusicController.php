@@ -147,7 +147,6 @@ class UploadMusicController extends Controller
                 ->route('busqueda_album')
                 ->with('ok', 'Álbum y canciones subidos correctamente.')
                 ->with('cover_url', $albumCoverUrl)
-                
                 ->with('album_id', $album->id);
         });
     }

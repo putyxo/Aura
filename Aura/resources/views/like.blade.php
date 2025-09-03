@@ -12,6 +12,7 @@
   <div class="page-container">
     @include('components.sidebar')
         @include('components.header')
+        @include('components.traductor')
 
 
 

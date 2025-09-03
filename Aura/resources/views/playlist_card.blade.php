@@ -23,7 +23,7 @@
         <button class="edit-btn" id="openEditModal"><i class="fa-solid fa-pen"></i> Editar</button>
 
         <div class="cover traducible">
-          <img src="{{ $playlist->cover_url ?? asset('img/default-cancion.png') }}" 
+          <img src="{{ $playlist->cover_url ?? 'https://via.placeholder.com/250x250.png?text=Cover' }}" 
                alt="Portada Playlist">
         </div>
 
@@ -46,68 +46,23 @@
       {{-- ====== LISTA DE CANCIONES ====== --}}
       <section class="playlist-songs">
         <div class="songs-header">
-          <h3><i class="fa-solid fa-music"></i> Canciones en esta playlist</h3>
           <input type="text" class="song-search" placeholder="Buscar canción...">
         </div>
 
         <div class="songs-list">
-          @forelse($playlist->canciones as $song)
-            @php
-              $coverUrl = $song->cover_url
-                  ? drive_img_url($song->cover_url, 300)
-                  : asset('img/default-cancion.png');
-
-              $rawAudio = $song->audio_url;
-              $audioUrl = null;
-              if ($rawAudio) {
-                  if (Str::contains($rawAudio, 'drive.google')) {
-                      if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
-                          $id = $m[1];
-                      } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
-                          $id = $m[1];
-                      } else {
-                          $id = null;
-                      }
-                      $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
-                  } else {
-                      $audioUrl = $rawAudio;
-                  }
-              }
-            @endphp
-
-            <div class="song-row">
-              <div class="song-left">
-                <img src="{{ $coverUrl }}" alt="cover">
-                <div class="song-info">
-                  <h4>{{ $song->title }}</h4>
-                  <p>{{ $song->artist ?? 'Artista desconocido' }}</p>
-                </div>
-              </div>
-
-              <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
-
-              <!-- Botón invisible para el reproductor -->
-              <button class="cancion-item"
-                      style="display:none"
-                      data-id="{{ $song->id }}"
-                      data-src="{{ $audioUrl }}"
-                      data-title="{{ $song->title }}"
-                      data-artist="{{ $song->artist ?? 'Desconocido' }}"
-                      data-cover="{{ $coverUrl }}">
-              </button>
-
-              <!-- Botón para quitar canción de la playlist -->
-              <form action="{{ route('playlists.removeSong', [$playlist->id, $song->id]) }}"
-                    method="POST"
-                    onsubmit="return confirm('¿Quitar esta canción de la playlist?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="delete-btn"><i class="fa-solid fa-trash"></i></button>
-              </form>
-            </div>
-          @empty
+          @if($playlist->songs && $playlist->songs->count())
+            <ul>
+              @foreach($playlist->songs as $song)
+                <li class="song-item">
+                  <span class="song-title">{{ $song->titulo }}</span>
+                  <span class="song-artist">{{ $song->artista }}</span>
+                  <button class="song-play"><i class="fa-solid fa-play"></i></button>
+                </li>
+              @endforeach
+            </ul>
+          @else
             <p class="empty-msg traducible"><i class="fa-solid fa-music"></i> Aún no tienes canciones en esta playlist.</p>
-          @endforelse
+          @endif
         </div>
       </section>
     </main>
@@ -135,7 +90,7 @@
           <div class="label-col">Portada</div>
           <div class="input-col">
             <label class="file-preview banner-edit">
-              <img src="{{ $playlist->cover_url ?? asset('img/default-cancion.png') }}" alt="cover">
+              <img src="{{ $playlist->cover_url ?? 'https://via.placeholder.com/400x200.png?text=Cover' }}" alt="cover">
               <input type="file" accept="image/*" hidden>
               <div class="overlay"><i class="fa-solid fa-camera"></i></div>
             </label>

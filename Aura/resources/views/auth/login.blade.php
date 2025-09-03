@@ -11,6 +11,7 @@
   <title>Login Aura</title>
 </head>
 <body>
+@include('components.traductor')
 
   <!-- Fondo animado -->
   <canvas id="canvas"></canvas>

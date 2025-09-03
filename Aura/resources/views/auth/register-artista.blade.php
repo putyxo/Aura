@@ -14,6 +14,7 @@
   <title>Registro</title>
 </head>
 <body>
+@include('components.traductor')
 
   <!-- CANVAS PARA FONDO ANIMADO -->
      <canvas id="canvas"></canvas>

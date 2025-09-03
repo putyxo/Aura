@@ -11,7 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://www.mshr.app/mesh/1734362949630">
 
-
+    @include('components.traductor')
+    
 </head>
         <!-- Nueva sección de auriculares -->
         <section class="aurionas-section">
@@ -273,6 +274,7 @@
                 </div>
             </footer>
             
-<script src="hero-bubbles.js"></script>    
+            <script src="{{ asset('js/hero-bubbles.js') }}"></script>
+  
 </body>
 </html>
