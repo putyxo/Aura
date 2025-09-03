@@ -1,78 +1,103 @@
 <!-- ===== BOTÓN FLOTANTE TRADUCTOR ===== -->
 <div id="traductor-btn">
   <i class="fas fa-language"></i>
-  <select id="lang">
-    <option value="es">Español</option>
-    <option value="en">Inglés</option>
-  </select>
+  <div class="custom-select">
+    <select id="lang">
+      <option value="es">🇪🇸 Español</option>
+      <option value="en">🇺🇸 Inglés</option>
+    </select>
+    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+  </div>
 </div>
+
+<!-- CSRF token -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-  /* ===== Estilo SOLO para el traductor ===== */
+  /* ===== Botón flotante ===== */
   #traductor-btn {
     position: fixed;
-    bottom: 100px;
+    bottom: 80px;
     right: 20px;
-    background: #8a2be2;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    background: linear-gradient(135deg, #7c3aed, #5a1499);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 35px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.35);
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 18px;
+    font-size: 15px;
+    font-weight: 600;
     z-index: 9999;
-    transition: background .3s ease;
+    cursor: pointer;
+    transition: all .25s ease-in-out;
   }
-  #traductor-btn:hover { background: #6a1bb9; }
+  #traductor-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.45);
+  }
+  #traductor-btn i {
+    font-size: 18px;
+  }
 
-  #traductor-btn select {
-    background: #6a1bb9;
+  /* ===== Estilo del select ===== */
+  .custom-select {
+    position: relative;
+    display: inline-block;
+  }
+
+  #lang {
+    appearance: none;
+    background: transparent;
     border: none;
-    border-radius: 6px;
     color: #fff;
     font-size: 14px;
     font-weight: 600;
-    padding: 6px 12px;
-    outline: none;
+    padding: 5px 25px 5px 5px;
     cursor: pointer;
-    appearance: none;
-    transition: background .3s ease, transform .2s ease;
+    outline: none;
   }
-  #traductor-btn select:hover { background: #5a1499; transform: scale(1.05); }
-  #traductor-btn select:focus { box-shadow: 0 0 0 2px rgba(255,255,255,0.6); }
-  #traductor-btn select option { color: #333; background: #fff; }
 
-  #traductor-btn i { color: #fff; font-size: 18px; }
+  .custom-select .arrow {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #fff;
+    font-size: 12px;
+  }
+
+  #lang option {
+    background: #fff;
+    color: #333;
+    font-size: 14px;
+  }
 </style>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
 let originalHTML = {};
+let cacheTraducciones = {};
 
 function guardarOriginal() {
   let index = 0;
-  let elementos = $("h1, h2, h3, p, span, a .label, .traducible");
-
-  elementos.each(function() {
-    let el = $(this);
-    let t = el.text().trim();
-    if (t.length > 0) {
-      originalHTML[index] = {el: el, text: t, tipo: "texto"};
-      index++;
-    }
+  $("body *:not(script):not(style)").contents().filter(function() {
+    return this.nodeType === 3 && this.nodeValue.trim().length > 0;
+  }).each(function() {
+    let node = this;
+    originalHTML[index] = { node: node, text: node.nodeValue, tipo: "texto" };
+    index++;
   });
-
-  let placeholders = $("input[placeholder], textarea[placeholder]");
-  placeholders.each(function() {
+  $("input[placeholder], textarea[placeholder]").each(function() {
     let el = $(this);
     let ph = el.attr("placeholder");
     if (ph && ph.length > 0) {
-      originalHTML[index] = {el: el, text: ph, tipo: "placeholder"};
+      originalHTML[index] = { el: el, text: ph, tipo: "placeholder" };
       index++;
     }
   });
@@ -83,9 +108,17 @@ function restaurarOriginal() {
     if (item.tipo === "placeholder") {
       item.el.attr("placeholder", item.text);
     } else {
-      item.el.text(item.text);
+      item.node.nodeValue = item.text;
     }
   });
+}
+
+function dividirEnChunks(array, size) {
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
 }
 
 function traducirPagina(idioma) {
@@ -95,46 +128,57 @@ function traducirPagina(idioma) {
     return;
   }
 
-  let textos = [];
-  Object.values(originalHTML).forEach(item => textos.push(item.text));
+  let textos = Object.values(originalHTML).map(item => item.text);
+  let textosUnicos = [...new Set(textos.filter(t => t.trim().length > 0))];
+  textosUnicos = textosUnicos.filter(t => !cacheTraducciones[t]);
 
-  $.ajax({
-  url: "{{ route('traducir') }}",  // URL de la ruta 'traducir'
-  method: "POST",  // El método debe ser POST, no GET
-  data: {
-    textos: textos,
-    lang: idioma,
-    _token: "{{ csrf_token() }}"
-  },
-  success: function(res) {
-    let i = 0;
-    Object.values(originalHTML).forEach(item => {
-      if (item.tipo === "placeholder") {
-        item.el.attr("placeholder", res[i]);
-      } else {
-        item.el.text(res[i]);
-      }
-      i++;
-    });
-    localStorage.setItem("idiomaSeleccionado", idioma);
+  if (textosUnicos.length === 0) {
+    aplicarTraducciones();
+    return;
   }
-});
 
+  let chunks = dividirEnChunks(textosUnicos, 30);
+  let promesas = chunks.map(chunk =>
+    $.ajax({
+      url: "/traducir",
+      method: "POST",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      data: { textos: chunk, lang: idioma }
+    }).then(res => {
+      for (let i = 0; i < chunk.length; i++) {
+        cacheTraducciones[chunk[i]] = res[i];
+      }
+    })
+  );
 
+  Promise.all(promesas).then(() => {
+    aplicarTraducciones();
+    localStorage.setItem("idiomaSeleccionado", idioma);
+  });
+}
+
+function aplicarTraducciones() {
+  Object.values(originalHTML).forEach(item => {
+    let txt = item.text;
+    let traducido = cacheTraducciones[txt] || txt;
+    if (item.tipo === "placeholder") {
+      item.el.attr("placeholder", traducido);
+    } else {
+      item.node.nodeValue = traducido;
+    }
+  });
 }
 
 $(document).ready(function() {
   guardarOriginal();
 
-  // Leer idioma guardado (si existe) al entrar a la página
+  // 📝 Mantener idioma al navegar
   let idiomaGuardado = localStorage.getItem("idiomaSeleccionado") || "es";
   $("#lang").val(idiomaGuardado);
   traducirPagina(idiomaGuardado);
 
-  // Guardar idioma al cambiar
   $("#lang").change(function() {
-  traducirPagina($(this).val());
-});
+    traducirPagina($(this).val());
+  });
 });
 </script>
-
