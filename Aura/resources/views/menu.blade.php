@@ -1,18 +1,28 @@
-
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AURA — Interfaz</title>
+  <meta charset="UTF-8">
+  <title>AURA</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   @vite('resources/css/menu.css')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root{ --player-width:380px; --player-gap:20px; }
+    /* empuje por el player */
+    .main-content{ margin-right: calc(var(--player-width) + var(--player-gap)); }
+    /* player fijo derecha (el resto del styling ya puede ir en tu CSS) */
+    .player-card{ position:fixed; top:0; right:0; bottom:0; width:var(--player-width); z-index:1300; }
+    /* si tu header es fixed */
+    .header{ padding-right: calc(var(--player-width) + var(--player-gap)); }
+    @media (max-width:860px){ :root{ --player-width:0px } .player-card{display:none} .main-content{margin-right:var(--player-gap)} }
+  </style>
 </head>
+
 <body>
 
 
-  <div class="app">
-  @include('components.traductor')
+
 
 
 <div class="with-sidebar">
@@ -212,8 +222,11 @@
         </div>
 
   </main>
+       </div>
+       @include('components.footer')
   </div>
-    @include('components.footer')
+
+    @stack('scripts')
 </body>
 </html>
 
