@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
   @vite('resources/css/menu.css')
+  @vite('resources/js/carousel.js')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -207,6 +208,30 @@
             <div class="artist-item">
               <img src="../img/tachos.jpg" alt="Artista 4">
               <p>LOS TACHOS </p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/king.jpg" alt="Artista 5">
+              <p>KING FLYP</p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/adrenalina.webp" alt="Artista 6">
+              <p>ADRENALINA</p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/dddd.webp" alt="Artista 7">
+              <p>DAKZZE</p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/Analu-Dada-cortesia.jpg" alt="Artista 8">
+              <p>ANALU DADA</p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/raza.jpg" alt="Artista 9">
+              <p>LA RAZA BAN</p>
+            </div>
+            <div class="artist-item">
+              <img src="../img/hermanos.png" alt="Artista 10">
+              <p>LOS HERMANOS FLORES</p>
             </div>
           </div>
         </div>
