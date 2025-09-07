@@ -29,9 +29,6 @@
   padding: 0;
 }
 
-html, body {
-  height: 100%;
-}
 
 body {
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -837,3 +834,18 @@ body {
     padding: 20px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
