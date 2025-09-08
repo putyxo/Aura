@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
     Route::get('/prueba', fn() => view('prueba'))->name('prueba');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
+    Route::get('/admin', fn() => view('admin'))->name('admin');
+
     
     // Albumes
     Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
