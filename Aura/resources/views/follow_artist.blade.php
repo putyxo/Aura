@@ -11,7 +11,7 @@
     @include('components.sidebar')
     @include('components.header')
     @include('components.traductor')
-
+    @include('components.fondo')
     <main class="main-content">
 
       <!-- Si no existe, define el helper de vista simple (queda por compatibilidad) -->

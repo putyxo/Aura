@@ -56,7 +56,7 @@ class PerfilController extends Controller
 
         // Ordena por fecha y evita elementos totalmente vacíos
         $lanzamientos = $lanzamientos
-            ->filter(fn($x) => !empty($x['titulo'])) // título siempre presente
+            ->filter(fn($x) => !empty($x['titulo']))
             ->sortByDesc('created_at')
             ->values();
 

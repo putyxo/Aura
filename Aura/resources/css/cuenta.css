@@ -1,0 +1,363 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    grid-template-areas:
+        "profile profile"
+        "experience experience"
+        "tools education"
+        "portfolio details";
+}
+
+/* Profile Section */
+.profile-section {
+    grid-area: profile;
+    display: flex;
+    gap: 20px;
+    background-color: #1a1a1a;
+    padding: 30px;
+    border-radius: 20px;
+}
+
+.profile-image {
+    flex-shrink: 0;
+}
+
+.profile-image img {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    object-fit: cover;
+    background-color: #f4a261;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #cccccc;
+}
+
+.interests {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.interest-label {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.interest-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background-color: #333333;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Experience Section */
+.experience-section {
+    grid-area: experience;
+    display: flex;
+    gap: 20px;
+}
+
+.job-card {
+    flex: 1;
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 20px;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.job-header h3 {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.date {
+    background-color: #333333;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.job-title {
+    color: #888888;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.job-details {
+    list-style: none;
+}
+
+.job-details li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #cccccc;
+    position: relative;
+    padding-left: 15px;
+}
+
+.job-details li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #666666;
+}
+
+/* Tools Section */
+.tools-section {
+    grid-area: tools;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tools-card {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.tools-card h3 {
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.tool-icons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tool-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.tool-icon.ai {
+    background-color: #ff9a00;
+    color: #000;
+}
+
+.tool-icon.ps {
+    background-color: #31a8ff;
+    color: #000;
+}
+
+.tool-icon.id {
+    background-color: #ff3366;
+    color: #fff;
+}
+
+.tool-icon.xd {
+    background-color: #ff61f6;
+    color: #000;
+}
+
+.tool-icon.ae {
+    background-color: #9999ff;
+    color: #000;
+}
+
+.tool-icon.pr {
+    background-color: #9999ff;
+    color: #000;
+}
+
+.tool-icon.davinci {
+    background-color: #333333;
+    color: #fff;
+}
+
+.language-flags {
+    display: flex;
+    gap: 10px;
+}
+
+.flag {
+    font-size: 24px;
+}
+
+/* Education Section */
+.education-section {
+    grid-area: education;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.education-card {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.education-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.education-header h3 {
+    font-size: 16px;
+}
+
+.education-details {
+    color: #888888;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Portfolio Section */
+.portfolio-section {
+    grid-area: portfolio;
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 20px;
+}
+
+.portfolio-section h3 {
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.portfolio-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.portfolio-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 12px;
+    transition: opacity 0.3s;
+}
+
+.portfolio-link:hover {
+    opacity: 0.8;
+}
+
+.portfolio-link.bento {
+    background-color: #6366f1;
+}
+
+.portfolio-link.behance {
+    background-color: #1769ff;
+}
+
+.portfolio-link.instagram {
+    background-color: #e4405f;
+}
+
+.portfolio-link.youtube {
+    background-color: #ff0000;
+}
+
+.portfolio-link.dribbble {
+    background-color: #ea4c89;
+}
+
+/* Details Section */
+.details-section {
+    grid-area: details;
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 20px;
+}
+
+.details-section h3 {
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.detail-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.detail-item i {
+    width: 20px;
+    color: #888888;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "profile"
+            "experience"
+            "tools"
+            "education"
+            "portfolio"
+            "details";
+    }
+    
+    .profile-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .experience-section {
+        flex-direction: column;
+    }
+}

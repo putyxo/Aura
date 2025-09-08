@@ -21,7 +21,7 @@
     @include('components.sidebar')
     @include('components.header')
     @include('components.traductor')
-
+    @include('components.fondo')
     <main class="main-content playlist-page" data-max-size-mb="5">
       <div class="shell">
 
