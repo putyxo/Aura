@@ -2,58 +2,98 @@
 
 namespace App\Services;
 
-use Google_Client;
-use Google_Service_Drive;
-use Google_Service_Drive_DriveFile;
-use Google_Service_Drive_Permission;
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
+use Google\Service\Drive\Permission;
 
 class GoogleDriveOAuthService
 {
-    private function client(): Google_Client
+    public function drive(): Drive
     {
-        $client = new Google_Client();
+        return env('GOOGLE_AUTH_MODE', 'sa') === 'oauth'
+            ? $this->driveOAuth()
+            : $this->driveSa();
+    }
+
+    /** ---- Service Account ---- */
+    protected function driveSa(): Drive
+    {
+        $kp = env('GOOGLE_SA_KEY_PATH', 'storage/app/google-sa.json');
+
+        $isAbs = function (string $p): bool {
+            $p = str_replace('\\','/',$p);
+            return str_starts_with($p, '/') || preg_match('/^[A-Za-z]:\//', $p) === 1;
+        };
+        $norm = fn(string $p) => rtrim(str_replace('\\','/',$p), '/');
+
+        $candidates = [];
+        if ($isAbs($kp)) $candidates[] = $norm($kp);
+        $candidates[] = $norm(base_path($kp));
+        $kpNorm = $norm($kp);
+        if (str_starts_with($kpNorm, 'storage/')) {
+            $inside = ltrim(substr($kpNorm, strlen('storage/')), '/');
+            $candidates[] = $norm(storage_path($inside));
+        }
+        $candidates[] = $norm(storage_path('app/google-sa.json'));
+
+        $fullPath = null;
+        foreach (array_unique($candidates) as $p) {
+            if (is_file($p)) { $fullPath = $p; break; }
+        }
+        if (!$fullPath) {
+            throw new \RuntimeException("SA_JSON_NOT_FOUND: ajusta GOOGLE_SA_KEY_PATH. Buscado:\n- ".implode("\n- ", $candidates));
+        }
+
+        $client = new Client();
+        $client->setAuthConfig($fullPath);
+        $client->setScopes([Drive::DRIVE]);
+        return new Drive($client);
+    }
+
+    /** ---- OAuth de usuario ---- */
+    protected function driveOAuth(): Drive
+    {
+        $client = new Client();
+
+        // ✅ usar credenciales desde .env
         $client->setClientId(env('GOOGLE_DRIVE_CLIENT_ID'));
         $client->setClientSecret(env('GOOGLE_DRIVE_CLIENT_SECRET'));
         $client->setRedirectUri(env('GOOGLE_DRIVE_REDIRECT'));
         $client->setAccessType('offline');
-        $client->setPrompt('select_account consent');
-        $client->addScope(Google_Service_Drive::DRIVE_FILE); // acceso a archivos creados por la app
+        $client->setPrompt('consent');
+        $client->setScopes([Drive::DRIVE]);
 
-        // cargar token guardado
         $tokenPath = storage_path('app/google/token.json');
+
         if (!file_exists($tokenPath)) {
-            throw new \RuntimeException('No existe token.json. Ve a /google-drive/auth y autoriza la app.');
+            // todavía no hay token: este client se usa solo para createAuthUrl()
+            return $client;
         }
-        $accessToken = json_decode(file_get_contents($tokenPath), true);
+
+        $accessToken = json_decode(file_get_contents($tokenPath), true) ?: [];
         $client->setAccessToken($accessToken);
 
-        // refrescar si expiró
         if ($client->isAccessTokenExpired()) {
             if (!empty($accessToken['refresh_token'])) {
                 $client->fetchAccessTokenWithRefreshToken($accessToken['refresh_token']);
                 file_put_contents($tokenPath, json_encode($client->getAccessToken()));
             } else {
-                throw new \RuntimeException('El token expiró y no hay refresh_token. Vuelve a autorizar en /google-drive/auth');
+                throw new \RuntimeException(
+                    'El token expiró y no hay refresh_token. Borra token.json y vuelve a /google-drive/auth'
+                );
             }
         }
 
-        return $client;
+        return new Drive($client);
     }
 
-    public function drive(): Google_Service_Drive
-    {
-        return new Google_Service_Drive($this->client());
-    }
-
-    /**
-     * Sube un archivo y lo hace accesible por enlace.
-     * @return array{id:string, directUrl:string}
-     */
+    /** ---- Subida pública ---- */
     public function uploadPublic(string $localPath, string $name, string $mime, ?string $parentId = null): array
     {
         $service = $this->drive();
 
-        $fileMeta = new Google_Service_Drive_DriveFile([
+        $fileMeta = new DriveFile([
             'name'    => $name,
             'parents' => $parentId ? [$parentId] : null,
         ]);
@@ -65,10 +105,9 @@ class GoogleDriveOAuthService
             'fields'     => 'id',
         ]);
 
-        // Hacerlo público por enlace
-        $perm = new Google_Service_Drive_Permission([
+        $perm = new Permission([
             'type' => 'anyone',
-            'role' => 'reader',
+            'role' => 'reader'
         ]);
         $service->permissions->create($file->id, $perm);
 
