@@ -1,237 +1,540 @@
 @vite('resources/css/header.css')
 
-<header class="header">
-  <!-- Buscador -->
-  <div class="header-search-group">
-    <span class="search-icon"></span>
-    <input class="search" type="text" placeholder="Buscar..." />
-@
-    <!-- 🔎 Caja de resultados -->
-    <div id="searchResults" class="search-results"></div>
-  </div>
+<header class="ah-header">
+  <div class="ah-inner">
+    <!-- === Navegación (izquierda del buscador) === -->
+    <div class="ah-nav">
+      <button class="ah-nav-btn" id="ahBackBtn" title="Atrás" aria-label="Atrás">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button class="ah-nav-btn" id="ahForwardBtn" title="Adelante" aria-label="Adelante">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
 
-  <!-- Acciones rápidas -->
-  <div class="quick-actions" role="toolbar" aria-label="Acciones rápidas">
-    @auth
-      @if(auth()->user()->es_artista)
-        <a class="qa-btn" href="{{ route('musica.subir') }}" title="Subir música">
-          <i class="fas fa-upload"></i>
-        </a>
-      @endif
-    @endauth
-    <button class="qa-btn" type="button" title="Traductor"><i class="fa-solid fa-language"></i></button>
-    <button class="qa-btn" type="button" title="Ajustes"><i class="fa-solid fa-gear"></i></button>
-    <button class="qa-btn" type="button" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
-  </div>
+    <!-- === Buscador (centro) === -->
+    <div class="ah-search-group">
+      <span class="ah-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
+      <input class="ah-search-input" type="text" placeholder="Buscar canciones, artistas..." aria-label="Buscar" autocomplete="off" />
+      <div id="ahSearchResults" class="ah-search-results" role="listbox" aria-expanded="false"></div>
+    </div>
 
-  <!-- Usuario -->
-  <div class="user-menu">
-    <button class="user-chip" id="userMenuBtn" type="button" aria-expanded="false">
-      <img class="chip-avatar"
-           src="@if(auth()->user()->avatar)
-                   {{ drive_img_url(auth()->user()->avatar, 100) }}&v={{ time() }}
-                 @else
-                   {{ asset('img/default-user.png') }}
-                 @endif"
-           alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
-      <span class="chip-name">
-        {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-      </span>
-      <i class="fa-solid fa-chevron-down"></i>
-    </button>
-
-    <div class="dropdown-menu" id="userDropdown" aria-hidden="true">
-      <div class="profile-grid">
-        <div class="avatar-wrap">
-          <img class="profile-avatar"
-               src="@if(auth()->user()->avatar)
-                       {{ drive_img_url(auth()->user()->avatar, 300) }}&v={{ time() }}
-                     @else
-                       {{ asset('img/default-user.png') }}
-                     @endif"
-               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
-        </div>
-        <div class="id-block">
-          <div class="profile-name">
-            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+    <!-- === Acciones + Usuario (derecha) === -->
+    <div class="ah-right">
+      <!-- Notificaciones -->
+      <div class="ah-pop ah-notif">
+        <button class="ah-btn" id="ahNotifBtn" type="button" aria-expanded="false" aria-controls="ahNotifPanel" title="Notificaciones">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+        <div class="ah-popover" id="ahNotifPanel" role="dialog" aria-hidden="true">
+          <div class="ah-popover-head"><span>Notificaciones</span></div>
+          <div class="ah-popover-body">
+            <div class="ah-empty">
+              <i class="fa-regular fa-bell-slash"></i>
+              <p>Aún no tienes notificaciones</p>
+            </div>
           </div>
-          @if(auth()->user()->email)
-            <div class="profile-email">{{ auth()->user()->email }}</div>
-          @endif
         </div>
       </div>
 
       <!-- Configuración -->
-      <div class="center-config">
-        <a href="{{ route('perfil.show', auth()->id()) }}" class="center-btn">
-          <i class="fa-solid fa-gear"></i><span>Configuración</span>
-        </a>
-      </div>
+      <button class="ah-btn" type="button" title="Ajustes" aria-label="Ajustes">
+        <i class="fa-solid fa-gear"></i>
+      </button>
 
-      <!-- Salir -->
-      <ul class="dropdown-list list-bottom">
-        <li>
-          <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="logout-wide">
-              <i class="fa-solid fa-right-from-bracket"></i><span>Salir</span>
-            </button>
-          </form>
-        </li>
-      </ul>
+      <!-- Usuario -->
+      <div class="ah-user">
+        <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
+          <img class="ah-chip-avatar"
+               src="@if(auth()->user()->avatar)
+                       {{ drive_img_url(auth()->user()->avatar, 100) }}&v={{ time() }}
+                     @else
+                       {{ asset('img/default-user.png') }}
+                     @endif"
+               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
+          <span class="ah-chip-name">
+            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+          </span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+
+        <div class="ah-dropdown" id="ahUserDropdown" aria-hidden="true" role="menu">
+          <div class="ah-profile-header">
+            <div class="ah-profile-info">
+              <img class="ah-profile-avatar"
+                   src="@if(auth()->user()->avatar)
+                           {{ drive_img_url(auth()->user()->avatar, 300) }}&v={{ time() }}
+                         @else
+                           {{ asset('img/default-user.png') }}
+                         @endif"
+                   alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
+              <div class="ah-profile-text">
+                <div class="ah-profile-name">
+                  {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+                </div>
+                @if(auth()->user()->email)
+                  <div class="ah-profile-email">{{ auth()->user()->email }}</div>
+                @endif
+              </div>
+            </div>
+          </div>
+
+          <div class="ah-menu-options">
+            <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
+              <i class="fas fa-user"></i><span>Ver mi perfil</span>
+            </a>
+            <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
+              <i class="fas fa-cog"></i><span>Mi cuenta</span>
+            </a>
+             <a href="{{ route('preferencias', auth()->id()) }}" class="ah-menu-item">
+               <i class="fas fa-sliders-h"></i><span>Preferencias</span>
+            </a>
+
+            @auth
+              @if(auth()->user()->es_artista)
+                <a href="{{ route('musica.subir') }}" class="ah-menu-item">
+                  <i class="fas fa-upload"></i><span>Subir música</span>
+                </a>
+              @endif
+            @endauth
+
+            <!-- Idioma (switch ES/EN) -->
+            <div class="ah-menu-item ah-lang-item">
+              <i class="fas fa-globe"></i><span>Idioma</span>
+              <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="Cambiar idioma">
+                <span class="ah-toggle-track">
+                  <span class="ah-toggle-label ah-l-es">ES</span>
+                  <span class="ah-toggle-label ah-l-en">EN</span>
+                  <span class="ah-toggle-knob"></span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="ah-menu-sep"></div>
+
+          <div class="ah-menu-logout">
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button type="submit" class="ah-menu-item ah-logout-btn">
+                <i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
-<script>
-/* === Buscador === */
-const searchInput = document.querySelector('.search');
-const resultsBox  = document.getElementById('searchResults');
+<style>
+/* ================== AURA HEADER (prefijo ah-) ================== */
+.ah-header{
+  /* offsets – ajústalos a tu layout */
+  --ah-left-offset: 76px;     /* sidebar mini */
+  --ah-right-offset: 300px;   /* player derecho (más equilibrado) */
+  --ah-safe-gap: 12px;
 
-function bindSearchSongs() {
-  document.querySelectorAll('.song-result').forEach(el => {
-    if (el.dataset.bound) return;
-    el.dataset.bound = "true";
-    el.addEventListener('click', () => {
-      const hiddenBtn = el.querySelector('.cancion-item');
-      if (hiddenBtn) hiddenBtn.click(); // dispara el reproductor normal
-    });
-  });
+  /* tamaños + tipografías (AGRANDADO) */
+  --ah-font: 15.5px;
+  --ah-font-sm: 14.5px;
+  --ah-font-lg: 18px;
+
+  /* paleta */
+  --ah-bg-1:#000000; --ah-bg-2:#090212;
+  --ah-panel:#0f0f17; --ah-panel2:#141428;
+  --ah-text:#f6f7fb; --ah-dim:#b6b6c8;
+  --ah-line:#26263a; --ah-line-soft: rgba(168,85,247,.14);
+  --ah-a1:#a855f7; --ah-a2:#ec4899;
+
+  position: sticky; top: 0; z-index: 40;
+  background:
+    radial-gradient(900px 140px at 10% 0%, color-mix(in oklab, var(--ah-a2) 8%, transparent) 0%, transparent 55%),
+    radial-gradient(900px 140px at 90% 0%, color-mix(in oklab, var(--ah-a1) 10%, transparent) 0%, transparent 55%),
+    linear-gradient(90deg, var(--ah-bg-2), var(--ah-bg-1));
+  border-bottom: 1px solid var(--ah-line-soft);
+  box-shadow: 0 6px 30px rgba(0,0,0,.35);
+  padding: 12px 0; /* vertical; los laterales van en .ah-inner */
+  color: var(--ah-text);
+  font-size: var(--ah-font);
 }
 
-if (searchInput && resultsBox) {
-  searchInput.addEventListener('input', async () => {
-    const q = searchInput.value.trim();
-    if (q.length < 2) {
-      resultsBox.innerHTML = "<div class='search-item'>Escribe al menos 2 letras...</div>";
-      resultsBox.style.display = "block";
-      return;
-    }
+/* Contenedor centrado */
+.ah-inner{
+  max-width: 1320px;              /* <<< centrado y más ancho */
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* nav | buscador | acciones+usuario */
+  align-items: center;
+  column-gap: 20px;
+  padding-left: calc(14px + var(--ah-left-offset));
+  padding-right: calc(14px + var(--ah-right-offset));
+}
 
+/* ===== Navegación ===== */
+.ah-nav{ display:flex; gap:12px; align-items:center }
+.ah-nav-btn{
+  width:48px; height:48px; display:grid; place-items:center;   /* ↑ más grande */
+  border-radius:12px; background: color-mix(in oklab, var(--ah-panel2) 88%, #000 12%);
+  border:1px solid var(--ah-line-soft); color:#d7d7df; cursor:pointer;
+  transition: transform .22s, border .22s;
+}
+.ah-nav-btn i{ font-size:18px }
+.ah-nav-btn:hover{ transform: translateY(-1px); border-color: color-mix(in oklab, var(--ah-a1) 50%, var(--ah-line-soft)) }
+
+/* ===== Buscador (centro) ===== */
+.ah-search-group{
+  position:relative; width:100%;
+  max-width: 820px;               /* <<< más ancho */
+  justify-self:center;
+}
+.ah-search-icon{
+  position:absolute; left:18px; top:50%; transform:translateY(-50%);
+  color: var(--ah-a1); font-size: 18px; z-index:2;
+  text-shadow: 0 0 10px color-mix(in oklab, var(--ah-a1) 70%, transparent);
+}
+.ah-search-input{
+  width:100%;
+  padding: 16px 16px 16px 50px;   /* ↑ más alto */
+  color:#e9e9f5; font-size: 16px;
+  background: color-mix(in oklab, var(--ah-panel) 93%, #fff 7%);
+  border: 1.8px solid rgba(168,85,247,.30);
+  border-radius: 18px;
+  background-clip: padding-box; outline: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 10px 24px rgba(0,0,0,.28);
+  transition: border .22s, box-shadow .22s, transform .22s;
+}
+.ah-search-input::placeholder{ color: color-mix(in oklab, var(--ah-dim) 72%, #fff 0%) }
+.ah-search-input:focus{
+  border-color: var(--ah-a1);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ah-a1) 18%, transparent), 0 18px 38px rgba(0,0,0,.35);
+  transform: translateY(-1px);
+}
+
+/* Resultados */
+.ah-search-results{
+  position:absolute; top: calc(100% + 12px); left:0; right:0;
+  background: linear-gradient(135deg, var(--ah-panel2) 0%, var(--ah-panel) 100%);
+  border:1px solid var(--ah-line-soft);
+  border-radius: 16px; max-height: 460px; overflow:auto;
+  display:none; z-index:10000; box-shadow: 0 24px 60px rgba(0,0,0,.40);
+  backdrop-filter: blur(10px);
+}
+.ah-skel{ padding: 14px 16px; color: var(--ah-dim); font-size: 15px }
+.ah-sr-item{
+  display:flex; align-items:center; gap:14px;
+  padding: 14px 16px; text-decoration:none; color: var(--ah-text);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  transition: transform .22s, background .22s;
+  font-size: 15px;
+}
+.ah-sr-item:last-child{ border-bottom:none }
+.ah-sr-item:hover, .ah-sr-item.is-active{ transform: translateX(8px); background: color-mix(in oklab, var(--ah-a1) 12%, transparent) }
+.ah-sr-item img{ width:56px; height:56px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,.08) }
+
+/* ===== Acciones + Usuario ===== */
+.ah-right{ display:flex; align-items:center; gap:12px; justify-self:end }
+
+.ah-btn{
+  width:48px; height:48px; display:grid; place-items:center;  /* ↑ más grande */
+  border-radius:14px; border:1px solid var(--ah-line-soft);
+  color:#fff; background: color-mix(in oklab, var(--ah-panel2) 88%, #000 12%);
+  cursor:pointer; transition: transform .22s, border .22s, background .22s;
+  font-size: 16px;
+}
+.ah-btn i{ font-size:18px }
+.ah-btn:hover{ border-color: color-mix(in oklab, var(--ah-a1) 55%, var(--ah-line-soft)); transform: translateY(-2px) }
+
+/* Notificaciones (popover) */
+.ah-pop{ position:relative }
+.ah-popover{
+  --ah-pop-shift: 0px;
+  position:absolute; top: calc(100% + 12px); left: 50%;
+  transform: translate(calc(-50% + var(--ah-pop-shift)), -8px) scale(.96);
+  opacity:0; visibility:hidden;
+  width: min(380px, calc(100vw - 32px));  /* ↑ más ancho */
+  background: linear-gradient(180deg, var(--ah-panel2), var(--ah-panel));
+  border:1px solid var(--ah-line-soft); border-radius:16px; box-shadow: 0 24px 60px rgba(0,0,0,.40);
+  transition: transform .22s, opacity .22s, visibility .22s;
+  z-index: 10001; overflow:hidden;
+}
+.ah-pop.open .ah-popover{ opacity:1; visibility:visible; transform: translate(calc(-50% + var(--ah-pop-shift)), 0) scale(1) }
+.ah-popover-head{ padding:12px 16px; font-weight:800; border-bottom:1px solid rgba(255,255,255,.06) }
+.ah-popover-body{ padding:16px }
+.ah-empty{ display:grid; place-items:center; gap:8px; color:var(--ah-dim); padding:20px 10px; text-align:center }
+.ah-empty i{ font-size:22px }
+
+/* Usuario */
+.ah-user{ position:relative }
+.ah-user-chip{
+  display:flex; align-items:center; gap:12px;
+  padding: 10px 14px; min-width: 220px;                 /* ↑ más grande */
+  border-radius: 999px; border:1px solid var(--ah-line-soft);
+  background: color-mix(in oklab, var(--ah-panel2) 88%, #000 12%);
+  color:#fff; cursor:pointer; transition: transform .22s, border .22s;
+  box-shadow: 0 10px 28px rgba(0,0,0,.25);
+  font-size: 15.5px;
+}
+.ah-user-chip:hover{ transform: translateY(-1px); border-color: color-mix(in oklab, var(--ah-a1) 50%, var(--ah-line-soft)) }
+.ah-chip-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid color-mix(in oklab, var(--ah-a1) 45%, transparent) }
+.ah-chip-name{ font-weight:700 }
+.ah-user-chip i{ color: var(--ah-a1); transition: transform .22s }
+.ah-user.open .ah-user-chip i{ transform: rotate(180deg) }
+
+/* Dropdown usuario (anti-overflow) */
+.ah-dropdown{
+  --ah-drop-shift: 0px;
+  position:absolute; top: calc(100% + 12px); right:0;
+  max-width: min(380px, calc(100vw - var(--ah-right-offset) - var(--ah-safe-gap))); /* ↑ */
+  background: linear-gradient(180deg, var(--ah-panel2), var(--ah-panel));
+  border:1px solid var(--ah-line-soft); border-radius: 16px;
+  opacity: 0; visibility: hidden; transform: translate(var(--ah-drop-shift), -10px) scale(.96);
+  transition: transform .22s, opacity .22s, visibility .22s;
+  z-index: 10001; overflow:hidden; box-shadow: 0 24px 60px rgba(0,0,0,.40);
+}
+.ah-user.open .ah-dropdown{ opacity:1; visibility:visible; transform: translate(var(--ah-drop-shift), 0) scale(1) }
+
+.ah-profile-header{ padding:16px; color:#fff; background: linear-gradient(135deg, color-mix(in oklab, var(--ah-a1) 70%, #000 0%), color-mix(in oklab, var(--ah-a2) 55%, #000 0%)) }
+.ah-profile-info{ display:flex; align-items:center; gap:14px }
+.ah-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; border:3px solid rgba(255,255,255,.35) } /* ↑ */
+.ah-profile-name{ font-weight:900; font-size: var(--ah-font-lg) }
+.ah-profile-email{ color: color-mix(in oklab, var(--ah-text) 70%, #fff 0%); opacity:.9; font-size: var(--ah-font-sm) }
+
+.ah-menu-options{ padding:6px 0 }
+.ah-menu-item{ display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; color:var(--ah-text); background:none; border:none; cursor:pointer; transition: background .22s, transform .22s; font-size: var(--ah-font) }
+.ah-menu-item i{ color: var(--ah-a1); font-size: 18px }
+.ah-menu-item:hover{ transform: translateX(8px); background: color-mix(in oklab, var(--ah-a1) 12%, transparent) }
+.ah-menu-sep{ height:1px; background: linear-gradient(90deg, transparent, var(--ah-line-soft), transparent); margin: 6px 0 }
+.ah-logout-btn{ color:#ff7b7b !important }
+.ah-logout-btn i{ color:#ff7b7b !important }
+
+/* Toggle idioma */
+.ah-lang-item{ gap:12px }
+.ah-toggle{ margin-left:auto; background:none; border:none; padding:0; cursor:pointer }
+.ah-toggle-track{
+  position:relative; display:inline-flex; align-items:center; justify-content:space-between;
+  width:78px; height:30px; border-radius:999px; border:1px solid var(--ah-line-soft);
+  background: linear-gradient(180deg, var(--ah-panel2), var(--ah-panel));
+  padding:0 9px; color:#fff; font-size:12.5px; letter-spacing:.3px;
+}
+.ah-toggle-label{ opacity:.75; user-select:none }
+.ah-toggle-knob{ position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,.35); transition:left .22s }
+.ah-toggle[aria-checked="true"] .ah-toggle-knob{ left: calc(100% - 27px) }
+
+/* ===== Responsive ===== */
+@media (max-width:1200px){
+  .ah-inner{ max-width: 1200px }
+}
+@media (max-width:992px){
+  .ah-inner{
+    max-width: 100%;
+    grid-template-columns: 1fr auto;
+    row-gap: 10px;
+    padding-left: 16px; padding-right: 16px;
+  }
+  .ah-search-group{ grid-column: 1 / -1; order: 2; max-width: none; }
+  .ah-right{ order:1; justify-self:end }
+  .ah-nav{ display:none } /* tablet: ocultamos flechas */
+}
+@media (max-width:520px){
+  .ah-search-input{ padding: 14px 14px 14px 46px; font-size: 15px }
+  .ah-btn{ width:44px; height:44px }
+  .ah-dropdown{ max-width: calc(100vw - 20px) }
+  .ah-chip-name{ display:none }
+}
+
+/* Foco accesible */
+.ah-search-input:focus, .ah-btn:focus, .ah-nav-btn:focus,
+.ah-user-chip:focus, .ah-menu-item:focus, .ah-toggle:focus{
+  outline: 3px solid color-mix(in oklab, var(--ah-a1) 55%, transparent);
+  outline-offset: 3px;
+}
+</style>
+
+<script>
+/* ================= AURA HEADER JS (prefijo ah-) ================= */
+(() => {
+  const qs  = (s, r=document) => r.querySelector(s);
+  const qsa = (s, r=document) => [...r.querySelectorAll(s)];
+  const debounce = (fn, ms=220) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+  /* Navegación */
+  qs('#ahBackBtn')?.addEventListener('click', ()=> history.back());
+  qs('#ahForwardBtn')?.addEventListener('click', ()=> history.forward());
+
+  /* Buscador */
+  const $input = qs('.ah-search-input');
+  const $box   = qs('#ahSearchResults');
+
+  const closeResults = () => { if(!$box) return; $box.style.display='none'; $box.setAttribute('aria-expanded','false'); };
+  const openResults  = () => { if(!$box) return; $box.style.display='block'; $box.setAttribute('aria-expanded','true'); };
+
+  const renderItems = (list=[]) => {
+    if (!list.length) { $box.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`; return; }
+    $box.innerHTML = list.map(item => {
+      if (item.tipo === 'cancion') {
+        return `
+          <div class="ah-sr-item ah-sr-song" role="option" tabindex="-1" data-id="${item.id}">
+            <img src="${item.avatar}" alt="">
+            <div><span class="ah-sr-main">${item.nombre}</span><span class="ah-sr-sub">🎵 Canción — ${item.artist || ''}</span></div>
+            <button class="ah-hidden-btn" style="display:none"
+                    data-id="${item.id}" data-src="${item.audio || ''}"
+                    data-title="${item.nombre}" data-artist="${item.artist || 'Desconocido'}"
+                    data-cover="${item.avatar}"></button>
+          </div>`;
+      }
+      const sub = item.tipo === 'usuario' ? '👤 Usuario' : '📀 Álbum';
+      return `
+        <a href="${item.url}" class="ah-sr-item" role="option" tabindex="-1">
+          <img src="${item.avatar}" alt="">
+          <div><span class="ah-sr-main">${item.nombre}</span><span class="ah-sr-sub">${sub}</span></div>
+        </a>`;
+    }).join('');
+  };
+
+  const bindSongClicks = () => {
+    qsa('.ah-sr-song', $box).forEach(el => {
+      if (el.dataset.bound) return;
+      el.dataset.bound = 'true';
+      el.addEventListener('click', () => {
+        const btn = el.querySelector('.ah-hidden-btn'); if (btn) btn.click();
+        closeResults();
+      });
+    });
+  };
+
+  const search = debounce(async () => {
+    const q = ($input?.value || '').trim();
+    if (!$box) return;
+    if (q.length < 2) { $box.innerHTML = `<div class="ah-skel">Escribe al menos 2 letras…</div>`; openResults(); return; }
+    $box.innerHTML = `<div class="ah-skel">Buscando…</div>`; openResults();
     try {
       const res  = await fetch(`/buscar?q=${encodeURIComponent(q)}`);
       const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) $box.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`;
+      else { renderItems(data); bindSongClicks(); }
+    } catch { $box.innerHTML = `<div class="ah-skel">Error al buscar</div>`; }
+  }, 260);
 
-      if (!Array.isArray(data) || data.length === 0) {
-        resultsBox.innerHTML = "<div class='search-item'>No se encontraron resultados</div>";
-      } else {
-        resultsBox.innerHTML = data.map(item => {
-          if (item.tipo === 'cancion') {
-            return `
-              <div class="search-item song-result"
-                   data-id="${item.id}">
-                <img src="${item.avatar}" alt="canción">
-                <div>
-                  <strong>${item.nombre}</strong><br>
-                  <small>🎵 Canción — ${item.artist || ''}</small>
-                </div>
-                <!-- Botón oculto -->
-                <button class="cancion-item" style="display:none"
-                        data-id="${item.id}"
-                        data-src="${item.audio || ''}"
-                        data-title="${item.nombre}"
-                        data-artist="${item.artist || 'Desconocido'}"
-                        data-cover="${item.avatar}">
-                </button>
-              </div>
-            `;
-          }
-          return `
-            <a href="${item.url}" class="search-item">
-              <img src="${item.avatar}" alt="${item.tipo}">
-              <div>
-                <strong>${item.nombre}</strong><br>
-                <small>${item.tipo === 'usuario' ? '👤 Usuario' : '📀 Álbum'}</small>
-              </div>
-            </a>
-          `;
-        }).join('');
-        bindSearchSongs();
+  if ($input && $box) {
+    $input.addEventListener('input', search);
+    document.addEventListener('click', (e) => { if (!$box.contains(e.target) && e.target !== $input) closeResults(); });
+
+    // navegación con teclado
+    let idx = -1;
+    const move = (d) => {
+      const items = qsa('.ah-sr-item', $box);
+      if (!items.length) return;
+      idx = (idx + d + items.length) % items.length;
+      items.forEach(i => i.classList.remove('is-active'));
+      items[idx].classList.add('is-active');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    };
+    $input.addEventListener('keydown', (e) => {
+      const items = qsa('.ah-sr-item', $box);
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); move(-1); }
+      if (e.key === 'Enter' && idx >= 0) {
+        e.preventDefault();
+        const t = items[idx];
+        if (t.classList.contains('ah-sr-song')) { const b = t.querySelector('.ah-hidden-btn'); b && b.click(); }
+        else if (t.tagName === 'A') { window.location.href = t.getAttribute('href'); }
+        closeResults();
       }
-
-      resultsBox.style.display = "block";
-    } catch (err) {
-      console.error("Error en búsqueda:", err);
-      resultsBox.innerHTML = "<div class='search-item'>Error al buscar</div>";
-      resultsBox.style.display = "block";
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!resultsBox.contains(e.target) && e.target !== searchInput) {
-      resultsBox.style.display = "none";
-    }
-  });
-}
-</script>
-
-
-<script>
-// ===================== USER MENU DROPDOWN =====================
-(function initUserMenu(){
-  const root      = document.querySelector('.user-menu');
-  const btn       = document.getElementById('userMenuBtn');
-  const dropdown  = document.getElementById('userDropdown');
-
-  if (!root || !btn || !dropdown) return;
-
-  // Evita doble-bind al recargar con PJAX
-  if (btn.dataset.bound === 'true') return;
-  btn.dataset.bound = 'true';
-
-  function openMenu(){
-    root.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-    dropdown.setAttribute('aria-hidden', 'false');
-  }
-  function closeMenu(){
-    root.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-    dropdown.setAttribute('aria-hidden', 'true');
-  }
-  function toggleMenu(){
-    if (root.classList.contains('open')) closeMenu(); else openMenu();
-  }
-
-  // Click en el chip: abrir/cerrar
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleMenu();
-  });
-
-  // Cerrar al hacer click fuera
-  document.addEventListener('click', (e) => {
-    if (!root.contains(e.target)) closeMenu();
-  });
-
-  // Cerrar con Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMenu();
-  });
-
-  // Si el dropdown tiene links, no dejes que el click cierre antes de tiempo
-  dropdown.addEventListener('click', (e) => {
-    // Permite clicks normales en enlaces y botones, pero no cierres por burbujeo
-    e.stopPropagation();
-  });
-
-  // Soporte para PJAX: re-inicializar tras navegación parcial
-  if (window.$ && $.pjax) {
-    $(document).on('pjax:success', function(){ 
-      // Re-intenta inicializar por si el header se re-renderizó
-      setTimeout(initUserMenu, 0);
+      if (e.key === 'Escape') closeResults();
     });
   }
 
-  // (Opcional) Autocargar avatar si usas un campo en el backend
-  try {
-    const avatarEls = root.querySelectorAll('.chip-avatar, .profile-avatar');
-    const fallback  = "{{ asset('img/default-avatar.png') }}";
-    // Si el backend ya imprime src, no hace falta esto.
-    avatarEls.forEach(img => {
-      if (!img.getAttribute('src')) img.setAttribute('src', fallback);
-    });
-  } catch (_) {}
+  /* Notificaciones (ajuste de borde seguro) */
+  const notifBtn   = document.getElementById('ahNotifBtn');
+  const notifPanel = document.getElementById('ahNotifPanel');
+  const notifWrap  = notifBtn?.closest('.ah-pop');
+
+  const applyPopoverShift = (panel) => {
+    const styles = getComputedStyle(document.querySelector('.ah-header'));
+    const leftOffset = parseFloat(styles.getPropertyValue('--ah-left-offset')) || 0;
+    const rightOffset= parseFloat(styles.getPropertyValue('--ah-right-offset')) || 0;
+    const safeGap    = parseFloat(styles.getPropertyValue('--ah-safe-gap')) || 12;
+
+    const rect = panel.getBoundingClientRect();
+    const leftLimit  = safeGap + leftOffset;
+    const rightLimit = window.innerWidth - rightOffset - safeGap;
+    let shift = 0;
+    if (rect.right > rightLimit) shift = -(rect.right - rightLimit);
+    if (rect.left + shift < leftLimit) shift = leftLimit - rect.left;
+    panel.style.setProperty('--ah-pop-shift', `${shift}px`);
+  };
+
+  if (notifBtn && notifPanel && notifWrap) {
+    const openN = () => { notifWrap.classList.add('open'); notifBtn.setAttribute('aria-expanded','true'); notifPanel.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>applyPopoverShift(notifPanel)); };
+    const closeN= () => { notifWrap.classList.remove('open'); notifBtn.setAttribute('aria-expanded','false'); notifPanel.setAttribute('aria-hidden','true'); };
+    notifBtn.addEventListener('click', (e)=>{ e.stopPropagation(); notifWrap.classList.contains('open') ? closeN() : openN(); });
+    document.addEventListener('click', (e)=>{ if (!notifWrap.contains(e.target)) closeN(); });
+    window.addEventListener('resize', ()=>{ if (notifWrap.classList.contains('open')) applyPopoverShift(notifPanel); });
+  }
+
+  /* Menú de usuario + anti-overflow + idioma */
+  const $root = document.querySelector('.ah-user');
+  const $btn  = document.getElementById('ahUserBtn');
+  const $dd   = document.getElementById('ahUserDropdown');
+
+  function applyDropdownShift() {
+    if (!$dd) return;
+    const styles = getComputedStyle(document.querySelector('.ah-header'));
+    const rightOffset = parseFloat(styles.getPropertyValue('--ah-right-offset')) || 0;
+    const safeGap     = parseFloat(styles.getPropertyValue('--ah-safe-gap')) || 12;
+
+    const rect = $dd.getBoundingClientRect();
+    const limit = window.innerWidth - rightOffset - safeGap;
+    let shift = 0;
+    if (rect.right > limit) shift = -(rect.right - limit);
+    if (rect.left + shift < safeGap) shift = safeGap - rect.left;
+    $dd.style.setProperty('--ah-drop-shift', `${shift}px`);
+  }
+
+  if ($root && $btn && $dd) {
+    if (!$btn.dataset.bound) {
+      $btn.dataset.bound = 'true';
+      const open = () => { $root.classList.add('open'); $btn.setAttribute('aria-expanded','true'); $dd.setAttribute('aria-hidden','false'); requestAnimationFrame(applyDropdownShift); };
+      const close= () => { $root.classList.remove('open'); $btn.setAttribute('aria-expanded','false'); $dd.setAttribute('aria-hidden','true'); };
+      const toggle = () => $root.classList.contains('open') ? close() : open();
+
+      $btn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toggle(); });
+      document.addEventListener('click', (e)=>{ if (!$root.contains(e.target)) close(); });
+      document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') close(); });
+      window.addEventListener('resize', ()=>{ if ($root.classList.contains('open')) applyDropdownShift(); });
+      $dd.addEventListener('click', (e)=> e.stopPropagation());
+
+      const $pref = document.getElementById('ahPrefBtn');
+      $pref && $pref.addEventListener('click', ()=>{ console.log('Abrir preferencias'); close(); });
+
+      const langSwitch = document.getElementById('ahLangSwitch');
+      const i18n = { es:{ search:'Buscar canciones, artistas...' }, en:{ search:'Search tracks, artists...' } };
+      const applyLangUI = (lang) => {
+        langSwitch.setAttribute('aria-checked', lang==='en' ? 'true' : 'false');
+        langSwitch.dataset.lang = lang;
+        document.querySelector('.ah-search-input').placeholder = i18n[lang].search;
+      };
+      try { applyLangUI(localStorage.getItem('ahLang') || 'es'); } catch(_){ applyLangUI('es'); }
+      langSwitch?.addEventListener('click', async () => {
+        const next = (langSwitch?.dataset.lang === 'es') ? 'en' : 'es';
+        applyLangUI(next);
+        try { localStorage.setItem('ahLang', next); } catch(_){}
+        try {
+          const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+          await fetch(`/locale/toggle?lang=${next}`, { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token}});
+        } catch(_){}
+        window.dispatchEvent(new CustomEvent('lang:toggle', { detail:{ lang: next } }));
+      });
+
+      // fallback avatar
+      try{
+        const imgs = $root.querySelectorAll('.ah-chip-avatar, .ah-profile-avatar');
+        const fallback = "{{ asset('img/default-user.png') }}";
+        imgs.forEach(img => { if (!img.getAttribute('src')) img.setAttribute('src', fallback); });
+      }catch(_){}
+    }
+  }
 })();
 </script>

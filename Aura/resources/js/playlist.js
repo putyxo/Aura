@@ -1,142 +1,237 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // ===== Animación de entrada de tiles (sin inflar layout)
-  const grid = document.querySelector('.playlist-grid');
-  if (grid) {
-    const tiles = grid.querySelectorAll('.tile');
-    requestAnimationFrame(() => {
-      tiles.forEach((tile, i) => {
-        tile.style.opacity = '0';
-        tile.style.transform = 'translateY(14px)';
-        tile.style.willChange = 'transform,opacity';
-        setTimeout(() => {
-          tile.style.transition = 'transform .45s var(--ease), opacity .45s var(--ease)';
-          tile.style.opacity = '1';
-          tile.style.transform = 'translateY(0)';
-        }, i * 60);
-      });
-    });
-  }
+/* ==========================================================================
+   AURA — PLAYLISTS (UX PRO)
+   - Buscador debajo del título + filtros
+   - Tile "Nueva playlist" con modal (drag & drop, preview, validaciones)
+   - Selección: click en todo el cuadro, Shift-click y long-press (touch)
+   - Skeleton loading; orden A–Z / por cantidad
+   ========================================================================== */
+(() => {
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-  // ===== Modal Crear Playlist
-  const openBtn   = document.getElementById('btnOpenPlaylistModal');
-  const closeBtn  = document.getElementById('btnClosePlaylistModal');
-  const cancelBtn = document.getElementById('btnCancelPlaylist');
-  const backdrop  = document.getElementById('playlistModalBackdrop');
-  const modal     = document.getElementById('playlistModal');
+  const grid = $('#playlistGrid');
+  const search = $('#plSearch');
+  const clearSearch = $('#clearSearch');
+  const chips = $$('.chip');
+  const selectBtn = $('#btnSelectMode');
+  const deleteBtn = $('#btnDeleteSelected');
+
+  /* ---------- Skeletons ---------- */
+  const addSkeletons = () => {
+    if (!grid) return;
+    const tpl = $('#skeletonTemplate'); if (!tpl) return;
+    const count = Math.max(6, parseInt(grid?.dataset?.count || '0', 10));
+    for (let i=0; i<count; i++) grid.append(tpl.content.cloneNode(true));
+  };
+  const removeSkeletons = () => $$('.skeleton', grid).forEach(el => el.remove());
+  addSkeletons();
+  const onAllImagesLoaded = () => setTimeout(removeSkeletons, 150);
+  const lazyImgs = $$('img[loading="lazy"]', grid);
+  let loaded = 0;
+  if (lazyImgs.length === 0) onAllImagesLoaded();
+  lazyImgs.forEach(img => img.addEventListener('load', () => { loaded++; if (loaded >= lazyImgs.length) onAllImagesLoaded(); }, { once:true }));
+  setTimeout(onAllImagesLoaded, 1200);
+
+  /* ---------- Búsqueda ---------- */
+  const norm = v => (v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const doFilter = () => {
+    const q = norm(search.value);
+    $$('.tile[href], .tile:not(.tile-create)', grid).forEach(t => {
+      const name = norm(t.dataset.name || t.querySelector('.tile-name')?.textContent || '');
+      t.style.display = name.includes(q) ? '' : 'none';
+    });
+  };
+  search?.addEventListener('input', doFilter);
+  clearSearch?.addEventListener('click', () => { search.value=''; doFilter(); search.focus(); });
+
+  /* ---------- Orden ---------- */
+  chips.forEach(ch => ch.addEventListener('click', () => {
+    chips.forEach(c => c.classList.remove('is-active'));
+    ch.classList.add('is-active');
+    sortGrid(ch.dataset.sort);
+  }));
+  const sortGrid = (mode) => {
+    const tiles = $$('.tile[href]', grid);
+    const frag = document.createDocumentFragment();
+    const arr = tiles.slice();
+    if (mode === 'az') arr.sort((a,b) => (a.dataset.name || '').localeCompare(b.dataset.name || ''));
+    else if (mode === 'cantidad') arr.sort((a,b) => (+b.dataset.count||0) - (+a.dataset.count||0));
+    else return; // recientes = orden del servidor
+    arr.forEach(el => frag.appendChild(el)); grid.appendChild(frag);
+  };
+
+  /* ---------- Modal crear ---------- */
+  const modal = $('#playlistModal');
+  const backdrop = $('#playlistModalBackdrop');
+  const openModalBtns = [$('#btnOpenPlaylistModal'), $('#btnOpenPlaylistModal2')].filter(Boolean);
+  const closeModalBtn = $('#btnClosePlaylistModal');
+  const cancelModalBtn = $('#btnCancelPlaylist');
+  const form = $('#playlistForm');
+  const nameInput = $('#pl_nombre');
+  const descInput = $('#pl_desc');
+  const coverInput = $('#pl_cover');
+  const coverDrop = $('#coverDrop');
+  const coverPreview = $('#coverPreview');
+  const uploaderHint = $('#uploaderHint');
+
+  const maxMB = parseFloat($('.playlist-page')?.dataset?.maxSizeMb || '5');
 
   const openModal = () => {
-    if (!modal || !backdrop) return;
-    backdrop.hidden = false;
-    modal.hidden = false;
-    document.documentElement.style.overflow = 'hidden';
-    document.getElementById('pl_nombre')?.focus();
+    backdrop.hidden = false; modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    nameInput?.focus();
+    trapFocus(modal);
   };
   const closeModal = () => {
-    if (!modal || !backdrop) return;
-    backdrop.hidden = true;
-    modal.hidden = true;
-    document.documentElement.style.overflow = '';
+    backdrop.hidden = true; modal.hidden = true;
+    document.body.style.overflow = '';
+    releaseFocusTrap();
+    form?.reset(); clearPreview(); clearMsgs();
+  };
+  openModalBtns.forEach(b => b.addEventListener('click', openModal));
+  closeModalBtn?.addEventListener('click', closeModal);
+  cancelModalBtn?.addEventListener('click', closeModal);
+  backdrop?.addEventListener('click', closeModal);
+
+  const clearPreview = () => { if (coverPreview){ coverPreview.src=''; coverPreview.style.display='none'; } if (uploaderHint){ uploaderHint.style.display=''; } };
+  const clearMsgs = () => $$('.field-msg').forEach(m => { m.textContent=''; m.classList.remove('msg-error','msg-ok'); });
+  const setMsg = (el, msg, ok=false) => { if (!el) return; el.textContent = msg || ''; el.classList.toggle('msg-error', !!msg && !ok); el.classList.toggle('msg-ok', !!msg && ok); };
+  const validateImage = (file) => {
+    if (!file) return {ok:true};
+    const sizeMB = file.size / (1024*1024);
+    if (sizeMB > maxMB) return {ok:false, msg:`Archivo supera ${maxMB}MB`};
+    if (!/^image\//.test(file.type)) return {ok:false, msg:`Formato no permitido`};
+    return {ok:true};
   };
 
-  openBtn?.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
-  [closeBtn, cancelBtn, backdrop].forEach(el => el?.addEventListener('click', closeModal));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal?.hidden) closeModal(); });
-
-  // ===== Drag&Drop + Validación portada
-  const fileInput = document.getElementById('pl_cover');
-  const dropArea  = document.getElementById('coverDrop');
-  const overlay   = document.getElementById('uploaderOverlay');
-  const hint      = document.getElementById('uploaderHint');
-  const preview   = document.getElementById('coverPreview');
-  const coverMsg  = document.getElementById('coverMsg');
-
-  const MAX_MB = 5;
-  const showError = (el, msg) => { if (!el) return; el.textContent = msg; el.classList.add('msg-error'); };
-  const clearMsg  = (el) => { if (!el) return; el.textContent = ''; el.classList.remove('msg-error','msg-ok'); };
-  const validType = (file) => /^image\/(png|jpe?g|webp)$/i.test(file.type);
-  const validSize = (file) => file.size <= MAX_MB * 1024 * 1024;
-
-  const setPreview = (file) => {
-    const url = URL.createObjectURL(file);
-    preview.src = url;
-    preview.style.display = 'block';
-    hint.style.display = 'none';
-    dropArea.classList.add('has-preview');
-  };
-
-  ['dragenter','dragover'].forEach(evt => {
-    dropArea?.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dropArea.classList.add('is-dragover');
-      if (overlay) overlay.style.opacity = '1';
-    });
+  coverDrop?.addEventListener('dragover', e => { e.preventDefault(); coverDrop.classList.add('is-dragover'); });
+  coverDrop?.addEventListener('dragleave', () => coverDrop.classList.remove('is-dragover'));
+  coverDrop?.addEventListener('drop', e => {
+    e.preventDefault(); coverDrop.classList.remove('is-dragover');
+    const file = e.dataTransfer?.files?.[0]; if (!file) return;
+    const v = validateImage(file); setMsg($('#coverMsg'), v.msg || '', v.ok);
+    if (!v.ok) return; coverInput.files = e.dataTransfer.files; readPreview(file);
   });
-  ['dragleave','drop'].forEach(evt => {
-    dropArea?.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dropArea.classList.remove('is-dragover');
-      if (overlay) overlay.style.opacity = '0';
-    });
+  coverDrop?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); coverInput?.click(); } });
+  coverInput?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    const v = validateImage(file); setMsg($('#coverMsg'), v.msg || '', v.ok);
+    if (!v.ok) return clearPreview(); readPreview(file);
   });
+  const readPreview = (file) => { const r = new FileReader(); r.onload = () => { if (coverPreview){ coverPreview.src = r.result; coverPreview.style.display='block'; } if (uploaderHint){ uploaderHint.style.display='none'; } }; r.readAsDataURL(file); };
 
-  dropArea?.addEventListener('drop', e => {
-    const file = e.dataTransfer.files?.[0]; if (!file) return;
-    clearMsg(coverMsg);
-    if (!validType(file)) { showError(coverMsg, 'Formato no permitido. Usa PNG/JPG.'); return; }
-    if (!validSize(file)) { showError(coverMsg, `El archivo supera ${MAX_MB}MB.`); return; }
-    const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
-    setPreview(file);
-  });
-
-  fileInput?.addEventListener('change', e => {
-    const file = e.target.files?.[0]; if (!file) return;
-    clearMsg(coverMsg);
-    if (!validType(file)) { showError(coverMsg, 'Formato no permitido. Usa PNG/JPG.'); fileInput.value=''; return; }
-    if (!validSize(file)) { showError(coverMsg, `El archivo supera ${MAX_MB}MB.`); fileInput.value=''; return; }
-    setPreview(file);
-  });
-
-  // ===== Validación mínima formulario
-  document.getElementById('playlistForm')?.addEventListener('submit', (e)=>{
+  form?.addEventListener('submit', (e) => {
+    clearMsgs();
     let ok = true;
-    const name    = document.getElementById('pl_nombre');
-    const nameMsg = document.getElementById('nameMsg');
-    clearMsg(nameMsg); clearMsg(coverMsg);
-
-    if (!name.value.trim()) { showError(nameMsg, 'Ingresa un nombre.'); ok = false; }
-    if (!fileInput || fileInput.files.length === 0) { showError(coverMsg, 'Agrega una portada.'); ok = false; }
+    if (!nameInput?.value?.trim() || nameInput.value.trim().length < 3) { setMsg($('#nameMsg'),'Escribe al menos 3 caracteres'); ok=false; }
+    if (descInput?.value && descInput.value.length > 300) { setMsg($('#descMsg'),'Máximo 300 caracteres'); ok=false; }
+    const f = coverInput?.files?.[0]; if (f){ const v = validateImage(f); if (!v.ok){ setMsg($('#coverMsg'), v.msg); ok=false; } }
     if (!ok) e.preventDefault();
   });
 
-  // ===== Panel de detalle (opcional)
-  document.getElementById('btnCloseDetail')?.addEventListener('click', () => {
-    const detail = document.getElementById('playlistDetail');
-    if (detail) detail.hidden = true;
+  /* ---------- Selección mejorada ---------- */
+  let selectMode = false;
+  const setSelectMode = (on) => {
+    selectMode = !!on;
+    grid.classList.toggle('is-selecting', selectMode);
+    $$('.tile[href]', grid).forEach(t => {
+      const cb = $('.bulk-check', t);
+      if (!cb) return;
+      cb.hidden = !selectMode;
+      if (!selectMode){ cb.checked = false; t.classList.remove('is-selected'); t.setAttribute('aria-selected','false'); }
+    });
+    deleteBtn.disabled = !selectMode;
+    selectBtn.querySelector('.btn-text').textContent = selectMode ? 'Cancelar' : 'Seleccionar';
+    selectBtn.querySelector('i').className = selectMode ? 'fa-regular fa-square-check' : 'fa-regular fa-square';
+  };
+  selectBtn?.addEventListener('click', () => setSelectMode(!selectMode));
+
+  // Click sobre la tarjeta -> alterna selección (y evita navegar)
+  grid?.addEventListener('click', (e) => {
+    const tile = e.target.closest('.tile[href]');
+    if (!tile) return;
+
+    // El botón de play sigue funcionando
+    if (e.target.closest('[data-action="quick-play"]')) return;
+
+    if (selectMode) {
+      e.preventDefault();
+      toggleTile(tile);
+    }
   });
 
-  // ===== Modal Acceder por Enlace
-  const accessBtn   = document.getElementById('accessPlaylistLink');
-  const shareModal  = document.getElementById('shareLinkModal');
-  const shareInput  = document.getElementById('shareLinkInput');
-  const shareClose  = document.getElementById('closeShareLinkModal');
-  const shareSubmit = document.getElementById('submitShareLink');
-
-  accessBtn?.addEventListener('click', () => { shareModal.hidden = false; shareInput.focus(); });
-  shareClose?.addEventListener('click', () => { shareModal.hidden = true; shareInput.value = ''; });
-  shareSubmit?.addEventListener('click', () => {
-    const link = (shareInput.value || '').trim();
-    if (!link) { alert('Por favor, ingresa un enlace válido'); return; }
-
-    let code = link;
-    if (link.includes('/')) { const parts = link.split('/'); code = parts[parts.length - 1]; }
-
-    fetch(`/api/playlists/share/${code}`)
-      .then(r => { if (!r.ok) throw new Error('Playlist no encontrada'); return r.json(); })
-      .then(data => {
-        if (data.success && data.playlist?.id) window.location.href = `/playlists/${data.playlist.id}`;
-        else alert('Error al acceder a la playlist.');
-      })
-      .catch(() => alert('No se pudo encontrar la playlist. Verifica el enlace.'));
+  // Shift+click activa selección y marca
+  grid?.addEventListener('mousedown', (e) => {
+    const tile = e.target.closest('.tile[href]'); if (!tile) return;
+    if (e.shiftKey && !selectMode) { e.preventDefault(); setSelectMode(true); toggleTile(tile, true); }
   });
-  shareInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') shareSubmit?.click(); });
-});
+
+  // Long-press (touch)
+  let pressTimer = null;
+  grid?.addEventListener('pointerdown', (e) => {
+    const tile = e.target.closest('.tile[href]'); if (!tile) return;
+    if (e.pointerType === 'touch') {
+      pressTimer = setTimeout(() => { if (!selectMode) setSelectMode(true); toggleTile(tile, true); }, 420);
+    }
+  });
+  const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+  grid?.addEventListener('pointerup', clearPress);
+  grid?.addEventListener('pointerleave', clearPress);
+  grid?.addEventListener('pointercancel', clearPress);
+
+  function toggleTile(tile, forceCheck=null){
+    const cb = $('.bulk-check', tile); if (!cb) return;
+    cb.checked = (forceCheck !== null) ? forceCheck : !cb.checked;
+    tile.classList.toggle('is-selected', cb.checked);
+    tile.setAttribute('aria-selected', cb.checked ? 'true' : 'false');
+  }
+
+  // Eliminar seleccionadas (frontend)
+  deleteBtn?.addEventListener('click', () => {
+    if (!selectMode) return;
+    const selected = $$('.tile[href]', grid).filter(t => $('.bulk-check', t)?.checked);
+    if (!selected.length) return;
+    selected.forEach(t => { t.style.transition='transform .22s ease, opacity .22s ease'; t.style.transform='scale(.98)'; t.style.opacity='0'; setTimeout(()=>t.remove(), 200); });
+    setSelectMode(false);
+  });
+
+  /* ---------- Quick play ---------- */
+  grid?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="quick-play"]'); if (!btn) return;
+    e.preventDefault();
+    const tile = e.target.closest('.tile[href]'); if (!tile) return;
+    const name = tile.querySelector('.tile-name')?.textContent?.trim();
+    const id = tile.dataset.id; const cover = tile.querySelector('img')?.src || '';
+    window.dispatchEvent(new CustomEvent('aura:queue:play', { detail:{ type:'playlist', id, name, cover } }));
+    btn.style.transform='scale(0.92)'; setTimeout(()=>btn.style.transform='', 120);
+  });
+
+  /* ---------- Focus trap (modal) ---------- */
+  let lastActive = null;
+  function trapFocus(modalEl){
+    lastActive = document.activeElement;
+    const FOCUSABLE = 'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])';
+    const tabHandler = (e) => {
+      const foc = $$(FOCUSABLE, modalEl).filter(el => !el.disabled && !el.getAttribute('aria-hidden'));
+      if (!foc.length) return;
+      const first = foc[0], last = foc[foc.length-1];
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+        else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+      }
+      if (e.key === 'Escape') { if (!modal.hidden) closeModal(); }
+    };
+    modalEl.__trapHandler = tabHandler; modalEl.addEventListener('keydown', tabHandler);
+  }
+  function releaseFocusTrap(){ if (lastActive){ lastActive.focus({preventScroll:true}); lastActive=null; } modal?.removeEventListener('keydown', modal.__trapHandler); }
+
+  /* ---------- Atajos ---------- */
+  window.addEventListener('keydown', (e) => {
+    if (e.target.matches('input,textarea')) return;
+    if (e.key.toLowerCase() === 'n') openModal();
+    if (e.key.toLowerCase() === 's') setSelectMode(!selectMode);
+    if (e.key === 'Delete' && selectMode && !deleteBtn.disabled) deleteBtn.click();
+    if (e.key === 'Escape') { if (!modal.hidden) closeModal(); }
+  });
+
+})();
