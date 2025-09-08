@@ -13,7 +13,7 @@
     @include('components.sidebar')
         @include('components.header')
         @include('components.traductor')
-
+        @include('components.fondo')
 
 
     <main class="main-content">

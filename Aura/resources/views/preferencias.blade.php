@@ -17,6 +17,7 @@
   @include('components.sidebar')
   @include('components.traductor')
   @include('components.header')
+    @include('components.fondo')
 
   {{-- Partículas de fondo --}}
   <div class="floating-particles" id="particles"></div>
@@ -24,10 +25,28 @@
   {{-- ====== CONTENIDO PRINCIPAL ====== --}}
   <main class="main-content">
     <div class="container">
-      <div class="header">
-        <h1>Preferencias</h1>
-        <p class="subtitle">Personaliza tu experiencia musical con artistas emergentes</p>
-      </div>
+
+      {{-- ====== HERO NUEVO ====== --}}
+      <section class="pref-hero" aria-label="Preferencias">
+        <div class="pref-hero__bg"></div>
+
+        <div class="pref-hero__content">
+          <div class="pref-hero__icon">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h1>Preferencias</h1>
+            <p class="pref-hero__subtitle">Personaliza tu experiencia musical con artistas emergentes</p>
+          </div>
+        </div>
+
+        <div class="pref-hero__chips">
+          <span class="pref-chip"><i class="fa-solid fa-globe"></i> Idioma: ES</span>
+          <span class="pref-chip"><i class="fa-solid fa-bolt"></i> Modo inmersivo</span>
+          <span class="pref-chip"><i class="fa-solid fa-wave-square"></i> EQ: Balanceado</span>
+        </div>
+      </section>
+      {{-- ====== /HERO NUEVO ====== --}}
 
       {{-- ===== CUENTA ===== --}}
       <div class="preferences-section">

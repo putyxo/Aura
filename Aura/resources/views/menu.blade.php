@@ -30,6 +30,7 @@
   @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}
         @include('components.header')
         @include('components.traductor')
+        @include('components.fondo')
 
   <main class="main-content">
 

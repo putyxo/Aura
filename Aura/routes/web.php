@@ -48,7 +48,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
     Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
     Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
-    Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
+    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
+    Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
+    Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
+    Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
     Route::get('/admin', fn() => view('admin'))->name('admin');
 
