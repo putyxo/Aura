@@ -13,7 +13,7 @@ class TraductorController extends Controller
         $target = $request->input('lang', 'en');
 
         $tr = new GoogleTranslate($target);
-        $tr->setSource(); // autodetecta el idioma original
+        $tr->setSource('auto'); // 🔥 corrección
 
         $traducciones = [];
         foreach ($textos as $t) {

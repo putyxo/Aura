@@ -1,5 +1,5 @@
-/* ================= TOKENS ================= */
-:root{
+/* ================== ARTIST CAROUSEL ================== */
+.artist-carousel {
   --bg:#0b0b10; --panel:#0f0f17; --panel2:#141428; --line:#24243a;
   --text:#f6f7fb; --dim:#b6b6c8;
   --a1:#a855f7; --a2:#ec4899; --a3:#00ffa8;
@@ -45,7 +45,7 @@ body{
 
 /* ================== PLAYLISTS (Hero) ================== */
 .playlist-section h2{
-  margin-top:70px; font-size:18px; font-weight:800; letter-spacing:.3px; color:#fff;
+  margin-top:70px; margin-bottom:30px; font-size:18px; font-weight:800; letter-spacing:.3px; color:#fff;
   position:relative; display:inline-block; padding-bottom:6px;
 }
 .playlist-section h2::after{
@@ -58,21 +58,34 @@ body{
 .playlist-card{
   position:relative; border-radius:22px; padding:32px; min-height:220px; height:100%;
   display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden; isolation:isolate;
-  border:1px solid rgba(255,255,255,.06);
-  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.playlist-card:hover{ transform:translateY(-3px); box-shadow:0 14px 32px rgba(0,0,0,.35) }
+.playlist-card:hover{
+  transform:translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,.4);
+}
 .playlist-card::after{
   content:""; position:absolute; inset:0; border-radius:inherit;
   background: radial-gradient(120% 120% at 70% 20%, rgba(255,255,255,.12), transparent 55%);
   mix-blend-mode: overlay; pointer-events:none;
 }
-.playlist-card.green{  background:linear-gradient(135deg,#2e026d 10%,#6d28d9 60%,#00ffa8 130%); color:#fff }
-.playlist-card.pink{   background:linear-gradient(135deg,#9d174d 10%,#db2777 70%); color:#fff }
-.playlist-card.teal{   background:linear-gradient(135deg,#1e3a8a 10%,#3b82f6 70%); color:#fff }
-.playlist-card.purple{ background:linear-gradient(135deg,#312e81 10%,#7c3aed 60%); color:#fff }
+.playlist-card.green,
+.playlist-card.pink,
+.playlist-card.teal,
+.playlist-card.purple{
+  background:linear-gradient(135deg,#2e026d 10%,#6d28d9 60%,#00ffa8 130%);
+  color:#fff;
+}
 
-.playlist-card img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; opacity:.22 }
+.playlist-card img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; opacity:.22;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.playlist-card:hover img{
+  opacity:.35; transform:scale(1.02);
+}
 .overlay-text{
   position:absolute; left:32px; right:32px; bottom:32px;
   background:rgba(0,0,0,.35); border-radius:16px; padding:16px 24px; color:#fff;
@@ -85,11 +98,14 @@ body{
 
 /* ================== MUSIC SECTIONS ================== */
 .music-sections{ display:flex; gap:32px; margin-top:40px }
-.selected-album,.tracks,.suggested{ flex:1 }
-.album-info{ display:flex; gap:16px; align-items:center }
-.album-info img{ border-radius:16px }
-.album-info p{ margin:0 0 4px 0; font-size:14px; color:var(--text-dim) }
-.album-info span{ font-size:13px; color:var(--text-dim) }
+.selected-album,.tracks{ flex:1.5 }
+.suggested{ flex:2 }
+.selected-album h2, .tracks h2, .suggested h2{ margin-bottom:40px; font-size:28px }
+.album-info{ display:flex; gap:24px; align-items:center }
+.album-info img{ border-radius:16px; width:150px; height:150px; object-fit:cover }
+.album-info h3{ font-size:22px; margin:0 0 12px 0; color:#fff }
+.album-info p{ margin:0 0 8px 0; font-size:17px; color:var(--text-dim) }
+.album-info span{ font-size:17px; color:var(--text-dim) }
 
 /* Tracks list */
 .tracks ul{ list-style:none }
@@ -100,22 +116,22 @@ body{
 }
 .tracks li:last-child{ border-bottom:none }
 .tracks li:hover{ background-color:rgba(255,255,255,.04) }
-.track-cover{ width:60px; height:60px; border-radius:12px; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,.18) }
+.track-cover{ width:70px; height:70px; border-radius:12px; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,.18) }
 
-.track-title{ font-size:16px; font-weight:800; margin-bottom:6px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.track-meta{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-dim) }
+.track-title{ font-size:17px; font-weight:600; margin-bottom:6px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.track-meta{ display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-dim) }
 .track-action{
-  margin-left:24px; font-size:20px; color:var(--accent-1);
+  margin-left:24px; font-size:22px; color:var(--accent-1);
   background:none; border:none; cursor:pointer; border-radius:50%;
-  width:38px; height:38px; display:grid; place-items:center;
+  width:42px; height:42px; display:grid; place-items:center;
   transition: background var(--dur), color var(--dur), transform .08s;
 }
 .track-action:hover{ background:rgba(255,255,255,.06); color:#fff }
 
 /* Suggested pills */
-.suggested .album-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px }
-.album-box{ background:transparent; border:none; border-radius:16px; padding:12px; text-align:center; color:#fff }
-.album-box img{ width:60px; border-radius:12px; margin-bottom:8px }
+.suggested .album-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px }
+.album-box{ background:transparent; border:none; border-radius:16px; padding:14px; text-align:center; color:#fff }
+.album-box img{ width:70px; border-radius:12px; margin-bottom:8px }
 
 
 
@@ -125,13 +141,69 @@ body{
 .element-glow::before{
   content:""; position:absolute; top:-6px; left:-6px; width:calc(100% + 12px); height:calc(100% + 12px);
   border-radius:16px;
-  background:linear-gradient(45deg,#6d28d9,#ec4899,#6d28d9,#00ffa8);
+  background:linear-gradient(45deg,#6d28d9,#ec4899,#6d28d9,);
   background-size:600%; filter:blur(9px); opacity:0; transition:opacity .3s ease; z-index:-1;
   animation:glowing 18s linear infinite;
 }
 .element-glow:hover::before{ opacity:.9 }
 @keyframes glowing{0%{background-position:0 0}50%{background-position:400% 0}100%{background-position:0 0}}
 
+/* ================== ARTIST CAROUSEL ================== */
+.artist-carousel {
+  margin-top: 40px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.artist-carousel h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 24px;
+  animation: scrollRight 42s linear infinite;
+}
+
+.artist-item {
+  flex: 0 0 auto;
+  width: 120px;
+  text-align: center;
+  color: var(--text);
+}
+
+.artist-item img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+}
+
+.artist-item p {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Animation to scroll carousel to the right */
+@keyframes scrollRight {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-120px * 10 - 24px * 9));
+  }
+}
 
 
 

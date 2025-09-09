@@ -21,6 +21,8 @@
   </style>
 </head>
 <body>
+@include('components.traductor')
+
 <div class="wrap">
   <h1>Buscar canciones</h1>
 

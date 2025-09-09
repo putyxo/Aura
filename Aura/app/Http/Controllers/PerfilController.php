@@ -8,6 +8,8 @@ use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\GoogleDriveOAuthService;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class PerfilController extends Controller
 {
@@ -25,18 +27,19 @@ class PerfilController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Obtener las canciones y álbumes del usuario
-        $canciones = Cancion::where('user_id', $user->id)->get();
-        $albumes   = Album::where('user_id', $user->id)->get();
+        // Obtener TODO (puedes limitar/paginar en DB si hace falta)
+        $canciones = Cancion::where('user_id', $user->id)->latest()->get();
+        $albumes   = Album::where('user_id', $user->id)->latest()->get();
 
-        // Combinar álbumes y canciones para lanzamientos
+        // Combinar álbumes y canciones para lanzamientos (normalizados)
         $lanzamientos = collect();
+
         foreach ($albumes as $album) {
             $lanzamientos->push([
                 'tipo'       => 'album',
-                'titulo'     => $album->titulo,
-                'cover'      => $album->portada,
-                'anio'       => $album->anio,
+                'titulo'     => $album->titulo ?: ($album->title ?? 'Sin título'),
+                'cover'      => $album->portada ?? $album->cover_path ?? null,
+                'anio'       => $album->anio ?? optional($album->created_at)->format('Y'),
                 'created_at' => $album->created_at,
             ]);
         }
@@ -44,30 +47,78 @@ class PerfilController extends Controller
         foreach ($canciones as $cancion) {
             $lanzamientos->push([
                 'tipo'       => 'cancion',
-                'titulo'     => $cancion->title,
-                'cover'      => $cancion->cover_url,
-                'anio'       => $cancion->created_at->format('Y'),
+                'titulo'     => $cancion->title ?: ($cancion->nombre ?? 'Sin título'),
+                'cover'      => $cancion->cover_url ?? $cancion->portada ?? $cancion->cover_path ?? null,
+                'anio'       => optional($cancion->created_at)->format('Y'),
                 'created_at' => $cancion->created_at,
             ]);
         }
 
-        // Ordenar los lanzamientos
-        $lanzamientos = $lanzamientos->sortByDesc('created_at');
+        // Ordena por fecha y evita elementos totalmente vacíos
+        $lanzamientos = $lanzamientos
+            ->filter(fn($x) => !empty($x['titulo']))
+            ->sortByDesc('created_at')
+            ->values();
 
         return view('ed_perfil', compact('user', 'canciones', 'albumes', 'lanzamientos'));
     }
 
     /**
-     * Perfil del usuario autenticado
+     * Página "Ver todo" de lanzamientos con paginación.
      */
+    public function releasesAll(Request $request, $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        $albums = Album::where('user_id', $user->id)->latest()->get()->map(function($a){
+            return [
+                'id'         => $a->id,
+                'tipo'       => 'album',
+                'titulo'     => $a->titulo ?: ($a->title ?? 'Sin título'),
+                'cover'      => $a->portada ?? $a->cover_path ?? null,
+                'anio'       => $a->anio ?? optional($a->created_at)->format('Y'),
+                'created_at' => $a->created_at,
+            ];
+        });
+
+        $songs = Cancion::where('user_id', $user->id)->latest()->get()->map(function($c){
+            return [
+                'id'         => $c->id,
+                'tipo'       => 'cancion',
+                'titulo'     => $c->title ?: ($c->nombre ?? 'Sin título'),
+                'cover'      => $c->cover_url ?? $c->portada ?? $c->cover_path ?? null,
+                'anio'       => optional($c->created_at)->format('Y'),
+                'created_at' => $c->created_at,
+            ];
+        });
+
+        /** @var Collection $all */
+        $all = $albums->merge($songs)
+            ->filter(fn($x) => !empty($x['titulo']))
+            ->sortByDesc('created_at')
+            ->values();
+
+        // Paginación manual de una Collection
+        $perPage   = 24;
+        $page      = LengthAwarePaginator::resolveCurrentPage() ?: 1;
+        $items     = $all->slice(($page - 1) * $perPage, $perPage)->values();
+        $paginator = new LengthAwarePaginator($items, $all->count(), $perPage, $page, [
+            'path'  => $request->url(),
+            'query' => $request->query(),
+        ]);
+
+        return view('perfil.releases_all', [
+            'user'         => $user,
+            'lanzamientos' => $items,
+            'pagination'   => $paginator,
+        ]);
+    }
+
     public function miPerfil()
     {
         return $this->show(Auth::id());
     }
 
-    /**
-     * Actualizar perfil
-     */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -86,33 +137,27 @@ class PerfilController extends Controller
             $user->biografia = $request->bio;
         }
 
-        // Carpeta de destino en Drive
+        // Carpeta en Drive
         $folderId = env('GOOGLE_DRIVE_UPLOAD_FOLDER_ID');
 
-        // === AVATAR en Drive ===
+        // Avatar
         if ($request->hasFile('avatar')) {
             $file  = $request->file('avatar');
             $local = $file->getPathname();
             $name  = uniqid('avatar_') . '.' . $file->getClientOriginalExtension();
             $mime  = $file->getMimeType();
-
             $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-
-            // Guardamos solo el ID del archivo
-            $user->avatar = $uploaded['id'];
+            $user->avatar = $uploaded['id']; // ID del archivo
         }
 
-        // === BANNER en Drive ===
+        // Banner
         if ($request->hasFile('banner')) {
             $file  = $request->file('banner');
             $local = $file->getPathname();
             $name  = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
             $mime  = $file->getMimeType();
-
             $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-
-            // Guardamos solo el ID del archivo
-            $user->banner = $uploaded['id'];
+            $user->banner = $uploaded['id']; // ID del archivo
         }
 
         $user->save();
@@ -121,37 +166,26 @@ class PerfilController extends Controller
             ->with('success', 'Perfil actualizado correctamente ✅');
     }
 
-    /**
-     * Seguir a un artista
-     */
     public function follow($userId)
     {
         $user = Auth::user();
         if ($user->isFollowing($userId)) {
             return redirect()->back()->with('error', 'Ya sigues a este usuario.');
         }
-
         $user->followings()->attach($userId);
         return redirect()->back()->with('success', 'Ahora sigues a este artista.');
     }
 
-    /**
-     * Dejar de seguir a un artista
-     */
     public function unfollow($userId)
     {
         $user = Auth::user();
         if (!$user->isFollowing($userId)) {
             return redirect()->back()->with('error', 'No sigues a este usuario.');
         }
-
         $user->followings()->detach($userId);
         return redirect()->back()->with('success', 'Has dejado de seguir a este artista.');
     }
 
-    /**
-     * Lista de artistas que sigue el usuario autenticado
-     */
     public function followArtistList()
     {
         $user = Auth::user();

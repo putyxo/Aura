@@ -11,6 +11,8 @@
   <div class="with-sidebar">
     @include('components.sidebar')
     @include('components.header')
+    @include('components.traductor')
+
 
     <main class="main-content">
       <!-- Verifica si hay álbumes -->

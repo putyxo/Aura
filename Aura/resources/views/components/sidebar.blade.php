@@ -70,11 +70,7 @@ html,body{height:100%}
 body{
   font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   color:var(--color-text);
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(168,85,247,.15), transparent 60%),
-    radial-gradient(1000px 700px at 10% 10%, rgba(236,72,153,.13), transparent 60%),
-    radial-gradient(900px 400px at 60% 110%, rgba(0,255,168,.10), transparent 55%),
-    var(--color-bg);
+
   overflow:hidden;
 }
 .app{display:flex;flex-direction:column;height:100vh}
@@ -112,7 +108,7 @@ body{
   backdrop-filter: blur(14px) saturate(1.05);
   -webkit-backdrop-filter: blur(14px) saturate(1.05);
   overflow: hidden;
-  z-index: 60;
+  z-index: 9999999;
   transition: width var(--anim-dur) var(--anim-ease), box-shadow var(--anim-dur) var(--anim-ease);
 }
 .sidebar::after {
