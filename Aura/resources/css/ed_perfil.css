@@ -262,8 +262,8 @@ body.modal-open{overflow:hidden}
   transition:transform .18s ease,background .18s ease;backdrop-filter:blur(4px);box-shadow:0 12px 26px rgba(124,58,237,.25)
 }
 .albums-arrow:hover{transform:translate(-60%,-50%) scale(1.05)}
-.albums-arrow.left{left:0}
-.albums-arrow.right{right:0;transform:translate(60%,-50%)}
+.albums-arrow.left{left:-30px}
+.albums-arrow.right{right:-30px;transform:translate(60%,-50%)}
 .albums-arrow.right:hover{transform:translate(60%,-50%) scale(1.05)}
 .albums-arrow:disabled{opacity:.35;pointer-events:none}
 
