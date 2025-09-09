@@ -9,8 +9,9 @@
 <body>
 
   @include('components.footer')
-    @include('components.sidebar')
-    @include('components.header')
+  @include('components.sidebar')
+  @include('components.header')
+
 <!-- ================= SELECCIÓN DE TIPO ================= -->
 <section class="home active">
   <h2 class="section-title">¿Qué deseas subir?</h2>
@@ -87,8 +88,18 @@
   <button type="submit" id="btn-submit">Subir</button>
 </form>
 
+<!-- ================= OVERLAY REVISIÓN ================= -->
+<div id="reviewOverlay" class="overlay hidden">
+  <div class="overlay-card">
+    <div class="spinner" aria-hidden="true"></div>
+    <h3 id="reviewTitle">Revisión en proceso</h3>
+    <p id="reviewMsg">Espere a que aprueben su envío.</p>
+    <button type="button" id="reviewClose" class="btn-close">Entendido</button>
+  </div>
+</div>
+
 <script>
-// Cambia entre "cancion" y "album"
+// Referencias base
 const home        = document.querySelector('.home');
 const form        = document.getElementById('uploadForm');
 const btnSubmit   = document.getElementById('btn-submit');
@@ -108,14 +119,24 @@ const inputTracks = document.getElementById('tracks');
 const list        = document.getElementById('tracks-list');
 const titleAlbum  = document.getElementById('title');
 
+// Overlay revisión
+const reviewOverlay = document.getElementById('reviewOverlay');
+const reviewTitle   = document.getElementById('reviewTitle');
+const reviewMsg     = document.getElementById('reviewMsg');
+const reviewClose   = document.getElementById('reviewClose');
+
+// Tipo seleccionado
+let tipoActual = null;
+
 // Cambiar entre los formularios de canción y álbum
 function mostrarRegistro(tipo) {
+  tipoActual = tipo;
   home.classList.add('hidden');
   form.classList.remove('hidden');
 
   if (tipo === 'album') {
-    form.action = "{{ route('albums.store') }}";
-    btnSubmit.textContent = 'Crear Álbum';
+    form.action = "{{ route('albums.store') }}"; // no se usará por preventDefault
+    btnSubmit.textContent = 'Solicitar revisión de Álbum';
 
     titleAlbum.required = true;
     inputTracks.required = true;
@@ -126,8 +147,8 @@ function mostrarRegistro(tipo) {
     formAlbum.classList.remove('hidden');
     formSong.classList.add('hidden');
   } else {
-    form.action = "{{ route('songs.store') }}";
-    btnSubmit.textContent = 'Subir Canción';
+    form.action = "{{ route('songs.store') }}"; // no se usará por preventDefault
+    btnSubmit.textContent = 'Solicitar revisión de Canción';
 
     nombreInput.required = true;
     mp3Input.required = true;
@@ -146,6 +167,30 @@ function volverASeleccion() {
   form.classList.add('hidden');
 }
 
+// Interceptar submit: NO enviar, mostrar revisión
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const esAlbum = (tipoActual === 'album');
+  reviewTitle.textContent = 'Revisión en proceso';
+  reviewMsg.textContent = esAlbum
+    ? 'Espere a que aprueben su álbum. Recibirá la confirmación cuando esté disponible.'
+    : 'Espere a que aprueben su canción. Recibirá la confirmación cuando esté disponible.';
+
+  Array.from(form.elements).forEach(el => el.disabled = true);
+  btnSubmit.disabled = true;
+
+  reviewOverlay.classList.remove('hidden');
+});
+
+// Cerrar overlay y restaurar UI
+reviewClose.addEventListener('click', () => {
+  reviewOverlay.classList.add('hidden');
+  Array.from(form.elements).forEach(el => el.disabled = false);
+  btnSubmit.disabled = false;
+  volverASeleccion();
+});
+
 // ===== Drag & drop SINGLE
 dzSingle.addEventListener('click', () => mp3Input.click());
 
@@ -161,7 +206,7 @@ function renderTitles() {
   const files = Array.from(inputTracks.files || []);
   if (!files.length) { list.style.display = 'none'; return; }
   list.style.display = 'flex';
-  files.forEach((f, i) => {
+  files.forEach((f) => {
     const base = f.name.replace(/\.[^/.]+$/, '');
     const row = document.createElement('div');
     row.classList.add('track-row');
@@ -190,6 +235,7 @@ dzCover.addEventListener('drop', e => {
 });
 
 // Vista previa portada álbum
+const coverPreview = document.getElementById('coverPreview');
 inputCover.addEventListener('change', () => {
   coverPreview.innerHTML = "";
   const file = inputCover.files[0];
@@ -203,7 +249,6 @@ inputCover.addEventListener('change', () => {
 });
 
 // ===== Drag & drop tracks
-dzTracks.addEventListener('click', () => inputTracks.click());
 dzTracks.addEventListener('dragover', e => { 
   e.preventDefault(); 
   dzTracks.classList.add('dragover'); 
@@ -218,24 +263,6 @@ dzTracks.addEventListener('drop', e => {
   }
 });
 inputTracks.addEventListener('change', renderTitles);
-
-// Vista previa canciones con título editable
-function renderTitles() {
-  list.innerHTML = '';
-  const files = Array.from(inputTracks.files || []);
-  if (!files.length) { list.style.display = 'none'; return; }
-  list.style.display = 'flex';
-  files.forEach((f, i) => {
-    const base = f.name.replace(/\.[^/.]+$/, '');
-    const row = document.createElement('div');
-    row.classList.add('track-row');
-    row.innerHTML = `
-      <audio controls src="${URL.createObjectURL(f)}"></audio>
-      <input type="text" name="titles[]" placeholder="Editar título" value="${base}">
-    `;
-    list.appendChild(row);
-  });
-}
 
 // Vista previa portada (canción individual)
 const dzSingleCover = document.getElementById('dz-single-cover');
@@ -257,7 +284,7 @@ dzSingleCover.addEventListener('drop', e => {
   }
 });
 
-// Vista previa portada
+// Vista previa portada single
 portadaInput.addEventListener('change', () => {
   singleCoverPreview.innerHTML = "";
   const file = portadaInput.files[0];

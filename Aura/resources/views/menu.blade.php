@@ -53,7 +53,7 @@
             <div class="overlay-text">
               <h3>Internacionales</h3>
               <p>Conoce lo nuevo</p>
-              <span class="emoji">▶️</span>
+              <span class="emoji"></span>
             </div>
           </div>
 
@@ -62,7 +62,7 @@
             <div class="overlay-text">
               <h3>Mezcla relajada</h3>
               <p>Solo relájate y escucha</p>
-              <span class="emoji">▶️</span>
+              <span class="emoji">/span>
             </div>
           </div>
 
@@ -71,7 +71,7 @@
             <div class="overlay-text">
               <h3>Exitos de El Salvador</h3>
               <p>Conoce lo mejor del país</p>
-              <span class="emoji">▶️</span>
+              <span class="emoji"></span>
             </div>
           </div>
         </div>

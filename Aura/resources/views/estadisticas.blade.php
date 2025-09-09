@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
-  @vite('resources/css/admin.css')
+  @vite('resources/css/estadisticas.css')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -17,6 +17,7 @@
     @include('components.sidebar')
     @include('components.header')
     @include('components.traductor')
+    @include('components.fondo')
   <div class="app">
     <div class="with-sidebar">
       <div class="main-content">
@@ -56,9 +57,9 @@
           <div class="studio__table" id="studioTable">
             <div class="studio__thead">
               <div class="c1"></div>
-              <div class="c2">Usuario</div>
+              <div class="c2">Video</div>
               <div class="c3">Visibilidad</div>
-              <div class="c4">Copyright</div>
+              <div class="c4">Restricciones</div>
               <div class="c5">Fecha</div>
               <div class="c6">Vistas</div>
               <div class="c7">Comentarios</div>
@@ -70,11 +71,11 @@
             <div class="studio__row reveal" data-id="1">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #1</div>
                 <a class="vlink" href="https://youtu.be/XXXXXXXX" target="_blank" rel="noopener">https://youtu.be/XXXXXXXX</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">7 sept 2020</div>
               <div class="c6 ta-r">96</div>
               <div class="c7 ta-r">2</div>
@@ -92,11 +93,11 @@
             <div class="studio__row reveal" data-id="2">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #2</div>
                 <a class="vlink" href="https://youtu.be/YYYYYYYY" target="_blank" rel="noopener">https://youtu.be/YYYYYYYY</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">8 sept 2020</div>
               <div class="c6 ta-r">145</div>
               <div class="c7 ta-r">3</div>
@@ -114,11 +115,11 @@
             <div class="studio__row reveal" data-id="3">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #3</div>
                 <a class="vlink" href="https://youtu.be/ZZZZZZZZ" target="_blank" rel="noopener">https://youtu.be/ZZZZZZZZ</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">9 sept 2020</div>
               <div class="c6 ta-r">210</div>
               <div class="c7 ta-r">8</div>
@@ -136,11 +137,11 @@
             <div class="studio__row reveal" data-id="4">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #4</div>
                 <a class="vlink" href="https://youtu.be/AAAAAAA1" target="_blank" rel="noopener">https://youtu.be/AAAAAAA1</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">10 sept 2020</div>
               <div class="c6 ta-r">78</div>
               <div class="c7 ta-r">0</div>
@@ -158,11 +159,11 @@
             <div class="studio__row reveal" data-id="5">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #5</div>
                 <a class="vlink" href="https://youtu.be/BBBBBBB2" target="_blank" rel="noopener">https://youtu.be/BBBBBBB2</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">11 sept 2020</div>
               <div class="c6 ta-r">304</div>
               <div class="c7 ta-r">5</div>
@@ -180,11 +181,11 @@
             <div class="studio__row reveal" data-id="6">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
+                <div class="vtitle">Mi video de ejemplo #6</div>
                 <a class="vlink" href="https://youtu.be/CCCCCCC3" target="_blank" rel="noopener">https://youtu.be/CCCCCCC3</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
               <div class="c5">12 sept 2020</div>
               <div class="c6 ta-r">512</div>
               <div class="c7 ta-r">12</div>
