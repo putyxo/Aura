@@ -83,7 +83,7 @@
             <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
               <i class="fas fa-user"></i><span>Ver mi perfil</span>
             </a>
-            <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
+            <a href="{{ route('cuenta', auth()->id()) }}" class="ah-menu-item">
               <i class="fas fa-cog"></i><span>Mi cuenta</span>
             </a>
              <a href="{{ route('preferencias', auth()->id()) }}" class="ah-menu-item">
@@ -321,6 +321,29 @@
 .ah-toggle-knob{ position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,.35); transition:left .22s }
 .ah-toggle[aria-checked="true"] .ah-toggle-knob{ left: calc(100% - 27px) }
 
+/* ===== Historial de búsqueda ===== */
+.ah-his-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; font-weight:800; color:#e7d7ff;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.ah-his-head i{ margin-right:8px; color: var(--ah-a1) }
+.ah-his-clear{
+  background:none; border:1px solid var(--ah-line-soft); color:#d7d7df;
+  padding:6px 10px; border-radius:10px; cursor:pointer; font-size:12.5px;
+  transition: transform .2s, border-color .2s;
+}
+.ah-his-clear:hover{ transform: translateY(-1px); border-color: color-mix(in oklab, var(--ah-a1) 55%, var(--ah-line-soft)) }
+.ah-his-list{ max-height:420px; overflow:auto }
+.ah-his-item{ display:grid; grid-template-columns: 24px 1fr auto; align-items:center; gap:12px }
+.ah-his-item .fa-clock{ opacity:.9 }
+.ah-his-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.ah-his-del{
+  background:#2b2d46; color:#fff; border:none; border-radius:9px;
+  padding:6px 8px; cursor:pointer; transition: background .2s;
+}
+.ah-his-del:hover{ background:#3a3d62 }
+
 /* ===== Responsive ===== */
 @media (max-width:1200px){
   .ah-inner{ max-width: 1200px }
@@ -446,6 +469,115 @@
     });
   }
 
+  /* ===== Historial de búsqueda (localStorage por usuario) ===== */
+  (() => {
+    if (!$input || !$box) return;
+
+    const USER_ID = @json(Auth::id());
+    const KEY = 'ah_search_history_' + (USER_ID ?? 'guest');
+    const MAX = 12;
+
+    const read = () => {
+      try{ const a = JSON.parse(localStorage.getItem(KEY)||'[]'); return Array.isArray(a)?a.filter(Boolean):[]; }
+      catch{ return []; }
+    };
+    const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr.slice(0,MAX))); }catch{} };
+    const remember = (q) => {
+      q = (q||'').trim();
+      if (q.length < 2) return;
+      let arr = read().filter(s => s.toLowerCase() !== q.toLowerCase());
+      arr.unshift(q);
+      write(arr);
+    };
+    const removeOne = (q) => {
+      q = (q||'').trim();
+      write(read().filter(s => s.toLowerCase() !== q.toLowerCase()));
+      renderHistory($input.value);
+    };
+    const clearAll = () => { write([]); renderHistory($input.value); };
+
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    function historyItemHTML(q){
+      const e = esc(q);
+      return `
+        <div class="ah-sr-item ah-his-item" role="option" tabindex="-1" data-q="${e}">
+          <i class="fa-regular fa-clock" aria-hidden="true"></i>
+          <div class="ah-his-text">${e}</div>
+          <button class="ah-his-del" title="Quitar" aria-label="Quitar del historial"><i class="fa-solid fa-xmark"></i></button>
+        </div>`;
+    }
+
+    function renderHistory(filter=''){
+      const list = read().filter(s => s.toLowerCase().includes((filter||'').toLowerCase()));
+      if (!list.length){
+        $box.innerHTML = `<div class="ah-skel">Sin historial</div>`;
+        openResults();
+        return false;
+      }
+      $box.innerHTML = `
+        <div class="ah-his-head">
+          <span><i class="fa-regular fa-clock"></i> Búsquedas recientes</span>
+          <button class="ah-his-clear" type="button">Limpiar</button>
+        </div>
+        <div class="ah-his-list">
+          ${list.map(historyItemHTML).join('')}
+        </div>`;
+      openResults();
+      return true;
+    }
+
+    // Mostrar historial al enfocar y cuando el término es corto
+    $input.addEventListener('focus', () => {
+      if (($input.value||'').trim().length < 2) renderHistory('');
+    });
+    $input.addEventListener('input', () => {
+      const q = ($input.value||'').trim();
+      if (q.length < 2){ renderHistory(q); return; }
+      // Si hay >=2 caracteres, el buscador normal pinta resultados.
+    });
+
+    // Enter sin selección visible: guarda lo escrito
+    $input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        const q = ($input.value||'').trim();
+        if (q.length >= 2) remember(q);
+      }
+    });
+
+    // Delegación de clicks dentro del panel (usar/limpiar historial)
+    $box.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('.ah-his-clear');
+      if (clearBtn){ clearAll(); return; }
+
+      const del = e.target.closest('.ah-his-del');
+      if (del){
+        e.stopPropagation();
+        const it = del.closest('.ah-his-item');
+        if (it) removeOne(it.dataset.q || it.querySelector('.ah-his-text')?.textContent || '');
+        return;
+      }
+
+      const it = e.target.closest('.ah-his-item');
+      if (it){
+        const q = it.dataset.q || it.querySelector('.ah-his-text')?.textContent || '';
+        $input.value = q;
+        remember(q);
+        closeResults();
+        // dispara el buscador existente
+        $input.dispatchEvent(new Event('input', { bubbles:true }));
+      }
+    });
+
+    // Si el usuario hace clic en cualquier resultado "normal", recuerda el término actual
+    document.addEventListener('click', (e) => {
+      const resItem = e.target.closest('.ah-sr-item');
+      if (!resItem) return;
+      const q = ($input.value||'').trim();
+      if (q.length >= 2) remember(q);
+    }, true);
+  })();
+
   /* Notificaciones (ajuste de borde seguro) */
   const notifBtn   = document.getElementById('ahNotifBtn');
   const notifPanel = document.getElementById('ahNotifPanel');
@@ -537,4 +669,30 @@
     }
   }
 })();
+</script>
+
+<!-- ======= OVERRIDES para que nada quede encima o debajo (fijo arriba) ======= -->
+<style>
+  .ah-header{
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 99999; /* nada por encima */
+  }
+  .ah-inner{ height: 100%; }
+</style>
+
+<script>
+  /* Empuja el body según la altura real del header (nada queda debajo) */
+  (() => {
+    const hdr = document.querySelector('.ah-header');
+    if (!hdr) return;
+    const apply = () => {
+      const h = Math.ceil(hdr.getBoundingClientRect().height);
+      document.body.style.paddingTop = h + 'px';
+    };
+    apply();
+    addEventListener('load', apply, { once:true });
+    addEventListener('resize', apply);
+    new ResizeObserver(apply).observe(hdr);
+  })();
 </script>

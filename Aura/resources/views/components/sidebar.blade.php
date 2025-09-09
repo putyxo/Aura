@@ -108,7 +108,7 @@ body{
   backdrop-filter: blur(14px) saturate(1.05);
   -webkit-backdrop-filter: blur(14px) saturate(1.05);
   overflow: hidden;
-  z-index: 60;
+  z-index: 9999999;
   transition: width var(--anim-dur) var(--anim-ease), box-shadow var(--anim-dur) var(--anim-ease);
 }
 .sidebar::after {
