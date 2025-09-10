@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn() => view('admin'))->name('admin');
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
+    Route::get('/menu_album', fn() => view('menu_album'))->name('menu_album');
+
 
 
     // Álbumes
@@ -110,6 +112,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
+
+    //Album
+    Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
+
 });
 
 // ===== Recursos de Playlist (RESTful) =====
