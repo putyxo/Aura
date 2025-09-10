@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
-  @vite('resources/css/admin.css')
+  @vite('resources/css/artistasadmin.css')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -18,13 +18,14 @@
   @include('components.header')
   @include('components.traductor')
   @include('components.fondo')
+
   <div class="app">
     <div class="with-sidebar">
       <div class="main-content">
         <div class="page-studio studio">
 
           <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Contenido</h1>
+            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Artistas</h1>
             <div class="studio__filters">
               <div class="studio__search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -58,10 +59,10 @@
             <div class="studio__thead">
               <div class="c1"></div>
               <div class="c2">Usuario</div>
-              <div class="c3">Visibilidad</div>
-              <div class="c4">Copyright</div>
-              <div class="c5">Fecha</div>
-              <div class="c6">Reproductor</div>
+              <div class="c3">Disponibilidad</div>
+              <div class="c4">Baneos</div>
+              <div class="c5">Union</div>
+              <div class="c6">Subidos</div>
               <div class="c7 ta-r">Acciones</div>
             </div>
 
@@ -73,19 +74,18 @@
                 <a class="vlink" href="https://youtu.be/XXXXXXXX" target="_blank" rel="noopener">https://youtu.be/XXXXXXXX</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">2</span></div>
               <div class="c5">7 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="45"><span class="fill" style="width:45%"></span></div>
-                  <span class="time">1:12/3:05</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">12</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="1" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="1" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="1" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -99,19 +99,18 @@
                 <a class="vlink" href="https://youtu.be/YYYYYYYY" target="_blank" rel="noopener">https://youtu.be/YYYYYYYY</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">3</span></div>
               <div class="c5">8 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20"><span class="fill" style="width:20%"></span></div>
-                  <span class="time">0:38/2:10</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">8</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="2" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="2" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="2" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -125,19 +124,18 @@
                 <a class="vlink" href="https://youtu.be/ZZZZZZZZ" target="_blank" rel="noopener">https://youtu.be/ZZZZZZZZ</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">1</span></div>
               <div class="c5">9 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70"><span class="fill" style="width:70%"></span></div>
-                  <span class="time">2:18/3:16</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">15</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="3" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="3" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="3" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -151,19 +149,18 @@
                 <a class="vlink" href="https://youtu.be/AAAAAAA1" target="_blank" rel="noopener">https://youtu.be/AAAAAAA1</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">0</span></div>
               <div class="c5">10 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="5"><span class="fill" style="width:5%"></span></div>
-                  <span class="time">0:07/2:21</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">3</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="4" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="4" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="4" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -177,19 +174,18 @@
                 <a class="vlink" href="https://youtu.be/BBBBBBB2" target="_blank" rel="noopener">https://youtu.be/BBBBBBB2</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">2</span></div>
               <div class="c5">11 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33"><span class="fill" style="width:33%"></span></div>
-                  <span class="time">0:49/2:27</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">9</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="5" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="5" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="5" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -203,19 +199,18 @@
                 <a class="vlink" href="https://youtu.be/CCCCCCC3" target="_blank" rel="noopener">https://youtu.be/CCCCCCC3</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">4</span></div>
               <div class="c5">12 sept 2020</div>
               <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="58"><span class="fill" style="width:58%"></span></div>
-                  <span class="time">1:45/3:00</span>
-                </div>
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">21</b>
+                  <small>canciones</small>
+                </span>
               </div>
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="6" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="6" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="6" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -301,13 +296,7 @@
               <div><span>Visibilidad</span><strong id="inspectorVis">—</strong></div>
               <div><span>Restricción</span><strong id="inspectorRes">—</strong></div>
               <div><span>Fecha</span><strong id="inspectorDate">—</strong></div>
-              <div class="inspector__player">
-                <span>Reproductor</span>
-                <div class="playerbar" aria-label="Barra de reproducción">
-                  <div class="track"><span class="progress" style="width:40%"></span></div>
-                  <div class="times"><small>1:02</small><small>3:12</small></div>
-                </div>
-              </div>
+              <div><span>Canciones</span><strong id="inspectorSongs">—</strong></div>
             </div>
           </div>
           <div class="inspector__right">
@@ -326,7 +315,6 @@
   </div>
   </div>
 
-  <!-- JS -->
   <script>
     // Reveal
     (function(){
@@ -343,8 +331,18 @@
     });
 
     let activeId = null;
-    const openModal = (sel)=>document.querySelector(sel)?.classList.add('show');
-    const closeAll = ()=>document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));
+    const openModal = (sel)=>{
+      const el=document.querySelector(sel);
+      if(!el) return;
+      el.classList.add('show');
+      el.setAttribute('aria-hidden','false');
+    };
+    const closeAll = ()=>{
+      document.querySelectorAll('.modal.show').forEach(m=>{
+        m.classList.remove('show');
+        m.setAttribute('aria-hidden','true');
+      });
+    };
 
     // Cerrar modales
     document.addEventListener('click',e=>{
@@ -373,43 +371,39 @@
       const vis = row.querySelector('.c3 .pill')?.textContent.trim() || '—';
       const res = row.querySelector('.c4 .pill')?.textContent.trim() || '—';
       const date = row.querySelector('.c5')?.textContent.trim() || '—';
-      const views = row.querySelector('.c6')?.textContent.trim() || '0';
-      const com = row.querySelector('.c7')?.textContent.trim() || '0';
-      const like = row.querySelector('.c8')?.textContent.trim() || '0%';
+      const songs = row.querySelector('.c6 .songs__num, .c6 .songcount b')?.textContent.trim() || '0';
 
       document.getElementById('inspectorTitle').textContent = title;
-      const link = document.getElementById('inspectorUrl');
-      link.textContent = url; link.href = url;
+      const link = document.getElementById('inspectorUrl'); link.textContent = url; link.href = url;
       document.getElementById('inspectorVis').textContent = vis;
       document.getElementById('inspectorRes').textContent = res;
       document.getElementById('inspectorDate').textContent = date;
-      document.getElementById('inspectorViews').textContent = views;
-      document.getElementById('inspectorCom').textContent = com;
-      document.getElementById('inspectorLike').textContent = like;
+      const s = document.getElementById('inspectorSongs'); if (s) s.textContent = songs;
 
-      // opcional: imitar miniatura
       const th = row.querySelector('.thumb');
       const thumb = document.getElementById('inspectorThumb');
-      thumb.style.background = getComputedStyle(th || document.body).background || '#2a2b31';
-      thumb.style.border = '1px solid var(--studio-border)';
+      if (thumb) {
+        thumb.style.background = getComputedStyle(th || document.body).background || '#2a2b31';
+        thumb.style.border = '1px solid var(--border)';
+      }
 
       openModal('#modal-inspector');
     });
 
     // Acciones inspector
     document.getElementById('inspectorAccept').onclick=()=>{ closeAll(); openModal('#modal-approve'); }
-    document.getElementById('inspectorDeny').onclick=()=>{ 
+    document.getElementById('inspectorDeny').onclick=()=>{
       const notes = document.getElementById('inspectorNotes').value;
       const denyArea = document.getElementById('denyReason');
       if(denyArea) denyArea.value = notes;
-      closeAll(); openModal('#modal-deny'); 
+      closeAll(); openModal('#modal-deny');
     }
     document.getElementById('inspectorDelete').onclick=()=>{ closeAll(); openModal('#modal-delete'); }
 
     // Confirmaciones
     document.getElementById('approveConfirm').onclick=()=>{ closeAll(); alert("Video "+activeId+" aceptado"); }
-    document.getElementById('denyConfirm').onclick=()=>{ 
-      closeAll(); alert("Video "+activeId+" denegado. Motivo: "+document.getElementById('denyReason').value); 
+    document.getElementById('denyConfirm').onclick=()=>{
+      closeAll(); alert("Video "+activeId+" denegado. Motivo: "+(document.getElementById('denyReason')?.value||'')); 
     }
     document.getElementById('deleteConfirm').onclick=()=>{ 
       document.querySelector(`.studio__row[data-id="${activeId}"]`)?.remove(); 

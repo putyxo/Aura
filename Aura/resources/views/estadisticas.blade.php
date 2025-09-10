@@ -4,27 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
-  @vite('resources/css/estadisticas.css')
+  @vite('resources/css/admin.css')
+  @vite('resources/js/admin.js')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 @yield('content')
-  @include('components.traductor')
-  @include('components.footer')
+@include('components.traductor')
+@include('components.footer')
 
-  <div class="with-sidebar">
-    @include('components.sidebar')
-    @include('components.header')
-    @include('components.traductor')
-    @include('components.fondo')
+<div class="with-sidebar">
+  @include('components.sidebar')
+  @include('components.header')
+  @include('components.traductor')
+  @include('components.fondo')
+
   <div class="app">
     <div class="with-sidebar">
       <div class="main-content">
         <div class="page-studio studio">
 
           <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Contenido</h1>
+            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Albumes</h1>
             <div class="studio__filters">
               <div class="studio__search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -57,30 +59,32 @@
           <div class="studio__table" id="studioTable">
             <div class="studio__thead">
               <div class="c1"></div>
-              <div class="c2">Video</div>
-              <div class="c3">Visibilidad</div>
-              <div class="c4">Restricciones</div>
+              <div class="c2">Usuario</div>
+              <div class="c3">Album</div>
+              <div class="c4">Copyright</div>
               <div class="c5">Fecha</div>
-              <div class="c6">Vistas</div>
-              <div class="c7">Comentarios</div>
-              <div class="c8">“Me gusta” (%)</div>
-              <div class="c9 ta-r">Acciones</div>
+              <div class="c6">Canciones</div>
+              <div class="c7 ta-r">Acciones</div>
             </div>
 
             <!-- Fila 1 -->
             <div class="studio__row reveal" data-id="1">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #1</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/XXXXXXXX" target="_blank" rel="noopener">https://youtu.be/XXXXXXXX</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">Detectado</span></div>
               <div class="c5">7 sept 2020</div>
-              <div class="c6 ta-r">96</div>
-              <div class="c7 ta-r">2</div>
-              <div class="c8 ta-r">88.6%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">12</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="1" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="1" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -93,16 +97,20 @@
             <div class="studio__row reveal" data-id="2">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #2</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/YYYYYYYY" target="_blank" rel="noopener">https://youtu.be/YYYYYYYY</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">No detectado</span></div>
               <div class="c5">8 sept 2020</div>
-              <div class="c6 ta-r">145</div>
-              <div class="c7 ta-r">3</div>
-              <div class="c8 ta-r">91.2%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">8</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="2" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="2" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -115,16 +123,20 @@
             <div class="studio__row reveal" data-id="3">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #3</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/ZZZZZZZZ" target="_blank" rel="noopener">https://youtu.be/ZZZZZZZZ</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">Detectado</span></div>
               <div class="c5">9 sept 2020</div>
-              <div class="c6 ta-r">210</div>
-              <div class="c7 ta-r">8</div>
-              <div class="c8 ta-r">84.0%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">15</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="3" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="3" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -137,16 +149,20 @@
             <div class="studio__row reveal" data-id="4">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #4</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/AAAAAAA1" target="_blank" rel="noopener">https://youtu.be/AAAAAAA1</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">Detectado</span></div>
               <div class="c5">10 sept 2020</div>
-              <div class="c6 ta-r">78</div>
-              <div class="c7 ta-r">0</div>
-              <div class="c8 ta-r">95.0%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">3</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="4" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="4" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -159,16 +175,20 @@
             <div class="studio__row reveal" data-id="5">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #5</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/BBBBBBB2" target="_blank" rel="noopener">https://youtu.be/BBBBBBB2</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">No detectado</span></div>
               <div class="c5">11 sept 2020</div>
-              <div class="c6 ta-r">304</div>
-              <div class="c7 ta-r">5</div>
-              <div class="c8 ta-r">86.4%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">9</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="5" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="5" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -181,16 +201,20 @@
             <div class="studio__row reveal" data-id="6">
               <div class="c1"><span class="thumb shimmer"></span></div>
               <div class="c2">
-                <div class="vtitle">Mi video de ejemplo #6</div>
+                <div class="vtitle">Nombre de usuario</div>
                 <a class="vlink" href="https://youtu.be/CCCCCCC3" target="_blank" rel="noopener">https://youtu.be/CCCCCCC3</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Ninguna</span></div>
+              <div class="c4"><span class="pill pill--none">Detectado</span></div>
               <div class="c5">12 sept 2020</div>
-              <div class="c6 ta-r">512</div>
-              <div class="c7 ta-r">12</div>
-              <div class="c8 ta-r">89.9%</div>
-              <div class="c9">
+              <div class="c6">
+                <span class="songcount" aria-label="Canciones subidas">
+                  <i class="fa-solid fa-music"></i>
+                  <b class="songs__num">21</b>
+                  <small>canciones</small>
+                </span>
+              </div>
+              <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="6" title="Aceptar"><i class="fa-solid fa-check"></i></button>
                   <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="6" title="Denegar"><i class="fa-solid fa-ban"></i></button>
@@ -279,9 +303,7 @@
               <div><span>Visibilidad</span><strong id="inspectorVis">—</strong></div>
               <div><span>Restricción</span><strong id="inspectorRes">—</strong></div>
               <div><span>Fecha</span><strong id="inspectorDate">—</strong></div>
-              <div><span>Vistas</span><strong id="inspectorViews">—</strong></div>
-              <div><span>Comentarios</span><strong id="inspectorCom">—</strong></div>
-              <div><span>Likes (%)</span><strong id="inspectorLike">—</strong></div>
+              <div><span>Canciones</span><strong id="inspectorSongs">—</strong></div>
             </div>
           </div>
           <div class="inspector__right">
@@ -298,8 +320,8 @@
     </div>
 
   </div>
+  </div>
 
-  <!-- JS -->
   <script>
     // Reveal
     (function(){
@@ -316,8 +338,18 @@
     });
 
     let activeId = null;
-    const openModal = (sel)=>document.querySelector(sel)?.classList.add('show');
-    const closeAll = ()=>document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));
+    const openModal = (sel)=>{
+      const el=document.querySelector(sel);
+      if(!el) return;
+      el.classList.add('show');
+      el.setAttribute('aria-hidden','false');
+    };
+    const closeAll = ()=>{
+      document.querySelectorAll('.modal.show').forEach(m=>{
+        m.classList.remove('show');
+        m.setAttribute('aria-hidden','true');
+      });
+    };
 
     // Cerrar modales
     document.addEventListener('click',e=>{
@@ -346,43 +378,39 @@
       const vis = row.querySelector('.c3 .pill')?.textContent.trim() || '—';
       const res = row.querySelector('.c4 .pill')?.textContent.trim() || '—';
       const date = row.querySelector('.c5')?.textContent.trim() || '—';
-      const views = row.querySelector('.c6')?.textContent.trim() || '0';
-      const com = row.querySelector('.c7')?.textContent.trim() || '0';
-      const like = row.querySelector('.c8')?.textContent.trim() || '0%';
+      const songs = row.querySelector('.c6 .songs__num, .c6 .songcount b')?.textContent.trim() || '0';
 
       document.getElementById('inspectorTitle').textContent = title;
-      const link = document.getElementById('inspectorUrl');
-      link.textContent = url; link.href = url;
+      const link = document.getElementById('inspectorUrl'); link.textContent = url; link.href = url;
       document.getElementById('inspectorVis').textContent = vis;
       document.getElementById('inspectorRes').textContent = res;
       document.getElementById('inspectorDate').textContent = date;
-      document.getElementById('inspectorViews').textContent = views;
-      document.getElementById('inspectorCom').textContent = com;
-      document.getElementById('inspectorLike').textContent = like;
+      const s = document.getElementById('inspectorSongs'); if (s) s.textContent = songs;
 
-      // opcional: imitar miniatura
       const th = row.querySelector('.thumb');
       const thumb = document.getElementById('inspectorThumb');
-      thumb.style.background = getComputedStyle(th || document.body).background || '#2a2b31';
-      thumb.style.border = '1px solid var(--studio-border)';
+      if (thumb) {
+        thumb.style.background = getComputedStyle(th || document.body).background || '#2a2b31';
+        thumb.style.border = '1px solid var(--border)';
+      }
 
       openModal('#modal-inspector');
     });
 
     // Acciones inspector
     document.getElementById('inspectorAccept').onclick=()=>{ closeAll(); openModal('#modal-approve'); }
-    document.getElementById('inspectorDeny').onclick=()=>{ 
+    document.getElementById('inspectorDeny').onclick=()=>{
       const notes = document.getElementById('inspectorNotes').value;
       const denyArea = document.getElementById('denyReason');
       if(denyArea) denyArea.value = notes;
-      closeAll(); openModal('#modal-deny'); 
+      closeAll(); openModal('#modal-deny');
     }
     document.getElementById('inspectorDelete').onclick=()=>{ closeAll(); openModal('#modal-delete'); }
 
     // Confirmaciones
     document.getElementById('approveConfirm').onclick=()=>{ closeAll(); alert("Video "+activeId+" aceptado"); }
-    document.getElementById('denyConfirm').onclick=()=>{ 
-      closeAll(); alert("Video "+activeId+" denegado. Motivo: "+document.getElementById('denyReason').value); 
+    document.getElementById('denyConfirm').onclick=()=>{
+      closeAll(); alert("Video "+activeId+" denegado. Motivo: "+(document.getElementById('denyReason')?.value||'')); 
     }
     document.getElementById('deleteConfirm').onclick=()=>{ 
       document.querySelector(`.studio__row[data-id="${activeId}"]`)?.remove(); 

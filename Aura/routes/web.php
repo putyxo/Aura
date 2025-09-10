@@ -54,6 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
     Route::get('/admin', fn() => view('admin'))->name('admin');
+    Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
+    Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
+
 
     // Álbumes
     Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
