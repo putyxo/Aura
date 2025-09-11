@@ -1,3 +1,4 @@
+<!-- resources/views/playlists/index.blade.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Vite: NUEVOS ARCHIVOS -->
-  @vite(['resources/css/axpl.playlists.css','resources/js/axpl.playlists.js'])
+  <!-- Vite -->
+  @vite(['resources/css/playlist.css','resources/js/playlist.js'])
 </head>
 <body>
 
@@ -61,7 +62,7 @@
               </div>
             </div>
             <div class="axpl-toolbar__right">
-              <button class="axpl-btn axpl-btn-ghost" id="axplSelectMode">
+              <button class="axpl-btn axpl-btn-ghost" id="axplSelectMode" aria-pressed="false">
                 <i class="fa-regular fa-square"></i><span class="axpl-btn-text">Seleccionar</span>
               </button>
               <button class="axpl-btn axpl-btn-ghost axpl-is-danger" id="axplDeleteSelected" disabled>
@@ -102,6 +103,9 @@
               <a href="{{ route('playlists.show', $pl->id) }}" class="axpl-tile-link" aria-label="Abrir {{ $pl->nombre }}"></a>
 
               <div class="axpl-tile-cover">
+                <!-- Badge de icono de playlist -->
+                <div class="axpl-cover-badge" aria-hidden="true"><i class="fa-solid fa-list-music"></i></div>
+
                 @if($pl->cover_url)
                   <img src="{{ $pl->cover_url }}" alt="Portada de {{ $pl->nombre }}" width="260" height="260" loading="lazy" decoding="async">
                 @else
@@ -121,6 +125,8 @@
                   <i class="fa-solid fa-play"></i>
                 </button>
 
+                <!-- Marcador visual de selección -->
+                <div class="axpl-selected-mark" aria-hidden="true"><i class="fa-solid fa-check"></i></div>
                 <input type="checkbox" class="axpl-bulk-check" aria-label="Seleccionar {{ $pl->nombre }}" hidden>
               </div>
 
@@ -138,7 +144,7 @@
 
       </div>
 
-      <!-- Backdrop + Modal (crear/editar) dentro del ROOT -->
+      <!-- Backdrop + Modal (crear/editar) -->
       <div id="axplModalBackdrop" class="axpl-modal-backdrop" hidden></div>
 
       <div id="axplModal" class="axpl-modal" hidden role="dialog" aria-modal="true" aria-labelledby="axplModalTitle">

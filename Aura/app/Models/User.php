@@ -7,6 +7,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * App\Models\User
+ *
+ * Campos extra (según tu migración): avatar, fecha_nacimiento, genero_favorito,
+ * es_artista, nombre_artistico, biografia, imagen_portada, banner, verificado.
+ *
+ * Relaciones incluidas:
+ * - followers / followings (tabla pivot 'follows')
+ * - likedSongs (tabla pivot 'likes')
+ *
+ * Accessors:
+ * - avatar_url, banner_url, imagen_portada_url (si usas media.drive para servir imgs)
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;

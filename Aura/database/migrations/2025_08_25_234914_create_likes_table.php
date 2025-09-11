@@ -10,15 +10,20 @@ return new class extends Migration
     {
         Schema::create('likes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            // IMPORTANTE: si tu tabla se llama 'canciones', usa 'canciones'
+            $table->foreignId('user_id')
+                ->constrained()              // -> references users(id)
+                ->cascadeOnDelete();
+
+            // DEBE referenciar la tabla real de canciones: 'songs'
             $table->foreignId('song_id')
-                  ->constrained(table: 'canciones') // <-- antes tenías 'songs'
-                  ->cascadeOnDelete();
+                ->constrained('songs')       // <- AQUÍ está la corrección
+                ->cascadeOnDelete();
 
             $table->timestamps();
-            $table->unique(['user_id', 'song_id']); // evita duplicados
+
+            // evita duplicados (un usuario no puede likear la misma canción 2 veces)
+            $table->unique(['user_id', 'song_id']);
         });
     }
 
