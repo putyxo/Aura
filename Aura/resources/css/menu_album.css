@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ================== Variables ================== */
 :root {
   --bg-primary: #121212;
@@ -306,4 +307,217 @@ body {
 }
 .modal-close:hover {
   transform: rotate(90deg);
+=======
+/* ================== THEME ================== */
+:root{
+  --bg:#0b0b10;
+  --card:#11111a;
+  --text:#f6f7fb;
+  --muted:#b6b6c8;
+  --accent:#a855f7;
+  --btn-bg:#1a1b22;
+  --btn-hover:#242635;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.5);
+  --transition:all .25s ease;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Montserrat',system-ui,sans-serif;
+  margin:0;
+}
+
+/* ================== LAYOUT ================== */
+.main-content{
+  width:100%;
+  min-height:100vh;
+}
+
+/* ================== BANNER ================== */
+.user-banner{
+  position:relative;
+  width:100%;
+  height:260px;
+  background-size:cover;
+  background-position:center;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+}
+.banner-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.6));
+}
+.user-info{
+  position:relative;
+  padding:24px 28px;
+}
+.user-name{
+  font-size:2rem;
+  font-weight:800;
+  margin:0 0 .25rem 0;
+}
+.user-followers{
+  margin:0;
+  color:var(--muted);
+  font-weight:600;
+}
+
+/* ================== HEADER DE SECCIÓN ================== */
+.albums-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:22px 28px 8px;
+}
+.section-title h2{
+  margin:0;
+  font-size:1.25rem;
+  font-weight:800;
+  display:flex;align-items:center;gap:10px;
+}
+.page-label{color:var(--muted);font-weight:600}
+
+/* ================== CARRUSEL ================== */
+.albums-wrap{
+  position:relative;
+  width:100%;
+  padding:12px 56px; /* deja espacio para flechas */
+  overflow:hidden;
+}
+.no-clip{clip-path:inset(0)}
+.albums-viewport{
+  overflow:hidden;
+  width:100%;
+}
+.albums-track{
+  display:flex;
+  transition:transform .4s ease;
+  will-change:transform;
+}
+.albums-page{
+  flex:0 0 100%;
+  padding:8px 0;
+}
+
+/* Grid 2x2 por página */
+.albums-grid-2x2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:18px;
+  padding:0 12px;
+}
+
+/* ================== CARD DE ÁLBUM ================== */
+.card.album-card{
+  position:relative;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:14px;
+  transition:var(--transition);
+}
+.card.album-card:hover{
+  transform:translateY(-2px);
+}
+.card-link{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.card-img{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:calc(var(--radius) - 4px);
+  overflow:hidden;
+  background:#0e0f15;
+}
+.card-img img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+}
+.album-play{
+  position:absolute;
+  right:10px;bottom:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:999px;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);
+  transition:var(--transition);
+  opacity:0;transform:translateY(6px);
+}
+.card.album-card:hover .album-play{
+  opacity:1;transform:translateY(0);
+}
+.album-play i{font-size:14px;color:#fff}
+
+.album-title{
+  margin:10px 4px 4px;
+  font-weight:800;
+  font-size:1rem;
+}
+.album-sub{
+  margin:0 4px 2px;
+  font-size:.9rem;color:var(--muted);font-weight:600;
+}
+
+/* Botón papelera flotante para dueño */
+.has-trash .trash-float{
+  position:absolute;
+  top:10px;right:10px;
+  border:none;cursor:pointer;
+  width:38px;height:38px;border-radius:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;background:#dc3545;
+  box-shadow:var(--shadow);
+  opacity:.0;transform:translateY(-6px);
+  transition:var(--transition);
+}
+.has-trash:hover .trash-float{opacity:1;transform:translateY(0)}
+.trash-float:hover{filter:brightness(1.05)}
+
+/* Estado vacío */
+.empty-state{
+  width:100%;
+  min-height:160px;
+  border:1px dashed rgba(255,255,255,.12);
+  border-radius:var(--radius);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;color:var(--muted);
+}
+.empty-state i{font-size:28px}
+
+/* ================== FLECHAS ================== */
+.albums-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--btn-bg);color:var(--text);
+  transition:var(--transition);
+  box-shadow:var(--shadow);
+  z-index:3;
+}
+.albums-arrow:hover{background:var(--btn-hover)}
+.albums-arrow:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.3)}
+.albums-arrow.left{left:8px}
+.albums-arrow.right{right:8px}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 900px){
+  .albums-grid-2x2{grid-template-columns:1fr;grid-template-rows:none}
+  .albums-wrap{padding:12px 48px}
+}
+@media (max-width: 640px){
+  .user-banner{height:220px}
+  .albums-wrap{padding:8px 44px}
+  .albums-arrow{width:38px;height:38px;border-radius:10px}
+>>>>>>> Parte-ubitzo
 }
