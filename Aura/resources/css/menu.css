@@ -6,10 +6,7 @@
   --dur:.25s; --ease:cubic-bezier(.2,.8,.2,1);
   --shadow: 0 10px 30px rgba(0,0,0,.30);
   --shadow-lg: 0 24px 60px rgba(0,0,0,.40);
-
-
-  }
-
+}
 
 /* ================= BASE ================= */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -29,9 +26,6 @@ body{
 /* Contenedor centrado */
 .shell{max-width:var(--shell); margin:0 auto; padding:0 24px}
 
-
-
-
 /* ================= SECTION TITLES ================= */
 .section-title{
   font-size:20px; font-weight:800; margin:24px 0 14px;
@@ -44,6 +38,7 @@ body{
 }
 
 /* ================== PLAYLISTS (Hero) ================== */
+/* ================== PLAYLISTS (Hero) ================== */
 .playlist-section h2{
   margin-top:70px; margin-bottom:30px; font-size:18px; font-weight:800; letter-spacing:.3px; color:#fff;
   position:relative; display:inline-block; padding-bottom:6px;
@@ -54,38 +49,36 @@ body{
 }
 .playlist-grid{
   display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; height:260px; align-items:stretch;
+  transition: transform 0.3s ease; /* Transición para el grid */
 }
+
+/* Tarjeta principal */
 .playlist-card{
   position:relative; border-radius:22px; padding:32px; min-height:220px; height:100%;
   display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden; isolation:isolate;
   border:1px solid rgba(255,255,255,.08);
   box-shadow: 0 8px 20px rgba(0,0,0,.2);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.playlist-card:hover{
-  transform:translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,.4);
-}
-.playlist-card::after{
-  content:""; position:absolute; inset:0; border-radius:inherit;
-  background: radial-gradient(120% 120% at 70% 20%, rgba(255,255,255,.12), transparent 55%);
-  mix-blend-mode: overlay; pointer-events:none;
-}
-.playlist-card.green,
-.playlist-card.pink,
-.playlist-card.teal,
-.playlist-card.purple{
-  background:linear-gradient(135deg,#2e026d 10%,#6d28d9 60%,#00ffa8 130%);
-  color:#fff;
+  background: transparent; /* Eliminar gradiente multicolor */
 }
 
+/* Efecto hover en una tarjeta individual para hacerla más grande */
+.playlist-card:hover{
+  transform:scale(1.2); /* Aumenta el tamaño de la tarjeta al pasar el cursor */
+  box-shadow: 0 20px 40px rgba(0,0,0,.4);
+  z-index: 2; /* Hace que la tarjeta se coloque por encima de las demás */
+}
+
+/* Animación en la imagen */
 .playlist-card img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; opacity:.22;
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; opacity:.6; /* Ajustado para que sea más visible */
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .playlist-card:hover img{
-  opacity:.35; transform:scale(1.02);
+  opacity:.75; transform:scale(1.02); /* Aumento la visibilidad de la imagen al pasar el cursor */
 }
+
 .overlay-text{
   position:absolute; left:32px; right:32px; bottom:32px;
   background:rgba(0,0,0,.35); border-radius:16px; padding:16px 24px; color:#fff;
@@ -132,9 +125,6 @@ body{
 .suggested .album-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px }
 .album-box{ background:transparent; border:none; border-radius:16px; padding:14px; text-align:center; color:#fff }
 .album-box img{ width:70px; border-radius:12px; margin-bottom:8px }
-
-
-
 
 /* ================== Glow decorativo ================== */
 .element-glow{ position:relative; z-index:1 }
@@ -204,7 +194,3 @@ body{
     transform: translateX(calc(-120px * 10 - 24px * 9));
   }
 }
-
-
-
-

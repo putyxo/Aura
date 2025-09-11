@@ -63,6 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
+    Route::get('/admin', fn() => view('admin'))->name('admin');
+    Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
+    Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
+    Route::get('/menu_album', fn() => view('menu_album'))->name('menu_album');
+
+
 
     // Álbumes
     Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
@@ -122,6 +128,9 @@ Route::middleware('auth')->group(function () {
         ->name('api.canciones.like.toggle');
     Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
         ->name('api.canciones.like.state');
+    //Album
+    Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
+
 });
 
 // ===== Recursos de Playlist (RESTful) =====
