@@ -1,199 +1,212 @@
 /* ================== THEME ================== */
-:root {
-  --bg: #0b0b10;
-  --card: #11111a;
-  --text: #f6f7fb;
-  --muted: #b6b6c8;
-  --accent: #a855f7;
-  --btn-bg: #1a1b22;
-  --btn-hover: #242635;
-  --radius: 14px;
-  --shadow: 0 10px 25px rgba(0,0,0,0.5);
-  --transition: all 0.25s ease;
+:root{
+  --bg:#0b0b10;
+  --card:#11111a;
+  --text:#f6f7fb;
+  --muted:#b6b6c8;
+  --accent:#a855f7;
+  --btn-bg:#1a1b22;
+  --btn-hover:#242635;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.5);
+  --transition:all .25s ease;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Montserrat',system-ui,sans-serif;
+  margin:0;
 }
 
-/* ================== CARD ================== */
-.album-card {
-  position: relative;
-  display: flex;
-  gap: 24px;
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 24px;
-  max-width: 1250px;
-  width: 100%;
-  margin: 10px auto;
-  transition: var(--transition);
+/* ================== LAYOUT ================== */
+.main-content{
+  width:100%;
+  min-height:100vh;
 }
 
-.cover img {
-  width: 330px;
-  height: 330px;
-  border-radius: var(--radius);
-  object-fit: cover;
+/* ================== BANNER ================== */
+.user-banner{
+  position:relative;
+  width:100%;
+  height:260px;
+  background-size:cover;
+  background-position:center;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+}
+.banner-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.6));
+}
+.user-info{
+  position:relative;
+  padding:24px 28px;
+}
+.user-name{
+  font-size:2rem;
+  font-weight:800;
+  margin:0 0 .25rem 0;
+}
+.user-followers{
+  margin:0;
+  color:var(--muted);
+  font-weight:600;
 }
 
-.info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+/* ================== HEADER DE SECCIÓN ================== */
+.albums-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:22px 28px 8px;
+}
+.section-title h2{
+  margin:0;
+  font-size:1.25rem;
+  font-weight:800;
+  display:flex;align-items:center;gap:10px;
+}
+.page-label{color:var(--muted);font-weight:600}
+
+/* ================== CARRUSEL ================== */
+.albums-wrap{
+  position:relative;
+  width:100%;
+  padding:12px 56px; /* deja espacio para flechas */
+  overflow:hidden;
+}
+.no-clip{clip-path:inset(0)}
+.albums-viewport{
+  overflow:hidden;
+  width:100%;
+}
+.albums-track{
+  display:flex;
+  transition:transform .4s ease;
+  will-change:transform;
+}
+.albums-page{
+  flex:0 0 100%;
+  padding:8px 0;
 }
 
-.title {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-  color: var(--text);
+/* Grid 2x2 por página */
+.albums-grid-2x2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:18px;
+  padding:0 12px;
 }
 
-.subtitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 6px;
+/* ================== CARD DE ÁLBUM ================== */
+.card.album-card{
+  position:relative;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:14px;
+  transition:var(--transition);
+}
+.card.album-card:hover{
+  transform:translateY(-2px);
+}
+.card-link{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.card-img{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:calc(var(--radius) - 4px);
+  overflow:hidden;
+  background:#0e0f15;
+}
+.card-img img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+}
+.album-play{
+  position:absolute;
+  right:10px;bottom:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:999px;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);
+  transition:var(--transition);
+  opacity:0;transform:translateY(6px);
+}
+.card.album-card:hover .album-play{
+  opacity:1;transform:translateY(0);
+}
+.album-play i{font-size:14px;color:#fff}
+
+.album-title{
+  margin:10px 4px 4px;
+  font-weight:800;
+  font-size:1rem;
+}
+.album-sub{
+  margin:0 4px 2px;
+  font-size:.9rem;color:var(--muted);font-weight:600;
 }
 
-.update {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 16px;
+/* Botón papelera flotante para dueño */
+.has-trash .trash-float{
+  position:absolute;
+  top:10px;right:10px;
+  border:none;cursor:pointer;
+  width:38px;height:38px;border-radius:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;background:#dc3545;
+  box-shadow:var(--shadow);
+  opacity:.0;transform:translateY(-6px);
+  transition:var(--transition);
 }
+.has-trash:hover .trash-float{opacity:1;transform:translateY(0)}
+.trash-float:hover{filter:brightness(1.05)}
 
-.description {
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--muted);
-  margin-bottom: 20px;
+/* Estado vacío */
+.empty-state{
+  width:100%;
+  min-height:160px;
+  border:1px dashed rgba(255,255,255,.12);
+  border-radius:var(--radius);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;color:var(--muted);
 }
+.empty-state i{font-size:28px}
 
-.actions {
-  display: flex;
-  gap: 16px;
+/* ================== FLECHAS ================== */
+.albums-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--btn-bg);color:var(--text);
+  transition:var(--transition);
+  box-shadow:var(--shadow);
+  z-index:3;
 }
-
-.btn {
-  background: var(--btn-bg);
-  border: none;
-  border-radius: var(--radius);
-  padding: 12px 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  transition: var(--transition);
-}
-
-.btn:hover {
-  background: var(--btn-hover);
-}
-
-/* ================== SONGS ================== */
-.album-songs {
-  max-width: 1250px;
-  width: 90%;
-  margin: 30px auto;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-}
-
-.songs-header {
-  margin-bottom: 16px;
-}
-
-.song-search {
-  width: 100%;
-  padding: 10px;
-  border-radius: var(--radius);
-  border: none;
-  background: var(--btn-bg);
-  color: var(--text);
-}
-
-.songs-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.song-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.song-title {
-  font-weight: 600;
-}
-
-.song-artist {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-left: 10px;
-}
-
-.song-play {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
+.albums-arrow:hover{background:var(--btn-hover)}
+.albums-arrow:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.3)}
+.albums-arrow.left{left:8px}
+.albums-arrow.right{right:8px}
 
 /* ================== RESPONSIVE ================== */
-@media (max-width: 768px) {
-  .album-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .cover img {
-    width: 200px;
-    height: 200px;
-  }
-
-  .actions {
-    flex-direction: column;
-    width: 100%;
-  }
+@media (max-width: 900px){
+  .albums-grid-2x2{grid-template-columns:1fr;grid-template-rows:none}
+  .albums-wrap{padding:12px 48px}
 }
-
-/* ===== BOTÓN EDITAR ===== */
-.edit-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: var(--btn-bg);
-  border: none;
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-}
-
-.edit-btn:hover {
-  background: var(--btn-hover);
+@media (max-width: 640px){
+  .user-banner{height:220px}
+  .albums-wrap{padding:8px 44px}
+  .albums-arrow{width:38px;height:38px;border-radius:10px}
 }

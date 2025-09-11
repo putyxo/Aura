@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Controladores
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UploadMusicController;
 use App\Http\Controllers\GoogleDriveController;
@@ -8,55 +11,54 @@ use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\DriveMediaController;
 use App\Http\Controllers\MiControlador;
 use App\Http\Controllers\PlaylistController;
-use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
-use App\Models\Album;
+use App\Http\Controllers\LikeController;
+use App\Http\Controllers\LikeApiController;
 
-// Controladores de Likes
-use App\Http\Controllers\LikeController;      // HTML (redirige)
-use App\Http\Controllers\LikeApiController;   // JSON (opcional)
+// Modelos usados en closures
+use App\Models\Album;
 
 // ===== Página principal =====
 Route::get('/', fn() => view('welcome'))->name('welcome');
 
 /*
- |---------------------------------------------------------------------------
- | Rutas PÚBLICAS necesarias SIEMPRE (sin auth)
- |--------------------------------------------------------------------------- 
- | Importante: dejamos aquí 'perfil.releasesAll' para que exista aunque el
- | usuario no esté logueado. Así no se rompe la vista al generar la URL.
+|--------------------------------------------------------------------------
+| Rutas públicas (sin auth)
+|--------------------------------------------------------------------------
+| Mantén aquí lo que deba existir sin sesión iniciada.
 */
-Route::get('/perfil/{user}/lanzamientos', [PerfilController::class, 'releasesAll'])
+Route::get('/perfil/{userId}/lanzamientos', [PerfilController::class, 'releasesAll'])
     ->name('perfil.releasesAll');
 
 // ===== Rutas protegidas (requieren login) =====
 Route::middleware('auth')->group(function () {
 
-    // ❤️ Like de canciones (HTML: usado por tus formularios en Blade)
+    // ===== Likes (HTML y JSON opcional) =====
     Route::post('/canciones/{cancion}/like', [LikeController::class, 'toggle'])
-        ->name('canciones.like'); // <- ESTE nombre es el que usa tu ed_perfil.blade.php
-
-    // Estado de like (JSON opcional, útil para JS)
+        ->name('canciones.like');
     Route::get('/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
         ->name('canciones.liked');
 
-    // Página "Me gusta" (si ya la tienes en CancionController)
+    // API JSON para likes
+    Route::post('/api/canciones/{cancion}/like/toggle', [LikeApiController::class, 'toggle'])
+        ->name('api.canciones.like.toggle');
+    Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
+        ->name('api.canciones.like.state');
+
+    // Página "Me gusta"
     Route::get('/like', [CancionController::class, 'like'])->name('like');
 
-    // 📂 Listar playlists del usuario autenticado
+    // ===== Playlists (acciones adicionales) =====
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
     Route::post('/api/playlists/create', [PlaylistController::class, 'quickStore']);
-
-    // ➕ Agregar canción a playlist
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
 
-    // Vistas principales
+    // ===== Vistas principales (Blade suelto) =====
     Route::get('/menu', fn() => view('menu'))->name('menu');
     Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
     Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
-    Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
     Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
     Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
     Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
@@ -66,77 +68,62 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn() => view('admin'))->name('admin');
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
-    Route::get('/menu_album', fn() => view('menu_album'))->name('menu_album');
 
+    // ===== Álbumes =====
+    // Importante: usamos el controlador de PERFIL para pasar $user/$albumes a la vista "menu_album"
+    Route::get('/menu_album', [PerfilController::class, 'albumsMenu'])->name('menu_album');
 
-
-    // Álbumes
     Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
+    Route::delete('/album/{id}', [AlbumController::class, 'destroy'])->name('album.destroy');
+
+    // Listado general de álbumes (ejemplo con closure)
     Route::get('/albumes', function () {
         $albumes = Album::with('user')->get();
         return view('album_principal', compact('albumes'));
     });
 
-    // 📂 Playlists API (compatibilidad)
-    Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
-    Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
-
-    // Media desde Drive
+    // ===== Media desde Google Drive (stream/preview) =====
     Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
 
-    // Playlist show individual
-    Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
-
-    // Playlist (grilla y creación)
-    Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
-    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
-
-    // Perfil
+    // ===== Perfil (artistas/usuarios) =====
     Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
     Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
     Route::post('/perfil/song', [PerfilController::class, 'storeSong'])->name('perfil.storeSong');
     Route::post('/perfil/follow/{userId}', [PerfilController::class, 'follow'])->name('perfil.follow');
     Route::post('/perfil/unfollow/{userId}', [PerfilController::class, 'unfollow'])->name('perfil.unfollow');
+    Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
 
-    // Buscador
+    // ===== Búsqueda =====
     Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
 
-    // Dashboard
+    // ===== Dashboard (con verificación de email si usas Breeze/Jetstream) =====
     Route::get('/dashboard', fn() => view('dashboard'))->middleware(['verified'])->name('dashboard');
 
-    // Profile
+    // ===== Profile (Breeze/Jetstream) =====
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Música
-    Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');    // Form
+    // ===== Música (subidas) =====
+    Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
     Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
     Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
 
-    // Borrado
-    Route::delete('/album/{id}', [AlbumController::class, 'destroy'])->name('album.destroy');
-    Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
-
-    // Búsqueda
+    // ===== Búsqueda (vistas varias) =====
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
-    Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
 
-    // ===== API JSON opcional para likes (sin colisionar con la HTML) =====
-    Route::post('/api/canciones/{cancion}/like/toggle', [LikeApiController::class, 'toggle'])
-        ->name('api.canciones.like.toggle');
-    Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
-        ->name('api.canciones.like.state');
-    //Album
-    Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
-
+    // ===== Eliminar canción (coincide con tu Blade: route('cancion.destroy', $id)) =====
+    Route::delete('/cancion/{cancion}', [CancionController::class, 'destroy'])->name('cancion.destroy');
+    // Alias REST plural por si lo usas en otros sitios
+    Route::delete('/canciones/{cancion}', [CancionController::class, 'destroy'])->name('canciones.destroy');
 });
 
-// ===== Recursos de Playlist (RESTful) =====
+// ===== Recurso RESTful de Playlists =====
+// (Deja este fuera si quieres acceso público; si quieres que sea privado, muévelo dentro del middleware 'auth')
 Route::resource('playlists', PlaylistController::class);
 
-// ===== Google Drive =====
+// ===== Google Drive OAuth / Upload =====
 Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogle']);
 Route::get('/google-drive/callback', [GoogleDriveController::class, 'handleCallback']);
 Route::post('/google-drive/upload', [GoogleDriveController::class, 'upload'])->name('google.upload');
@@ -144,13 +131,13 @@ Route::post('/google-drive/upload', [GoogleDriveController::class, 'upload'])->n
 // ===== Debug =====
 Route::get('/phpinfo', fn() => dd(PHP_BINARY, php_ini_loaded_file()));
 
-// ===== Auth =====
-require __DIR__.'/auth.php';
+// ===== Auth scaffolding (Breeze/Jetstream/etc.) =====
+require __DIR__ . '/auth.php';
 
 // ===== Test helper =====
 Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });
 
-// ===== Ruta para el traductor =====
+// ===== Traductor =====
 Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');
