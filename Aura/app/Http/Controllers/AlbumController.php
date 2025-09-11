@@ -36,12 +36,34 @@ class ProfileController extends Controller
         });
 
         // Paginación de los álbumes (4 álbumes por página)
-        $albumPages = $albumsNormalized->chunk(4); 
+        $albumPages = $albumsNormalized->chunk(4);
 
         // Pasar datos a la vista
         return view('profile.edit', [
             'user' => $user,
             'albumPages' => $albumPages,
+        ]);
+    }
+
+    /**
+     * Mostrar los álbumes del usuario.
+     */
+    public function menuAlbum(Request $request): View
+    {
+        // Obtener el usuario autenticado
+        $user = $request->user();
+
+        // Obtener los álbumes asociados al usuario
+        $albumes = Album::where('user_id', $user->id)->get();
+
+        // Calcular el número de seguidores
+        $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
+
+        // Pasar datos a la vista
+        return view('menu_album', [
+            'user' => $user,
+            'albumes' => $albumes,
+            'followersCount' => $followersCount,
         ]);
     }
 

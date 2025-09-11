@@ -1,0 +1,286 @@
+/* ==========================================================
+   AURA - Historial de canciones reproducidas
+   Estilo inspirado en Spotify + Glassmorphism + Animaciones
+   Versión extendida (~400 líneas)
+   ========================================================== */
+
+/* -------------------- VARIABLES -------------------- */
+:root {
+  --bg: #0b0b10;
+  --panel: rgba(20, 20, 32, 0.78);
+  --panel-solid: #141420;
+  --line: rgba(255,255,255,0.08);
+  --text: #f6f6fa;
+  --muted: rgba(255,255,255,0.65);
+
+  --accent: #6d28d9;
+  --accent-alt: #ff4ecd;
+  --accent-gradient: linear-gradient(90deg, #86198f, #7b1485, #5d0a64);
+
+  --radius: 1rem;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.75);
+  --blur: blur(18px);
+
+  --transition: 0.25s ease;
+  --fast: 0.18s ease;
+}
+
+/* -------------------- BASE -------------------- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Inter", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+.with-sidebar {
+  display: flex;
+  flex: 1;
+}
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: radial-gradient(600px at 50% 20%, rgba(29,185,84,0.12), transparent),
+              radial-gradient(800px at 80% 80%, rgba(255,78,205,0.08), transparent);
+  animation: bgPulse 12s ease infinite alternate;
+}
+
+/* -------------------- HISTORY CONTAINER -------------------- */
+.history-container {
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  animation: fadeIn .4s ease;
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+}
+.history-container h2 {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.3px;
+}
+
+/* -------------------- MINI PLAYER -------------------- */
+.mini-player {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  animation: slideDown .5s ease;
+}
+.mini-player-cover {
+  width: 56px; height: 56px;
+  border-radius: .6rem;
+  object-fit: cover;
+  box-shadow: 0 0 14px rgba(167, 29, 185, 0.35);
+  flex-shrink: 0;
+}
+.mini-player-info {
+  flex: 1;
+  overflow: hidden;
+}
+.mini-player-title {
+  font-weight: 600;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-player-artist {
+  font-size: .85rem;
+  opacity: .7;
+}
+.mini-player-actions {
+  display: flex;
+  gap: .7rem;
+}
+.mini-player-actions button {
+  border: none;
+  background: var(--hover, rgba(255,255,255,0.1));
+  color: var(--text);
+  padding: .6rem .8rem;
+  border-radius: .7rem;
+  cursor: pointer;
+  transition: background var(--fast), transform var(--fast);
+}
+.mini-player-actions button:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* -------------------- LISTA HISTORIAL -------------------- */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .7rem;
+}
+.history-item {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: .8rem 1rem;
+  border-radius: var(--radius);
+  transition: background var(--transition), transform var(--transition);
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.history-item:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateX(4px);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+.history-cover {
+  width: 52px; height: 52px;
+  border-radius: .7rem;
+  object-fit: cover;
+  transition: transform var(--fast), box-shadow var(--fast);
+}
+.history-item:hover .history-cover {
+  transform: scale(1.07);
+  box-shadow: 0 0 18px rgba(255,78,205,0.45);
+}
+.history-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.history-title {
+  font-weight: 600;
+  font-size: .95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-artist {
+  font-size: .8rem;
+  opacity: .7;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-actions {
+  display: flex;
+  gap: .6rem;
+}
+.history-actions button {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: var(--text);
+  font-size: .9rem;
+  padding: .5rem .6rem;
+  border-radius: .7rem;
+  cursor: pointer;
+  transition: background var(--fast), transform var(--fast);
+}
+.history-actions button:hover {
+  background: var(--accent-alt);
+  color: #fff;
+  transform: scale(1.15);
+}
+
+/* -------------------- ESTADO VACÍO -------------------- */
+.empty-state {
+  text-align: center;
+  opacity: .7;
+  font-size: 1rem;
+  margin: 2rem 0;
+  animation: fadeIn .8s ease;
+}
+
+/* -------------------- NOTIFICACIONES -------------------- */
+.notification {
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 500;
+  padding: .9rem 1.2rem;
+  border-radius: .8rem;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  animation: slideLeft .4s ease;
+}
+.notification-success {
+  background: rgba(77, 9, 54, 0.95);
+}
+.notification-info {
+  background: rgba(124,58,237,0.95);
+}
+.notification-error {
+  background: rgba(239,68,68,0.95);
+}
+
+/* -------------------- SCROLLBAR -------------------- */
+.history-list::-webkit-scrollbar {
+  width: 10px;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* -------------------- ANIMACIONES -------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes bgPulse {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* -------------------- RESPONSIVE -------------------- */
+@media (max-width: 992px) {
+  .main-content { padding: 1rem; }
+  .history-container { padding: 1rem; }
+}
+@media (max-width: 768px) {
+  .mini-player {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mini-player-actions { width: 100%; justify-content: flex-end; }
+  .history-item { grid-template-columns: 44px 1fr auto; }
+  .history-cover { width: 44px; height: 44px; }
+}
+@media (max-width: 480px) {
+  .history-container { padding: .8rem; }
+  .history-item { padding: .6rem .8rem; gap: .5rem; }
+  .history-cover { width: 40px; height: 40px; }
+  .history-title { font-size: .85rem; }
+  .history-artist { font-size: .75rem; }
+  .history-actions button { padding: .4rem .5rem; }
+}

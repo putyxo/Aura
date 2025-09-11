@@ -79,8 +79,8 @@ class CancionController extends Controller
     public function like()
     {
         $user = Auth::user();
-        $canciones = $user->likes()->with('user')->get();
-        return view('like', compact('canciones'));
+        $likedSongs = $user->likes()->with('user')->get();
+        return view('like', compact('likedSongs'));
     }
 
     /* ================== Helpers privados ================== */
