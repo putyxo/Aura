@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Perfil — {{ $user->nombre_artistico ?? 'Invitado' }} · Aura</title>
 
+  <!-- Hints de red para acelerar -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer">
 
   @vite('resources/css/ed_perfil.css')
 
@@ -125,7 +130,7 @@
           @if($user && $user->avatar)
             <img id="avatarPreviewLive" class="avatar-img"
                  src="{{ drive_img_url($user->avatar, 500) }}&v={{ time() }}"
-                 alt="{{ $user->nombre_artistico ?? $user->nombre }}" loading="lazy" decoding="async">
+                 alt="{{ $user->nombre_artistico ?? $user->nombre }}" loading="lazy" decoding="async" fetchpriority="low">
           @else
             <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
           @endif
@@ -318,11 +323,11 @@
       ->filter(fn($x) => !empty($x['titulo']))
       ->values();
 
-      $relPages = $normalizedReleases->chunk(8); // 4×2
+      $relPages = $normalizedReleases->chunk(8); // 4×2 por página
     @endphp
 
     @php $isOwner = $isOwner; @endphp
-    <section class="releases-section no-clip">
+    <section class="releases-section no-clip" id="releasesSection">
       <div class="releases-head">
         <h2><i class="fa-solid fa-bolt"></i> Últimos lanzamientos</h2>
         <a href="{{ $releasesAllUrl }}" class="pf-link">Ver todo</a>
@@ -337,7 +342,8 @@
                 <div class="releases-grid-4x2">
                   @foreach($rPage as $item)
                     @php
-                      $rCover = $item['cover_url'] ?? ($item['cover'] ? (function_exists('drive_img_url') ? drive_img_url($item['cover'], 360) : $item['cover']) . '&v=' . time() : asset('img/default-album.png'));
+                      /* Imagen más ligera para velocidad: 240px */
+                      $rCover = $item['cover_url'] ?? ($item['cover'] ? (function_exists('drive_img_url') ? drive_img_url($item['cover'], 240) : $item['cover']) . '&v=' . time() : asset('img/default-album.png'));
                       $cls = 'card release-card' . ($isOwner ? ' has-trash' : '');
                     @endphp
 
@@ -527,7 +533,7 @@
         <div class="bio-grid">
           <div class="bio-media">
             @if($user && $user->avatar)
-              <img src="{{ drive_img_url($user->avatar, 600) }}&v={{ time() }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre }}">
+              <img src="{{ drive_img_url($user->avatar, 600) }}&v={{ time() }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre }}" loading="lazy" decoding="async">
             @else
               <div class="bio-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
             @endif
@@ -553,12 +559,13 @@
 (function(){
   const rootSel = '#page-profile';
   const once = (k)=>{const r=document.querySelector(rootSel); if(!r||r.dataset[k]) return false; r.dataset[k]=1; return true;}
+  const ri = window.requestIdleCallback || function(cb){ setTimeout(cb, 1); };
 
   function initProfile(){
     const root = document.querySelector(rootSel); if(!root) return;
     document.body.classList.remove('blurred','modal-open');
 
-    /* Banner progresivo */
+    /* Banner progresivo (crítico visual) */
     if (once('banner')) {
       const b = root.querySelector('.profile-banner');
       if (b?.dataset.hires){
@@ -567,224 +574,248 @@
       }
     }
 
-    /* Canción clicable */
+    /* Canción clicable (crítico UX) */
     if (once('rows')){
       root.querySelectorAll('.song-row').forEach(row => {
         const play = () => row.querySelector('.cancion-item')?.click();
         row.addEventListener('click', (e) => {
           if (e.target.closest('.icon-chip') || e.target.closest('.kebab-menu')) return;
           play();
-        });
+        }, { passive:true });
       });
     }
 
-    /* Menú 3 puntos */
-    if (once('kebab')){
-      root.querySelectorAll('.more-btn').forEach(btn=>{
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const wrap = btn.closest('.menu-wrap');
-          wrap.querySelector('.kebab-menu').classList.toggle('open');
-          btn.setAttribute('aria-expanded', wrap.querySelector('.kebab-menu').classList.contains('open'));
+    /* Inicializaciones NO críticas -> en idle */
+    ri(() => {
+      /* Menú 3 puntos */
+      if (once('kebab')){
+        root.querySelectorAll('.more-btn').forEach(btn=>{
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const wrap = btn.closest('.menu-wrap');
+            const menu = wrap.querySelector('.kebab-menu');
+            menu.classList.toggle('open');
+            btn.setAttribute('aria-expanded', menu.classList.contains('open'));
+          });
         });
-      });
-      document.addEventListener('click', ()=> {
-        root.querySelectorAll('.kebab-menu.open').forEach(m => m.classList.remove('open'));
-      });
-    }
-
-    /* Carrusel álbumes + altura filas */
-    (function albums(){
-      const track = document.getElementById('albumsTrack');
-      const viewport = document.getElementById('albumsViewport');
-      const prev = document.getElementById('albumsPrev');
-      const next = document.getElementById('albumsNext');
-      const label = document.getElementById('albumsPageLabel');
-      if(!track || !viewport) return;
-      let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
-      const updateAlbums = () => {
-        track.style.transform = `translateX(-${page * 100}%)`;
-        prev && (prev.disabled = (page === 0));
-        next && (next.disabled = (page >= pages - 1));
-        label && (label.textContent = pages ? `Página ${page+1} de ${pages}` : '');
-      };
-      prev?.addEventListener('click', ()=>{ if (page>0) { page--; updateAlbums(); }});
-      next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; updateAlbums(); }});
-      updateAlbums();
-
-      const syncHeights = () => {
-        const vpH = viewport.clientHeight || 0;
-        if (!vpH) return;
-        const rowH = Math.max(64, Math.floor(vpH / 6));
-        document.querySelector(rootSel).style.setProperty('--aurp-song-row-h', rowH + 'px');
-      };
-      const delayedSync = () => requestAnimationFrame(syncHeights);
-      syncHeights();
-      window.addEventListener('resize', delayedSync, { passive:true });
-      window.addEventListener('load', delayedSync, { once:true });
-    })();
-
-    /* Modal editar + previews + tabs + avanzadas (solo si existe) */
-    (function modals(){
-      const editModal = document.getElementById('editModal');
-      if(!editModal) return;
-      const openEdit  = document.getElementById('editBtn');
-      const closeEdit1= document.getElementById('closeEdit');
-      const closeEdit2= document.getElementById('closeEditTop');
-      const closeEdit = ()=> editModal?.setAttribute('aria-hidden','true');
-      const pageRoot  = document.querySelector('#page-profile');
-
-      function openModal(tab='basic'){
-        editModal?.setAttribute('aria-hidden','false');
-        editModal?.querySelectorAll('.tab-btn').forEach(b=>{
-          const is = b.dataset.tab === tab; b.classList.toggle('active', is);
-        });
-        editModal?.querySelectorAll('.tab-pane').forEach(p=>{
-          const is = p.dataset.pane === tab; p.classList.toggle('hidden', !is);
-        });
+        document.addEventListener('click', ()=> {
+          root.querySelectorAll('.kebab-menu.open').forEach(m => m.classList.remove('open'));
+        }, { passive:true });
       }
-      openEdit?.addEventListener('click', ()=> openModal('basic'));
-      closeEdit1?.addEventListener('click', closeEdit);
-      closeEdit2?.addEventListener('click', closeEdit);
-      editModal?.addEventListener('click', (e)=>{ if(e.target===editModal) closeEdit(); });
 
-      // Tabs
-      editModal?.querySelectorAll('.tab-btn').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const tab = btn.dataset.tab;
-          editModal.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
-          editModal.querySelectorAll('.tab-pane').forEach(p=> p.classList.toggle('hidden', p.dataset.pane !== tab));
-        });
-      });
-
-      // Previews Avanzado
-      const accInput  = document.getElementById('accColor');
-      const darkRange = document.getElementById('darknessRange');
-      const tintRgb   = document.getElementById('tintRgb');
-      function setVar(name, value){ pageRoot?.style.setProperty(name, value); }
-
-      accInput?.addEventListener('input', ()=>{
-        const hex = accInput.value;
-        setVar('--aurp-accent', hex);
-        setVar('--aurp-accent-2', hex);
-      });
-
-      function setScrimLevels(f){
-        const clamp = v => Math.max(0, Math.min(1, v));
-        setVar('--scrim-a', clamp(0.56 * f));
-        setVar('--scrim-b', clamp(0.78 * f));
-        setVar('--scrim-c', clamp(0.92 * f));
-        setVar('--scrim-d', clamp(0.98 * f));
-      }
-      darkRange?.addEventListener('input', ()=>{
-        const f = parseFloat(darkRange.value || '0.94') / 0.94; // 1 = default
-        setScrimLevels(f);
-      });
-
-      tintRgb?.addEventListener('change', ()=>{
-        const ok = /^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$/.test(tintRgb.value);
-        if(ok) setVar('--banner-tint-rgb', tintRgb.value.trim());
-      });
-
-      // Previews de archivos
-      const avatarInput = document.getElementById('avatarInput');
-      const avatarPrev  = document.getElementById('avatarPreview');
-      const avatarLive  = document.getElementById('avatarPreviewLive');
-      const bannerInput = document.getElementById('bannerInput');
-      const bannerPrev  = document.getElementById('bannerPreview');
-      document.querySelector('#page-profile .avatar-edit')?.addEventListener('click', ()=> avatarInput?.click());
-      document.querySelector('#page-profile .banner-edit')?.addEventListener('click', ()=> bannerInput?.click());
-      avatarInput?.addEventListener('change', ()=>{
-        const f = avatarInput.files?.[0]; if(!f) return;
-        const url = URL.createObjectURL(f);
-        if (avatarPrev) { avatarPrev.src = url; avatarPrev.style.display='block'; }
-        if (avatarLive) { avatarLive.src = url; }
-      });
-      bannerInput?.addEventListener('change', ()=>{
-        const f = bannerInput.files?.[0]; if(!f) return;
-        const url = URL.createObjectURL(f);
-        const banner = document.querySelector('#page-profile .profile-banner');
-        if (bannerPrev) { bannerPrev.src = url; bannerPrev.style.display='block'; }
-        if (banner)     { banner.style.backgroundImage = `url('${url}')`; }
-      });
-    })();
-
-    /* Confirm eliminar */
-    (function confirmDelete(){
-      const cModal = document.getElementById('confirmModal');
-      if(!cModal) return;
-      const cCover = document.getElementById('confirmCover');
-      const cTitle = document.getElementById('confirmTitle');
-      const cSub   = document.getElementById('confirmSubtitle');
-      const dForm  = document.getElementById('deleteForm');
-      const dangerBtn = document.getElementById('confirmDeleteBtn');
-      const cancelBtn = document.getElementById('cancelDelete');
-      let lastFocused = null;
-
-      const focusableSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-      function trapFocus(container, e){
-        const f = [...container.querySelectorAll(focusableSel)].filter(el=>!el.disabled && el.offsetParent !== null);
-        if (!f.length) return; const first = f[0], last = f[f.length - 1];
-        if (e.key === 'Tab'){
-          if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
-          else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
-        }
-      }
-      function openConfirm(type, action, title, cover){
-        lastFocused = document.activeElement;
-        cCover.src = cover || '';
-        cTitle.textContent = '¿Deseas eliminar ' + (type === 'album' ? 'este álbum?' : 'esta canción?');
-        cSub.textContent   = title || '';
-        dForm.action       = action;
-        cModal.setAttribute('aria-hidden','false');
-        document.body.classList.add('blurred','modal-open');
-        dangerBtn.focus();
-
-        const onKey = (e)=>{
-          if (e.key === 'Escape'){ closeConfirm(); }
-          if (e.key === 'Enter' && cModal.getAttribute('aria-hidden') === 'false' && document.activeElement !== cancelBtn){
-            e.preventDefault(); dangerBtn.click();
-          }
-          trapFocus(cModal, e);
+      /* Carrusel álbumes + altura filas */
+      (function albums(){
+        const track = document.getElementById('albumsTrack');
+        const viewport = document.getElementById('albumsViewport');
+        const prev = document.getElementById('albumsPrev');
+        const next = document.getElementById('albumsNext');
+        const label = document.getElementById('albumsPageLabel');
+        if(!track || !viewport) return;
+        let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
+        const updateAlbums = () => {
+          track.style.transform = `translateX(-${page * 100}%)`;
+          prev && (prev.disabled = (page === 0));
+          next && (next.disabled = (page >= pages - 1));
+          label && (label.textContent = pages ? `Página ${page+1} de ${pages}` : '');
         };
-        cModal._escHandler = onKey;
-        document.addEventListener('keydown', onKey);
-      }
-      function closeConfirm(){
-        cModal.setAttribute('aria-hidden','true');
-        document.body.classList.remove('blurred','modal-open');
-        if (cModal._escHandler){
-          document.removeEventListener('keydown', cModal._escHandler);
-          cModal._escHandler = null;
+        prev?.addEventListener('click', ()=>{ if (page>0) { page--; updateAlbums(); }});
+        next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; updateAlbums(); }});
+        updateAlbums();
+      })();
+
+      /* Carrusel ÚLTIMOS LANZAMIENTOS */
+      (function releases(){
+        const track = document.getElementById('releasesTrack');
+        if(!track) return;
+        const prev = document.getElementById('releasesPrev');
+        const next = document.getElementById('releasesNext');
+        const pager = document.getElementById('releasesPager');
+        let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
+
+        // Construir paginador
+        pager.innerHTML = '';
+        for (let i=0;i<pages;i++){
+          const d = document.createElement('div');
+          d.className = 'dot' + (i===0 ? ' active':'');
+          d.role = 'button'; d.tabIndex = 0; d.ariaLabel = `Ir a página ${i+1}`;
+          d.addEventListener('click', ()=>{ page = i; update(); });
+          pager.appendChild(d);
         }
-        lastFocused?.focus?.();
-      }
-      document.querySelectorAll('#page-profile .open-delete').forEach(btn=>{
-        btn.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          openConfirm(btn.dataset.type, btn.dataset.action, btn.dataset.title, btn.dataset.cover);
+
+        function update(){
+          track.style.transform = `translateX(-${page * 100}%)`;
+          prev && (prev.disabled = (page === 0));
+          next && (next.disabled = (page >= pages - 1));
+          [...pager.children].forEach((el,idx)=> el.classList.toggle('active', idx===page));
+        }
+
+        prev?.addEventListener('click', ()=>{ if (page>0) { page--; update(); }});
+        next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; update(); }});
+        update();
+      })();
+
+      /* Modal editar + previews + tabs + avanzadas (solo si existe) */
+      (function modals(){
+        const editModal = document.getElementById('editModal');
+        if(!editModal) return;
+        const openEdit  = document.getElementById('editBtn');
+        const closeEdit1= document.getElementById('closeEdit');
+        const closeEdit2= document.getElementById('closeEditTop');
+        const closeEdit = ()=> editModal?.setAttribute('aria-hidden','true');
+        const pageRoot  = document.querySelector('#page-profile');
+
+        function openModal(tab='basic'){
+          editModal?.setAttribute('aria-hidden','false');
+          editModal?.querySelectorAll('.tab-btn').forEach(b=>{
+            const is = b.dataset.tab === tab; b.classList.toggle('active', is);
+          });
+          editModal?.querySelectorAll('.tab-pane').forEach(p=>{
+            const is = p.dataset.pane === tab; p.classList.toggle('hidden', !is);
+          });
+        }
+        openEdit?.addEventListener('click', ()=> openModal('basic'));
+        closeEdit1?.addEventListener('click', closeEdit);
+        closeEdit2?.addEventListener('click', closeEdit);
+        editModal?.addEventListener('click', (e)=>{ if(e.target===editModal) closeEdit(); });
+
+        // Tabs
+        editModal?.querySelectorAll('.tab-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const tab = btn.dataset.tab;
+            editModal.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
+            editModal.querySelectorAll('.tab-pane').forEach(p=> p.classList.toggle('hidden', p.dataset.pane !== tab));
+          });
         });
-      });
-      cancelBtn?.addEventListener('click', closeConfirm);
-      cModal?.addEventListener('click', (e)=>{ if (e.target === cModal) closeConfirm(); });
-    })();
 
-    /* Modal BIO (ayuda) */
-    (function bio(){
-      const modal = document.getElementById('bioModal');
-      const open  = document.getElementById('openBio');
-      const closeTop = document.getElementById('closeBioTop');
-      const closeBtn = document.getElementById('closeBio');
-      const close = () => modal?.setAttribute('aria-hidden','true');
+        // Previews Avanzado
+        const accInput  = document.getElementById('accColor');
+        const darkRange = document.getElementById('darknessRange');
+        const tintRgb   = document.getElementById('tintRgb');
+        function setVar(name, value){ pageRoot?.style.setProperty(name, value); }
 
-      open?.addEventListener('click', ()=> modal?.setAttribute('aria-hidden','false'));
-      closeTop?.addEventListener('click', close);
-      closeBtn?.addEventListener('click', close);
-      modal?.addEventListener('click', (e)=>{ if(e.target===modal) close(); });
-      document.addEventListener('keydown', (e)=> {
-        if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') close();
-      });
-    })();
+        accInput?.addEventListener('input', ()=>{
+          const hex = accInput.value;
+          setVar('--aurp-accent', hex);
+          setVar('--aurp-accent-2', hex);
+        });
+
+        function setScrimLevels(f){
+          const clamp = v => Math.max(0, Math.min(1, v));
+          setVar('--scrim-a', clamp(0.56 * f));
+          setVar('--scrim-b', clamp(0.78 * f));
+          setVar('--scrim-c', clamp(0.92 * f));
+          setVar('--scrim-d', clamp(0.98 * f));
+        }
+        darkRange?.addEventListener('input', ()=>{
+          const f = parseFloat(darkRange.value || '0.94') / 0.94; // 1 = default
+          setScrimLevels(f);
+        });
+
+        tintRgb?.addEventListener('change', ()=>{
+          const ok = /^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$/.test(tintRgb.value);
+          if(ok) setVar('--banner-tint-rgb', tintRgb.value.trim());
+        });
+
+        // Previews de archivos
+        const avatarInput = document.getElementById('avatarInput');
+        const avatarPrev  = document.getElementById('avatarPreview');
+        const avatarLive  = document.getElementById('avatarPreviewLive');
+        const bannerInput = document.getElementById('bannerInput');
+        const bannerPrev  = document.getElementById('bannerPreview');
+        document.querySelector('#page-profile .avatar-edit')?.addEventListener('click', ()=> avatarInput?.click());
+        document.querySelector('#page-profile .banner-edit')?.addEventListener('click', ()=> bannerInput?.click());
+        avatarInput?.addEventListener('change', ()=>{
+          const f = avatarInput.files?.[0]; if(!f) return;
+          const url = URL.createObjectURL(f);
+          if (avatarPrev) { avatarPrev.src = url; avatarPrev.style.display='block'; }
+          if (avatarLive) { avatarLive.src = url; }
+        });
+        bannerInput?.addEventListener('change', ()=>{
+          const f = bannerInput.files?.[0]; if(!f) return;
+          const url = URL.createObjectURL(f);
+          const banner = document.querySelector('#page-profile .profile-banner');
+          if (bannerPrev) { bannerPrev.src = url; bannerPrev.style.display='block'; }
+          if (banner)     { banner.style.backgroundImage = `url('${url}')`; }
+        });
+      })();
+
+      /* Confirm eliminar */
+      (function confirmDelete(){
+        const cModal = document.getElementById('confirmModal');
+        if(!cModal) return;
+        const cCover = document.getElementById('confirmCover');
+        const cTitle = document.getElementById('confirmTitle');
+        const cSub   = document.getElementById('confirmSubtitle');
+        const dForm  = document.getElementById('deleteForm');
+        const dangerBtn = document.getElementById('confirmDeleteBtn');
+        const cancelBtn = document.getElementById('cancelDelete');
+        let lastFocused = null;
+
+        const focusableSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        function trapFocus(container, e){
+          const f = [...container.querySelectorAll(focusableSel)].filter(el=>!el.disabled && el.offsetParent !== null);
+          if (!f.length) return; const first = f[0], last = f[f.length - 1];
+          if (e.key === 'Tab'){
+            if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+            else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+          }
+        }
+        function openConfirm(type, action, title, cover){
+          lastFocused = document.activeElement;
+          cCover.src = cover || '';
+          cTitle.textContent = '¿Deseas eliminar ' + (type === 'album' ? 'este álbum?' : 'esta canción?');
+          cSub.textContent   = title || '';
+          dForm.action       = action;
+          cModal.setAttribute('aria-hidden','false');
+          document.body.classList.add('blurred','modal-open');
+          dangerBtn.focus();
+
+          const onKey = (e)=>{
+            if (e.key === 'Escape'){ closeConfirm(); }
+            if (e.key === 'Enter' && cModal.getAttribute('aria-hidden') === 'false' && document.activeElement !== cancelBtn){
+              e.preventDefault(); dangerBtn.click();
+            }
+            trapFocus(cModal, e);
+          };
+          cModal._escHandler = onKey;
+          document.addEventListener('keydown', onKey);
+        }
+        function closeConfirm(){
+          cModal.setAttribute('aria-hidden','true');
+          document.body.classList.remove('blurred','modal-open');
+          if (cModal._escHandler){
+            document.removeEventListener('keydown', cModal._escHandler);
+            cModal._escHandler = null;
+          }
+          lastFocused?.focus?.();
+        }
+        document.querySelectorAll('#page-profile .open-delete').forEach(btn=>{
+          btn.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            openConfirm(btn.dataset.type, btn.dataset.action, btn.dataset.title, btn.dataset.cover);
+          });
+        });
+        cancelBtn?.addEventListener('click', closeConfirm);
+        cModal?.addEventListener('click', (e)=>{ if (e.target === cModal) closeConfirm(); });
+      })();
+
+      /* Modal BIO (ayuda) */
+      (function bio(){
+        const modal = document.getElementById('bioModal');
+        const open  = document.getElementById('openBio');
+        const closeTop = document.getElementById('closeBioTop');
+        const closeBtn = document.getElementById('closeBio');
+        const close = () => modal?.setAttribute('aria-hidden','true');
+
+        open?.addEventListener('click', ()=> modal?.setAttribute('aria-hidden','false'));
+        closeTop?.addEventListener('click', close);
+        closeBtn?.addEventListener('click', close);
+        modal?.addEventListener('click', (e)=>{ if(e.target===modal) close(); });
+        document.addEventListener('keydown', (e)=> {
+          if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') close();
+        }, { passive:true });
+      })();
+    });
   }
 
   document.addEventListener('DOMContentLoaded', initProfile);
@@ -819,7 +850,7 @@
     }
   }
   window.addEventListener('load', measure, { once:true });
-  window.addEventListener('resize', measure);
+  window.addEventListener('resize', measure, { passive:true });
   if (window.ResizeObserver){
     const ro = new ResizeObserver(measure);
     sidebar && ro.observe(sidebar);

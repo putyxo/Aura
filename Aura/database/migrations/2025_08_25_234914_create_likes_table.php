@@ -10,10 +10,14 @@ return new class extends Migration
     {
         Schema::create('likes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('song_id')->constrained('songs')->onDelete('cascade');
-            $table->timestamps();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
+            // IMPORTANTE: si tu tabla se llama 'canciones', usa 'canciones'
+            $table->foreignId('song_id')
+                  ->constrained(table: 'canciones') // <-- antes tenías 'songs'
+                  ->cascadeOnDelete();
+
+            $table->timestamps();
             $table->unique(['user_id', 'song_id']); // evita duplicados
         });
     }
