@@ -98,6 +98,7 @@
   const CSRF   = (document.querySelector('meta[name="csrf-token"]')?.content) || '{{ csrf_token() }}';
   const userId = @json(Auth::id());
   const KEY    = 'player_state_' + userId;
+  const HISTORY_KEY = 'song_history_' + userId;
 
   let currentSongId = null;
   let raf = null, ticker = null, lastVolume = 0.7;
@@ -304,6 +305,25 @@
     .catch(()=> alert('No se pudo agregar a la playlist'));
   }
 
+  function saveToHistory(song) {
+    if (!song.id || !song.title) return;
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    // Remove if already exists
+    history = history.filter(s => s.id !== song.id);
+    // Add to beginning
+    history.unshift({
+      id: song.id,
+      src: song.src || '',
+      title: song.title,
+      artist: song.artist,
+      cover: song.cover,
+      playedAt: new Date().toISOString()
+    });
+    // Limit to 20
+    if (history.length > 20) history = history.slice(0, 20);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
   // API del reproductor
   window.AuraPlayer = {
     play({id, src, title, artist, cover}){
@@ -315,6 +335,8 @@
       audio.src            = src || '';
       audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; }).catch(()=>{});
       if (window.AuraQueue?.noteNowPlaying) window.AuraQueue.noteNowPlaying({id,src,title,artist,cover});
+      // Save to history
+      saveToHistory({id, title, artist, cover});
     }
   };
 

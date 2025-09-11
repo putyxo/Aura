@@ -68,10 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn() => view('admin'))->name('admin');
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
-<<<<<<< HEAD
     Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
-=======
->>>>>>> Parte-ubitzo
 
     // ===== Álbumes =====
     // Importante: usamos el controlador de PERFIL para pasar $user/$albumes a la vista "menu_album"
@@ -117,24 +114,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
     //Album
     Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
 
-=======
     // ===== API JSON opcional para likes (sin colisionar con la HTML) =====
     Route::post('/api/canciones/{cancion}/like/toggle', [LikeApiController::class, 'toggle'])
         ->name('api.canciones.like.toggle');
     Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
         ->name('api.canciones.like.state');
->>>>>>> Parte-ubitzo
-=======
     // ===== Eliminar canción (coincide con tu Blade: route('cancion.destroy', $id)) =====
     Route::delete('/cancion/{cancion}', [CancionController::class, 'destroy'])->name('cancion.destroy');
     // Alias REST plural por si lo usas en otros sitios
     Route::delete('/canciones/{cancion}', [CancionController::class, 'destroy'])->name('canciones.destroy');
->>>>>>> Parte-ubitzo
 });
 
 // ===== Recurso RESTful de Playlists =====
