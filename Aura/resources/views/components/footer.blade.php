@@ -814,7 +814,7 @@
 <style>
 :root{
   --player-width:380px; --player-gap:20px;
-  --z-player:1300; --z-popup:1500;
+  --z-player:9999999; --z-popup:1500;
   --pl-bg-1:#0a0a0f; --pl-bg-2:#151521; --pl-line:rgba(255,255,255,.08);
   --pl-fg:#f8f9fb; --pl-fg-dim:#a8a9b8; --pl-accent:#7c3aed; --pl-accent2:#4c1d95; --pl-glow:rgba(76,29,149,.55);
 }

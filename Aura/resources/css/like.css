@@ -1,66 +1,246 @@
-/* ================== THEME ================== */
-:root {
-  --bg: #0b0b10;
-  --card: #11111a;
-  --text: #f6f7fb;
-  --muted: #b6b6c8;
-  --accent: #a855f7;
-  --btn-bg: #1a1b22;
-  --btn-hover: #242635;
-  --radius: 14px;
-  --shadow: 0 10px 25px rgba(0,0,0,0.5);
-  --transition: all 0.25s ease;
+/* =========================
+   AURA — ME GUSTA (LK)
+   Namespaced con lk- para evitar choques
+   ========================= */
+:root{
+  /* Paleta */
+  --lk-bg:#0b0b10;
+  --lk-panel:#11111a;
+  --lk-elev:#171725;
+  --lk-line:rgba(255,255,255,.10);
+
+  --lk-fg:#f3f2ff;
+  --lk-fg-dim:#c7b7ff;
+
+  --lk-vio-300:#c4b5fd;
+  --lk-vio-400:#a78bfa;
+  --lk-vio-500:#8b5cf6;
+  --lk-vio-600:#7c3aed;
+  --lk-vio-700:#6d28d9;
+
+  --lk-ok:#22c55e;
+  --lk-err:#ef4444;
+
+  --lk-shadow-lg:0 30px 80px rgba(0,0,0,.55);
+  --lk-radius:22px;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--lk-bg);color:var(--lk-fg);font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+
+.lk-page{position:relative;min-height:100dvh}
+.lk-shell{max-width:1300px;margin:0 auto;padding:18px 18px 90px}
+
+/* =========================
+   HERO
+   ========================= */
+.lk-hero{
+  position:relative;border-radius:24px;padding:28px clamp(20px, 4vw, 40px);
+  background: rgba(12,9,20,.55);backdrop-filter: blur(16px);overflow:hidden;
+  border:1px solid transparent;box-shadow:0 10px 40px rgba(124,58,237,.15);margin-bottom: 18px;
+}
+.lk-hero::before{
+  content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
+  background: linear-gradient(90deg, rgba(167,139,250,.90), rgba(124,58,237,.90), rgba(109,40,217,.90));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+}
+.lk-hero__bg{
+  position:absolute; inset:-20% -30% -30% -30%;
+  background:
+    radial-gradient(40% 60% at 20% 30%, rgba(167,139,250,.35), transparent 60%),
+    radial-gradient(35% 55% at 80% 10%, rgba(124,58,237,.28), transparent 60%),
+    radial-gradient(60% 80% at 55% 100%, rgba(109,40,217,.28), transparent 60%);
+  filter: blur(30px); opacity:.95; animation: lkAurora 14s ease-in-out infinite alternate; pointer-events:none;
+}
+@keyframes lkAurora{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-6%) scale(1.05)}}
+.lk-hero__row{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.lk-hero__content{display:flex;align-items:center;gap:14px}
+.lk-hero__icon{
+  width:52px;height:52px;border-radius:16px;display:grid;place-items:center;
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,.10) 0, rgba(255,255,255,0) 60%),
+    linear-gradient(135deg, rgba(167,139,250,.22), rgba(109,40,217,.22));
+  border:1px solid rgba(167,139,250,.45);
+  box-shadow: inset 0 8px 30px rgba(167,139,250,.18), 0 10px 30px rgba(124,58,237,.25);
+}
+.lk-hero__icon i{ font-size:20px;color:#f5f3ff;text-shadow:0 0 12px rgba(167,139,250,.9) }
+.lk-hero__title{
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height:1.1;margin:0;
+  background: linear-gradient(90deg, #f5f3ff, #e9d5ff 30%, var(--lk-vio-400) 60%, #f5f3ff);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.lk-hero__sub{ margin-top:6px; color: var(--lk-fg-dim); opacity:.95; }
+.lk-hero__actions{display:flex;gap:10px}
+
+/* search */
+.lk-search{position:relative;display:flex;align-items:center}
+.lk-search i{position:absolute;left:12px;color:#bdb4ff;opacity:.9;pointer-events:none}
+.lk-search input{
+  width:min(360px,72vw);padding:10px 36px;border-radius:12px;border:1px solid var(--lk-line);
+  background:#121222;color:var(--lk-fg);outline:0;transition:border-color .2s ease
+}
+.lk-search input:focus{border-color:rgba(167,139,250,.55);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+.lk-search .lk-clear{
+  position:absolute;right:6px;width:30px;height:30px;border-radius:10px;border:1px solid var(--lk-line);
+  background:#17172a;display:inline-flex;align-items:center;justify-content:center;color:#eaeaff
+}
+.lk-search .lk-clear:hover{background:#1f1f34}
+
+/* =========================
+   GRID
+   ========================= */
+.lk-grid{
+  --tile-min: 240px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--tile-min),1fr));
+  gap:14px;margin-top:12px
+}
+.lk-tile{
+  position:relative;display:flex;flex-direction:column;gap:8px;
+  background:rgba(0,0,0,.42);
+  border:1px solid rgba(167,139,250,.25);
+  border-radius:16px;padding:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s;
+  animation:lkFloatIn .35s ease both; overflow:hidden;
+}
+.lk-tile::before{
+  content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
+  background:linear-gradient(135deg, rgba(167,139,250,.45), rgba(124,58,237,.35));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+}
+.lk-tile:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.38);border-color:rgba(167,139,250,.45)}
+.lk-tile__link{position:absolute;inset:0;z-index:1}
+
+/* Cover + acciones */
+.lk-cover{
+  position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;
+  background:#141428;border:1px solid rgba(255,255,255,.06)
+}
+.lk-cover img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.lk-tile:hover .lk-cover img{transform:scale(1.04)}
+.lk-play{
+  position:absolute;right:10px;bottom:10px;z-index:2;width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.18);
+  background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));color:#fff;
+  box-shadow:0 16px 32px rgba(124,58,237,.28);opacity:0;transform:translateY(6px);transition:.25s ease
+}
+.lk-tile:hover .lk-play{opacity:1;transform:none}
+.lk-like{
+  position:absolute;left:10px;top:10px;z-index:2;width:38px;height:38px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.08);color:#ffd9e4;backdrop-filter:blur(6px);transition:.22s
+}
+.lk-like.is-liked{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.55)}
+.lk-like:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(124,58,237,.25)}
+
+/* Meta */
+.lk-meta{padding:2px 2px 0}
+.lk-title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lk-artist{font-size:.95rem;color:var(--lk-fg-dim)}
+
+/* =========================
+   MINI PLAYER
+   ========================= */
+.lk-player{
+  display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;
+  background:linear-gradient(180deg, rgba(24,20,38,.80), rgba(14,12,24,.80));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 10px 40px rgba(124,58,237,.08);
+  position:relative;z-index:2
+}
+.lk-player__controls{display:flex;align-items:center;gap:8px}
+.lk-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 12px;border-radius:12px;border:1px solid transparent;font-weight:800;
+  transition:.18s ease;background:transparent;color:var(--lk-fg)
+}
+.lk-btn--sm{padding:8px 10px}
+.lk-btn--primary{background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));box-shadow:0 10px 22px rgba(124,58,237,.28)}
+.lk-btn--primary:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(124,58,237,.36)}
+.lk-btn--ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px) saturate(140%)}
+.lk-time{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--lk-fg-dim);font-weight:800}
+.lk-time__sep{opacity:.6}
+
+/* Barra de progreso */
+.lk-player__bar{position:relative}
+.lk-seek{
+  -webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;cursor:pointer;
+  background:linear-gradient(90deg, rgba(124,58,237,.75), rgba(167,139,250,.75));
+  outline:none;border:1px solid rgba(255,255,255,.14)
+}
+.lk-seek::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#fff;box-shadow:0 0 22px rgba(124,58,237,.65), 0 2px 8px rgba(0,0,0,.35);border:2px solid rgba(124,58,237,.55)
+}
+.lk-seek::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(124,58,237,.55)
 }
 
-/* ================== CARD FAVORITOS ================== */
-.favorite-card {
-  position: relative;
-  display: flex;
-  gap: 24px;
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 24px;
-  max-width: 1250px;
-  width: 100%;
-  margin: 10px auto;
-  transition: var(--transition);
+/* Empty */
+.lk-empty{
+  text-align:center;padding:36px;border-radius:18px;background:rgba(255,255,255,.04);
+  border:1px dashed rgba(167,139,250,.35);color:#e9d5ff
+}
+.lk-empty i{font-size:34px;margin-bottom:8px}
+
+/* Toast */
+.lk-toast{
+  position:sticky;top:14px;z-index:50;margin-bottom:12px;display:inline-flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);
+}
+.lk-toast--ok{background:rgba(34,197,94,.15);color:#d7ffea;border-color:rgba(34,197,94,.45)}
+
+/* Animaciones */
+@keyframes lkFloatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width:768px){
+  .lk-grid{--tile-min: 200px}
+  .lk-time{display:none}
 }
 
-.favorite-cover img {
-  width: 330px;
-  height: 330px;
-  border-radius: var(--radius);
-  object-fit: cover;
+/* =========================================================
+   MEJORAS AL REPRODUCTOR DEL FOOTER (opcional y no invasivo)
+   Se aplican solo cuando estamos en la página lk-page para evitar choques globales.
+   Si tu wrapper del footer tiene otro selector, cambia #footerPlayer por el tuyo.
+   ========================================================= */
+.lk-page #footerPlayer,
+.lk-page .footer-player{
+  background:linear-gradient(180deg, rgba(20,16,34,.85), rgba(11,9,20,.85));
+  backdrop-filter:blur(12px) saturate(140%);
+  border-top:1px solid rgba(167,139,250,.25);
+  box-shadow:0 -18px 60px rgba(0,0,0,.45), inset 0 20px 60px rgba(124,58,237,.06);
 }
-
-.favorite-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.lk-page #footerPlayer .controls button,
+.lk-page .footer-player .controls button{
+  border-radius:12px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);color:#fff;font-weight:900;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
-
-.favorite-subtitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 6px;
+.lk-page #footerPlayer .controls button:hover,
+.lk-page .footer-player .controls button:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));
+  box-shadow:0 10px 22px rgba(124,58,237,.28);
+  border-color:transparent;
 }
-
-.favorite-title {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-  color: var(--text);
+.lk-page #footerPlayer .progress input[type="range"],
+.lk-page .footer-player .progress input[type="range"]{
+  -webkit-appearance:none;appearance:none;height:8px;border-radius:999px;cursor:pointer;
+  background:linear-gradient(90deg, rgba(124,58,237,.8), rgba(167,139,250,.8));
+  border:1px solid rgba(255,255,255,.14);
 }
+<<<<<<< HEAD
 
 .favorite-user {
   font-size: 0.9rem;
@@ -284,4 +464,10 @@ body {
 .empty-msg i {
   margin-right: 6px;
   color: #ffb347;
+=======
+.lk-page #footerPlayer .progress input[type="range"]::-webkit-slider-thumb,
+.lk-page .footer-player .progress input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(124,58,237,.55);
+  box-shadow:0 0 22px rgba(124,58,237,.65), 0 2px 8px rgba(0,0,0,.35)
+>>>>>>> Parte-ubitzo
 }

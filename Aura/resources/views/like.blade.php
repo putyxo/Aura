@@ -2,116 +2,190 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+<<<<<<< HEAD
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>AURA — Favoritos</title>
   @vite('resources/css/like.css')
+=======
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>AURA — Me gusta</title>
+
+  {{-- Fuente + Iconos --}}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  {{-- Vite CSS --}}
+  @vite(['resources/css/like.css'])
+>>>>>>> Parte-ubitzo
 </head>
 <body>
-@yield('content')
-@include('components.traductor')
-  <div class="page-container">
+<div class="lk-app">
+  <div class="lk-with-sidebar">
     @include('components.sidebar')
-        @include('components.header')
-        @include('components.traductor')
-        @include('components.fondo')
+    @include('components.header')
+    @include('components.traductor')
+    @include('components.fondo')
 
-
-    <main class="main-content">
-
-<div class="favorite-card">
-  <div class="favorite-cover">
-    <img src="img/like_icono.jpg" alt="Favoritos">
-  </div>
-
-  <div class="favorite-info">
-    <span class="favorite-subtitle">Lista</span>
-    <h2 class="favorite-title">Favoritos</h2>
-    <span class="favorite-user">Tus me gusta</span>
-
-    <div class="favorite-actions">
-      <button class="btn"><i class="fa-solid fa-play"></i> Reproducir</button>
-      <button class="btn"><i class="fa-solid fa-shuffle"></i> Aleatorio</button>
-    </div>
-  </div>
-</div>
-
-<section class="likes-section">
-  <h3 class="likes-header"><i class="fa-solid fa-heart"></i> Canciones que te gustan</h3>
-
-  <div class="songs-list">
-    @forelse($canciones as $song)
-      @php
-        // Portada
-        $coverUrl = $song->cover_url
-            ? drive_img_url($song->cover_url, 300)
-            : asset('img/default-cancion.png');
-
-        // Audio (drive o directo)
-        $rawAudio = $song->audio_url;
-        $audioUrl = null;
-        if ($rawAudio) {
-            if (Str::contains($rawAudio, 'drive.google')) {
-                if (preg_match('~/d/([^/]+)~', $rawAudio, $m)) {
-                    $id = $m[1];
-                } elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) {
-                    $id = $m[1];
-                } else {
-                    $id = null;
-                }
-                $audioUrl = $id ? route('media.drive', ['id' => $id]) : $rawAudio;
-            } else {
-                $audioUrl = $rawAudio;
-            }
+    {{-- HOTFIX: garantiza que $likedSongs exista como Collection --}}
+    @php
+        if (!isset($likedSongs) || is_null($likedSongs)) {
+            $likedSongs = collect();
+        } elseif (is_array($likedSongs)) {
+            $likedSongs = collect($likedSongs);
         }
-      @endphp
+    @endphp
 
+<<<<<<< HEAD
       <div class="song-row" data-song-id="{{ $song->id }}">
         <div class="song-left">
           <img src="{{ $coverUrl }}" alt="cover">
           <div class="song-info">
             <h4>{{ $song->title }}</h4>
             <p>{{ $song->title }}</p>
-          </div>
-        </div>
+=======
+    <main class="main-content lk-page" data-page="likes">
+      <div class="lk-shell">
 
+        {{-- ================== HERO ================== --}}
+        <section class="lk-hero" aria-label="Tus Me gusta">
+          <div class="lk-hero__bg"></div>
+
+          <div class="lk-hero__row">
+            <div class="lk-hero__content">
+              <div class="lk-hero__icon"><i class="fa-solid fa-heart"></i></div>
+              <div>
+                <h1 class="lk-hero__title">Tus Me gusta</h1>
+                <p class="lk-hero__sub">
+                  {{ number_format($likedSongs->count()) }} canciones guardadas para volver siempre.
+                </p>
+              </div>
+            </div>
+
+            <div class="lk-hero__actions">
+              <div class="lk-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="lkSearch" type="search" placeholder="Buscar canción o artista..." aria-label="Buscar en Me gusta" autocomplete="off">
+                <button class="lk-clear" id="lkClear" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+>>>>>>> Parte-ubitzo
+          </div>
+        </section>
+
+<<<<<<< HEAD
         <!-- Botón de reproducir -->
         <button class="play-song-btn" title="Reproducir" data-id="{{ $song->id }}" data-src="{{ $audioUrl }}" data-title="{{ $song->title }}" data-artist="{{ $song->title }}" data-cover="{{ $coverUrl }}">
           <i class="fa-solid fa-play"></i>
         </button>
 
         <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
+=======
+        {{-- Toast --}}
+        @if(session('ok'))
+          <div class="lk-toast lk-toast--ok" role="status" aria-live="polite">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>{{ session('ok') }}</span>
+          </div>
+        @endif
+>>>>>>> Parte-ubitzo
 
-        <!-- botón invisible para el reproductor -->
-        <button class="cancion-item"
-                style="display:none"
-                data-id="{{ $song->id }}"
-                data-src="{{ $audioUrl }}"
-                data-title="{{ $song->title }}"
-                data-artist="{{ $song->title }}"
-                data-cover="{{ $coverUrl }}">
-        </button>
+        {{-- ================== GRID ================== --}}
+        <section class="lk-grid" id="lkGrid" data-count="{{ $likedSongs->count() }}">
 
-        <!-- Botón para quitar de favoritos -->
-        <form action="{{ route('canciones.like', $song->id) }}" method="POST" onsubmit="return confirm('¿Quitar de favoritos?')">
-          @csrf
-          <button type="submit" class="delete-btn"><i class="fa-solid fa-heart-crack"></i></button>
-        </form>
+          @php use Illuminate\Support\Str; @endphp
+
+          @forelse($likedSongs as $song)
+            @php
+              // Campos tolerantes (ES/EN) para diferentes esquemas
+              $title  = $song->title  ?? $song->titulo  ?? $song->name ?? 'Sin título';
+              $artist = optional($song->user)->nombre_artistico ?? optional($song->user)->nombre ?? 'Artista';
+
+              $cover  = $song->cover_path ?? $song->portada ?? $song->imagen ?? null;
+              $audio  = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
+              $dur    = $song->duration ?? $song->duracion ?? null;
+
+              // Si guardas IDs de Drive en vez de URLs
+              if ($cover && is_numeric($cover)) $cover = route('media.drive', ['id' => $cover]);
+              if ($audio && is_numeric($audio)) $audio = route('media.drive', ['id' => $audio]);
+
+              $cover = $cover ?: asset('img/default-cover.jpg');
+              $searchKey = Str::lower(($title ?? '') . ' ' . $artist);
+            @endphp
+
+            <article
+              class="lk-tile"
+              title="{{ $title }}"
+              data-name="{{ $searchKey }}"
+              data-duration="{{ $dur ?? 0 }}"
+              data-song-id="{{ $song->id }}"
+            >
+              <a class="lk-tile__link" aria-label="Abrir {{ $title }}"></a>
+
+              <div class="lk-cover">
+                <img src="{{ $cover }}" alt="Portada {{ $title }}" width="260" height="260" loading="lazy" decoding="async">
+                <button type="button" class="lk-play" aria-label="Reproducir {{ $title }}">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <button type="button" class="lk-like is-liked" title="Quitar de Me gusta" aria-label="Quitar de Me gusta" data-unlike="{{ $song->id }}">
+                  <i class="fa-solid fa-heart"></i>
+                </button>
+              </div>
+
+              <div class="lk-meta">
+                <div class="lk-title" title="{{ $title }}">{{ $title }}</div>
+                <div class="lk-artist">{{ $artist }}</div>
+              </div>
+
+              {{-- Mini player mejorado --}}
+              <div class="lk-player" aria-label="Mini reproductor">
+                <audio preload="none" src="{{ $audio }}"></audio>
+
+                <div class="lk-player__controls">
+                  <button class="lk-btn lk-btn--sm lk-btn--primary lk-btn-play" aria-label="Reproducir">
+                    <i class="fa-solid fa-play"></i>
+                  </button>
+                  <button class="lk-btn lk-btn--sm lk-btn--ghost lk-btn-mute" aria-label="Silenciar">
+                    <i class="fa-solid fa-volume-high"></i>
+                  </button>
+                  <div class="lk-time">
+                    <span class="lk-time__current">0:00</span>
+                    <span class="lk-time__sep">/</span>
+                    <span class="lk-time__total">{{ $dur ? gmdate('i:s', max(0,$dur)) : '--:--' }}</span>
+                  </div>
+                </div>
+
+                <div class="lk-player__bar">
+                  <input class="lk-seek" type="range" min="0" max="{{ $dur ?? 0 }}" value="0" step="1" aria-label="Barra de progreso">
+                </div>
+              </div>
+
+              {{-- Fallback sin JS para quitar Me gusta --}}
+              <form class="lk-like-form" method="POST" action="{{ url('likes/'.$song->id) }}">
+                @csrf
+                @method('DELETE')
+              </form>
+            </article>
+          @empty
+            <div class="lk-empty" style="grid-column:1/-1;">
+              <i class="fa-solid fa-heart-crack"></i>
+              <h3>Aún no tienes canciones en Me gusta</h3>
+              <p>Descubre música y pulsa <i class="fa-solid fa-heart"></i> para guardarlas aquí.</p>
+            </div>
+          @endforelse
+        </section>
+
       </div>
-    @empty
-      <p class="empty-msg"><i class="fa-solid fa-circle-exclamation"></i> Aún no has dado like a ninguna canción.</p>
-    @endforelse
-  </div>
-</section>
-
-
-   
-
     </main>
 
     @include('components.footer')
   </div>
+</div>
 
+<<<<<<< HEAD
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Función para formatear tiempo
@@ -227,5 +301,112 @@
     });
   </script>
 
+=======
+{{-- ======= JS mínimo (inline) para el mini-player y buscador ======= --}}
+<script>
+(() => {
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  const tiles  = $$('.lk-tile');
+  const search = $('#lkSearch');
+  const clear  = $('#lkClear');
+
+  let current = null; // audio activo
+
+  const fmt = (sec) => {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Filtro de búsqueda
+  if (search) {
+    const apply = () => {
+      const q = (search.value || '').trim().toLowerCase();
+      tiles.forEach(t => {
+        const hay = t.dataset.name || '';
+        t.style.display = hay.includes(q) ? '' : 'none';
+      });
+    };
+    search.addEventListener('input', apply);
+    clear.addEventListener('click', () => { search.value=''; apply(); search.focus(); });
+  }
+
+  // Controles por tarjeta
+  tiles.forEach(tile => {
+    const audio    = $('audio', tile);
+    const btnPlay  = $('.lk-btn-play', tile);
+    const btnMute  = $('.lk-btn-mute', tile);
+    const btnHeart = $('.lk-like', tile);
+    const coverBtn = $('.lk-play', tile);
+    const seek     = $('.lk-seek', tile);
+    const tCur     = $('.lk-time__current', tile);
+    const tTot     = $('.lk-time__total', tile);
+
+    const togglePlay = () => {
+      if (!audio) return;
+      if (current && current !== audio) {
+        current.pause();
+        const prev = current.closest('.lk-tile');
+        if (prev) $('.lk-btn-play i', prev)?.classList.replace('fa-pause','fa-play');
+        if (prev) $('.lk-play i', prev)?.classList.replace('fa-pause','fa-play');
+      }
+      if (audio.paused) {
+        audio.play().catch(() => {});
+        current = audio;
+        btnPlay?.querySelector('i')?.classList.replace('fa-play','fa-pause');
+        coverBtn?.querySelector('i')?.classList.replace('fa-play','fa-pause');
+      } else {
+        audio.pause();
+        btnPlay?.querySelector('i')?.classList.replace('fa-pause','fa-play');
+        coverBtn?.querySelector('i')?.classList.replace('fa-pause','fa-play');
+      }
+    };
+
+    btnPlay?.addEventListener('click', togglePlay);
+    coverBtn?.addEventListener('click', togglePlay);
+
+    btnMute?.addEventListener('click', () => {
+      audio.muted = !audio.muted;
+      const icon = btnMute.querySelector('i');
+      if (audio.muted) { icon.classList.replace('fa-volume-high','fa-volume-xmark'); }
+      else { icon.classList.replace('fa-volume-xmark','fa-volume-high'); }
+    });
+
+    audio?.addEventListener('timeupdate', () => {
+      if (seek && !seek.dataset.lock) {
+        seek.max   = audio.duration || seek.max || 0;
+        seek.value = audio.currentTime || 0;
+      }
+      if (tCur) tCur.textContent = fmt(audio.currentTime);
+      if (tTot && (audio.duration || 0) > 0) tTot.textContent = fmt(audio.duration);
+    });
+
+    seek?.addEventListener('input', () => {
+      seek.dataset.lock = '1';
+      if (!isNaN(seek.value)) audio.currentTime = +seek.value;
+      if (tCur) tCur.textContent = fmt(seek.value);
+    });
+    seek?.addEventListener('change', () => { delete seek.dataset.lock; });
+
+    audio?.addEventListener('ended', () => {
+      btnPlay?.querySelector('i')?.classList.replace('fa-pause','fa-play');
+      coverBtn?.querySelector('i')?.classList.replace('fa-pause','fa-play');
+      if (seek) seek.value = 0;
+      if (tCur) tCur.textContent = '0:00';
+    });
+
+    // Fallback sin fetch: submit del form para quitar like
+    btnHeart?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const form = $('.lk-like-form', tile);
+      if (form) form.submit();
+    });
+  });
+})();
+</script>
+>>>>>>> Parte-ubitzo
 </body>
 </html>

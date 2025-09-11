@@ -14,6 +14,10 @@ use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
 use App\Models\Album;
 
+// Controladores de Likes
+use App\Http\Controllers\LikeController;      // HTML (redirige)
+use App\Http\Controllers\LikeApiController;   // JSON (opcional)
+
 // ===== Página principal =====
 Route::get('/', fn() => view('welcome'))->name('welcome');
 
@@ -30,9 +34,15 @@ Route::get('/perfil/{user}/lanzamientos', [PerfilController::class, 'releasesAll
 // ===== Rutas protegidas (requieren login) =====
 Route::middleware('auth')->group(function () {
 
-    // ❤️ Like de canciones
-    Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
-    Route::get('/canciones/{cancion}/liked', [CancionController::class, 'liked'])->name('canciones.liked');
+    // ❤️ Like de canciones (HTML: usado por tus formularios en Blade)
+    Route::post('/canciones/{cancion}/like', [LikeController::class, 'toggle'])
+        ->name('canciones.like'); // <- ESTE nombre es el que usa tu ed_perfil.blade.php
+
+    // Estado de like (JSON opcional, útil para JS)
+    Route::get('/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
+        ->name('canciones.liked');
+
+    // Página "Me gusta" (si ya la tienes en CancionController)
     Route::get('/like', [CancionController::class, 'like'])->name('like');
 
     // 📂 Listar playlists del usuario autenticado
@@ -67,7 +77,7 @@ Route::middleware('auth')->group(function () {
         return view('album_principal', compact('albumes'));
     });
 
-    // 📂 Playlists API (duplicadas arriba a propósito por compatibilidad con tu app)
+    // 📂 Playlists API (compatibilidad)
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
 
@@ -113,9 +123,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
 
+<<<<<<< HEAD
     //Album
     Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
 
+=======
+    // ===== API JSON opcional para likes (sin colisionar con la HTML) =====
+    Route::post('/api/canciones/{cancion}/like/toggle', [LikeApiController::class, 'toggle'])
+        ->name('api.canciones.like.toggle');
+    Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
+        ->name('api.canciones.like.state');
+>>>>>>> Parte-ubitzo
 });
 
 // ===== Recursos de Playlist (RESTful) =====

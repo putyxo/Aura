@@ -1,237 +1,188 @@
-/* ==========================================================================
-   AURA — PLAYLISTS (UX PRO)
-   - Buscador debajo del título + filtros
-   - Tile "Nueva playlist" con modal (drag & drop, preview, validaciones)
-   - Selección: click en todo el cuadro, Shift-click y long-press (touch)
-   - Skeleton loading; orden A–Z / por cantidad
-   ========================================================================== */
+/* AURA — axpl.playlists.js (aislado en #axplRoot) */
 (() => {
-  const $ = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  'use strict';
 
-  const grid = $('#playlistGrid');
-  const search = $('#plSearch');
-  const clearSearch = $('#clearSearch');
-  const chips = $$('.chip');
-  const selectBtn = $('#btnSelectMode');
-  const deleteBtn = $('#btnDeleteSelected');
+  const root = document.getElementById('axplRoot');
+  if (!root) return;
 
-  /* ---------- Skeletons ---------- */
-  const addSkeletons = () => {
-    if (!grid) return;
-    const tpl = $('#skeletonTemplate'); if (!tpl) return;
-    const count = Math.max(6, parseInt(grid?.dataset?.count || '0', 10));
-    for (let i=0; i<count; i++) grid.append(tpl.content.cloneNode(true));
-  };
-  const removeSkeletons = () => $$('.skeleton', grid).forEach(el => el.remove());
-  addSkeletons();
-  const onAllImagesLoaded = () => setTimeout(removeSkeletons, 150);
-  const lazyImgs = $$('img[loading="lazy"]', grid);
-  let loaded = 0;
-  if (lazyImgs.length === 0) onAllImagesLoaded();
-  lazyImgs.forEach(img => img.addEventListener('load', () => { loaded++; if (loaded >= lazyImgs.length) onAllImagesLoaded(); }, { once:true }));
-  setTimeout(onAllImagesLoaded, 1200);
+  const $  = (sel, p = root) => p.querySelector(sel);
+  const $$ = (sel, p = root) => Array.from(p.querySelectorAll(sel));
 
-  /* ---------- Búsqueda ---------- */
-  const norm = v => (v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const doFilter = () => {
-    const q = norm(search.value);
-    $$('.tile[href], .tile:not(.tile-create)', grid).forEach(t => {
-      const name = norm(t.dataset.name || t.querySelector('.tile-name')?.textContent || '');
-      t.style.display = name.includes(q) ? '' : 'none';
-    });
-  };
-  search?.addEventListener('input', doFilter);
-  clearSearch?.addEventListener('click', () => { search.value=''; doFilter(); search.focus(); });
+  /* ---------- MODAL ---------- */
+  const backdrop   = $('#axplModalBackdrop');
+  const modal      = $('#axplModal');
+  const form       = $('#axplForm');
+  const btnOpen1   = $('#axplOpenModal');
+  const btnOpen2   = $('#axplOpenModal2');
+  const btnClose   = $('#axplCloseModal');
+  const btnCancel  = $('#axplCancel');
+  const btnSubmit  = $('#axplSubmit');
+  const modalTitle = $('#axplModalTitle');
 
-  /* ---------- Orden ---------- */
-  chips.forEach(ch => ch.addEventListener('click', () => {
-    chips.forEach(c => c.classList.remove('is-active'));
-    ch.classList.add('is-active');
-    sortGrid(ch.dataset.sort);
-  }));
-  const sortGrid = (mode) => {
-    const tiles = $$('.tile[href]', grid);
-    const frag = document.createDocumentFragment();
-    const arr = tiles.slice();
-    if (mode === 'az') arr.sort((a,b) => (a.dataset.name || '').localeCompare(b.dataset.name || ''));
-    else if (mode === 'cantidad') arr.sort((a,b) => (+b.dataset.count||0) - (+a.dataset.count||0));
-    else return; // recientes = orden del servidor
-    arr.forEach(el => frag.appendChild(el)); grid.appendChild(frag);
+  const fieldNombre = $('#axpl_nombre');
+  const fieldDesc   = $('#axpl_desc');
+  const nameMsg     = $('#axplNameMsg');
+
+  const drop     = $('#axplCoverDrop');
+  const input    = $('#axpl_cover');
+  const preview  = $('#axplCoverPreview');
+  const overlay  = $('#axplUploaderOverlay');
+  const hint     = $('#axplUploaderHint');
+  const coverMsg = $('#axplCoverMsg');
+
+  const openModal = (mode = 'create', payload = null) => {
+    if (mode === 'create') {
+      modalTitle.textContent = 'Añadir Playlist';
+      form.removeAttribute('data-editing');
+      fieldNombre.value = '';
+      fieldDesc.value   = '';
+      clearCover();
+    } else if (mode === 'edit' && payload) {
+      modalTitle.textContent = 'Editar Playlist';
+      form.setAttribute('data-editing', payload.id);
+      fieldNombre.value = payload.nombre || '';
+      fieldDesc.value   = payload.descripcion || '';
+      if (payload.cover) setPreview(payload.cover, true); else clearCover();
+    }
+
+    backdrop.hidden = false;
+    modal.hidden    = false;
+    root.classList.add('axpl--modal-open');
+    fieldNombre.focus();
   };
 
-  /* ---------- Modal crear ---------- */
-  const modal = $('#playlistModal');
-  const backdrop = $('#playlistModalBackdrop');
-  const openModalBtns = [$('#btnOpenPlaylistModal'), $('#btnOpenPlaylistModal2')].filter(Boolean);
-  const closeModalBtn = $('#btnClosePlaylistModal');
-  const cancelModalBtn = $('#btnCancelPlaylist');
-  const form = $('#playlistForm');
-  const nameInput = $('#pl_nombre');
-  const descInput = $('#pl_desc');
-  const coverInput = $('#pl_cover');
-  const coverDrop = $('#coverDrop');
-  const coverPreview = $('#coverPreview');
-  const uploaderHint = $('#uploaderHint');
-
-  const maxMB = parseFloat($('.playlist-page')?.dataset?.maxSizeMb || '5');
-
-  const openModal = () => {
-    backdrop.hidden = false; modal.hidden = false;
-    document.body.style.overflow = 'hidden';
-    nameInput?.focus();
-    trapFocus(modal);
-  };
   const closeModal = () => {
-    backdrop.hidden = true; modal.hidden = true;
-    document.body.style.overflow = '';
-    releaseFocusTrap();
-    form?.reset(); clearPreview(); clearMsgs();
-  };
-  openModalBtns.forEach(b => b.addEventListener('click', openModal));
-  closeModalBtn?.addEventListener('click', closeModal);
-  cancelModalBtn?.addEventListener('click', closeModal);
-  backdrop?.addEventListener('click', closeModal);
-
-  const clearPreview = () => { if (coverPreview){ coverPreview.src=''; coverPreview.style.display='none'; } if (uploaderHint){ uploaderHint.style.display=''; } };
-  const clearMsgs = () => $$('.field-msg').forEach(m => { m.textContent=''; m.classList.remove('msg-error','msg-ok'); });
-  const setMsg = (el, msg, ok=false) => { if (!el) return; el.textContent = msg || ''; el.classList.toggle('msg-error', !!msg && !ok); el.classList.toggle('msg-ok', !!msg && ok); };
-  const validateImage = (file) => {
-    if (!file) return {ok:true};
-    const sizeMB = file.size / (1024*1024);
-    if (sizeMB > maxMB) return {ok:false, msg:`Archivo supera ${maxMB}MB`};
-    if (!/^image\//.test(file.type)) return {ok:false, msg:`Formato no permitido`};
-    return {ok:true};
+    backdrop.hidden = true;
+    modal.hidden    = true;
+    root.classList.remove('axpl--modal-open');
   };
 
-  coverDrop?.addEventListener('dragover', e => { e.preventDefault(); coverDrop.classList.add('is-dragover'); });
-  coverDrop?.addEventListener('dragleave', () => coverDrop.classList.remove('is-dragover'));
-  coverDrop?.addEventListener('drop', e => {
-    e.preventDefault(); coverDrop.classList.remove('is-dragover');
-    const file = e.dataTransfer?.files?.[0]; if (!file) return;
-    const v = validateImage(file); setMsg($('#coverMsg'), v.msg || '', v.ok);
-    if (!v.ok) return; coverInput.files = e.dataTransfer.files; readPreview(file);
-  });
-  coverDrop?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); coverInput?.click(); } });
-  coverInput?.addEventListener('change', e => {
-    const file = e.target.files?.[0];
-    const v = validateImage(file); setMsg($('#coverMsg'), v.msg || '', v.ok);
-    if (!v.ok) return clearPreview(); readPreview(file);
-  });
-  const readPreview = (file) => { const r = new FileReader(); r.onload = () => { if (coverPreview){ coverPreview.src = r.result; coverPreview.style.display='block'; } if (uploaderHint){ uploaderHint.style.display='none'; } }; r.readAsDataURL(file); };
-
-  form?.addEventListener('submit', (e) => {
-    clearMsgs();
-    let ok = true;
-    if (!nameInput?.value?.trim() || nameInput.value.trim().length < 3) { setMsg($('#nameMsg'),'Escribe al menos 3 caracteres'); ok=false; }
-    if (descInput?.value && descInput.value.length > 300) { setMsg($('#descMsg'),'Máximo 300 caracteres'); ok=false; }
-    const f = coverInput?.files?.[0]; if (f){ const v = validateImage(f); if (!v.ok){ setMsg($('#coverMsg'), v.msg); ok=false; } }
-    if (!ok) e.preventDefault();
+  btnOpen1 && btnOpen1.addEventListener('click', () => openModal('create'));
+  btnOpen2 && btnOpen2.addEventListener('click', () => openModal('create'));
+  btnClose && btnClose.addEventListener('click', closeModal);
+  btnCancel && btnCancel.addEventListener('click', closeModal);
+  backdrop && backdrop.addEventListener('click', closeModal);
+  window.addEventListener('keydown', e => {
+    if (!modal.hidden && e.key === 'Escape') closeModal();
   });
 
-  /* ---------- Selección mejorada ---------- */
-  let selectMode = false;
-  const setSelectMode = (on) => {
-    selectMode = !!on;
-    grid.classList.toggle('is-selecting', selectMode);
-    $$('.tile[href]', grid).forEach(t => {
-      const cb = $('.bulk-check', t);
-      if (!cb) return;
-      cb.hidden = !selectMode;
-      if (!selectMode){ cb.checked = false; t.classList.remove('is-selected'); t.setAttribute('aria-selected','false'); }
-    });
-    deleteBtn.disabled = !selectMode;
-    selectBtn.querySelector('.btn-text').textContent = selectMode ? 'Cancelar' : 'Seleccionar';
-    selectBtn.querySelector('i').className = selectMode ? 'fa-regular fa-square-check' : 'fa-regular fa-square';
+  /* ---------- DROPZONE / PREVIEW ---------- */
+  const maxSizeMB = parseFloat(root.dataset.axplMaxMb || '5');
+
+  const setPreview = (src, isUrl = false) => {
+    preview.src = src;
+    preview.style.display = 'block';
+    drop.classList.add('has-image');
+    hint.style.display = 'none';
+    coverMsg.textContent = '';
+    if (isUrl) preview.removeAttribute('data-blob');
   };
-  selectBtn?.addEventListener('click', () => setSelectMode(!selectMode));
 
-  // Click sobre la tarjeta -> alterna selección (y evita navegar)
-  grid?.addEventListener('click', (e) => {
-    const tile = e.target.closest('.tile[href]');
-    if (!tile) return;
+  const clearCover = () => {
+    preview.removeAttribute('src');
+    preview.style.display = 'none';
+    drop.classList.remove('has-image');
+    hint.style.display = '';
+    coverMsg.textContent = '';
+  };
 
-    // El botón de play sigue funcionando
-    if (e.target.closest('[data-action="quick-play"]')) return;
-
-    if (selectMode) {
-      e.preventDefault();
-      toggleTile(tile);
+  const handleFile = (file) => {
+    if (!file) return;
+    const okTypes = ['image/jpeg','image/jpg','image/png','image/webp','image/gif'];
+    if (!okTypes.includes(file.type)) {
+      coverMsg.textContent = 'Formato no válido. Usa PNG/JPG.';
+      return;
     }
-  });
-
-  // Shift+click activa selección y marca
-  grid?.addEventListener('mousedown', (e) => {
-    const tile = e.target.closest('.tile[href]'); if (!tile) return;
-    if (e.shiftKey && !selectMode) { e.preventDefault(); setSelectMode(true); toggleTile(tile, true); }
-  });
-
-  // Long-press (touch)
-  let pressTimer = null;
-  grid?.addEventListener('pointerdown', (e) => {
-    const tile = e.target.closest('.tile[href]'); if (!tile) return;
-    if (e.pointerType === 'touch') {
-      pressTimer = setTimeout(() => { if (!selectMode) setSelectMode(true); toggleTile(tile, true); }, 420);
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      coverMsg.textContent = `La imagen supera ${maxSizeMB}MB.`;
+      return;
     }
-  });
-  const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
-  grid?.addEventListener('pointerup', clearPress);
-  grid?.addEventListener('pointerleave', clearPress);
-  grid?.addEventListener('pointercancel', clearPress);
+    const reader = new FileReader();
+    reader.onload = e => setPreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
 
-  function toggleTile(tile, forceCheck=null){
-    const cb = $('.bulk-check', tile); if (!cb) return;
-    cb.checked = (forceCheck !== null) ? forceCheck : !cb.checked;
-    tile.classList.toggle('is-selected', cb.checked);
-    tile.setAttribute('aria-selected', cb.checked ? 'true' : 'false');
-  }
-
-  // Eliminar seleccionadas (frontend)
-  deleteBtn?.addEventListener('click', () => {
-    if (!selectMode) return;
-    const selected = $$('.tile[href]', grid).filter(t => $('.bulk-check', t)?.checked);
-    if (!selected.length) return;
-    selected.forEach(t => { t.style.transition='transform .22s ease, opacity .22s ease'; t.style.transform='scale(.98)'; t.style.opacity='0'; setTimeout(()=>t.remove(), 200); });
-    setSelectMode(false);
+  drop.addEventListener('click', () => input.click());
+  drop.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
   });
 
-  /* ---------- Quick play ---------- */
-  grid?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action="quick-play"]'); if (!btn) return;
+  input.addEventListener('change', (e) => handleFile(e.target.files[0]));
+  drop.addEventListener('dragover', (e) => {
     e.preventDefault();
-    const tile = e.target.closest('.tile[href]'); if (!tile) return;
-    const name = tile.querySelector('.tile-name')?.textContent?.trim();
-    const id = tile.dataset.id; const cover = tile.querySelector('img')?.src || '';
-    window.dispatchEvent(new CustomEvent('aura:queue:play', { detail:{ type:'playlist', id, name, cover } }));
-    btn.style.transform='scale(0.92)'; setTimeout(()=>btn.style.transform='', 120);
+    drop.classList.add('dragover');
+    overlay.style.opacity = '1';
+  });
+  drop.addEventListener('dragleave', () => {
+    drop.classList.remove('dragover');
+    overlay.style.opacity = '0';
+  });
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('dragover');
+    overlay.style.opacity = '0';
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) { input.files = e.dataTransfer.files; handleFile(file); }
   });
 
-  /* ---------- Focus trap (modal) ---------- */
-  let lastActive = null;
-  function trapFocus(modalEl){
-    lastActive = document.activeElement;
-    const FOCUSABLE = 'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])';
-    const tabHandler = (e) => {
-      const foc = $$(FOCUSABLE, modalEl).filter(el => !el.disabled && !el.getAttribute('aria-hidden'));
-      if (!foc.length) return;
-      const first = foc[0], last = foc[foc.length-1];
-      if (e.key === 'Tab') {
-        if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
-        else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
-      }
-      if (e.key === 'Escape') { if (!modal.hidden) closeModal(); }
-    };
-    modalEl.__trapHandler = tabHandler; modalEl.addEventListener('keydown', tabHandler);
-  }
-  function releaseFocusTrap(){ if (lastActive){ lastActive.focus({preventScroll:true}); lastActive=null; } modal?.removeEventListener('keydown', modal.__trapHandler); }
+  /* ---------- VALIDACIÓN ---------- */
+  const validate = () => {
+    let ok = true;
+    nameMsg.textContent = '';
+    fieldNombre.removeAttribute('aria-invalid');
 
-  /* ---------- Atajos ---------- */
-  window.addEventListener('keydown', (e) => {
-    if (e.target.matches('input,textarea')) return;
-    if (e.key.toLowerCase() === 'n') openModal();
-    if (e.key.toLowerCase() === 's') setSelectMode(!selectMode);
-    if (e.key === 'Delete' && selectMode && !deleteBtn.disabled) deleteBtn.click();
-    if (e.key === 'Escape') { if (!modal.hidden) closeModal(); }
+    const name = fieldNombre.value.trim();
+    if (name.length < 3) {
+      nameMsg.textContent = 'El nombre debe tener al menos 3 caracteres.';
+      fieldNombre.setAttribute('aria-invalid','true');
+      ok = false;
+    }
+    return ok;
+  };
+
+  fieldNombre.addEventListener('input', validate);
+
+  /* ---------- SUBMIT ---------- */
+  form.addEventListener('submit', (e) => {
+    if (!validate()) {
+      e.preventDefault();
+      fieldNombre.focus();
+      return;
+    }
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando…';
+  });
+
+  /* ---------- EDITAR (lápiz) ---------- */
+  $$('.axpl-pencil').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const payload = {
+        id: btn.dataset.id,
+        nombre: btn.dataset.nombre || '',
+        descripcion: btn.dataset.descripcion || '',
+        cover: btn.dataset.cover || ''
+      };
+      openModal('edit', payload);
+    });
+  });
+
+  /* ---------- BÚSQUEDA EN GRID ---------- */
+  const searchInput = $('#axplSearch');
+  const clearBtn    = $('#axplClearSearch');
+  const grid        = $('#axplGrid');
+
+  const applySearch = () => {
+    const q = (searchInput.value || '').trim().toLowerCase();
+    $$('.axpl-tile', grid).forEach(card => {
+      const name = (card.dataset.name || '').toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  };
+  searchInput && searchInput.addEventListener('input', applySearch);
+  clearBtn && clearBtn.addEventListener('click', () => {
+    searchInput.value=''; applySearch(); searchInput.focus();
   });
 
 })();
