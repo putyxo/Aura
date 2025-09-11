@@ -179,6 +179,23 @@ body {
   gap: 10px;
 }
 
+/* Botón de reproducir en fila de canción */
+.play-song-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 40px;
+  margin-right: 10px;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.play-song-btn:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
 /* Fila de canción */
 .song-row {
   display: flex;
@@ -188,7 +205,9 @@ body {
   padding: 10px 14px;
   border-radius: 10px;
   background: rgba(255,255,255,0.04);
-  transition: background .25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
 }
 .song-row:hover {
   background: rgba(255,255,255,0.08);

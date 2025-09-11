@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn() => view('admin'))->name('admin');
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
-    Route::get('/menu_album', fn() => view('menu_album'))->name('menu_album');
+    Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
 
 
 

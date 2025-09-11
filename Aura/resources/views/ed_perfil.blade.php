@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Perfil — {{ $user->nombre_artistico ?? 'Invitado' }} · Aura</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -418,6 +419,27 @@
 
     // limpia estados residuales
     document.body.classList.remove('blurred','modal-open');
+
+    // Animación hover para filas de canciones
+    function initSongHoverEffects() {
+      rootEl.querySelectorAll('.song-row').forEach(row => {
+        row.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-8px) scale(1.02)';
+          this.style.boxShadow = '0 12px 24px rgba(0,0,0,.15)';
+          this.style.zIndex = '10';
+          this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
+
+        row.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0) scale(1)';
+          this.style.boxShadow = 'none';
+          this.style.zIndex = '1';
+        });
+      });
+    }
+
+    // Inicializar efectos hover
+    initSongHoverEffects();
 
     /* Banner progresivo */
     if (once('banner')) {

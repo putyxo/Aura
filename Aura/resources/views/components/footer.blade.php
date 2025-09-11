@@ -106,7 +106,7 @@
 
   const paintSeek = p => {
     const x = Math.max(0, Math.min(100, p||0));
-    seek.style.background = `linear-gradient(to right,var(--pl-accent) 0%,var(--pl-accent2) ${x}%,var(--pl-line) ${x}%,var(--pl-line) 100%)`;
+    seek.style.background = `linear-gradient(to right, var(--pl-accent) 0%, var(--pl-accent2) ${x}%, rgba(255,255,255,.2) ${x}%, rgba(255,255,255,.2) 100%)`;
   };
   const paintByTime = () => {
     if (!audio.duration) return paintSeek(0);
@@ -841,9 +841,11 @@
 #rightPlayer .img-wrap img{ width:100%; height:100%; object-fit:cover }
 #rightPlayer .song-name{ font-size:20px; font-weight:800; margin-top:14px; color:var(--pl-fg); text-align:center; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:85% }
 #rightPlayer .song-autor{ font-size:13px; color:#b39ddb; margin-top:4px; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:80% }
-#rightPlayer .time{ display:flex; justify-content:space-between; margin:12px auto 6px; width:85%; font-size:12px; color:var(--pl-fg-dim); font-weight:500 }
-#rightPlayer .seek{ -webkit-appearance:none; width:85%; height:8px; margin:0 auto; border-radius:999px; background:linear-gradient(to right,var(--pl-accent) 0%, var(--pl-accent2) 0%, var(--pl-line) 0%, var(--pl-line) 100%); cursor:pointer }
+#rightPlayer .time{ display:flex; justify-content:space-between; margin:12px auto 6px; width:85%; font-size:14px; color:var(--pl-fg); font-weight:600 }
+#rightPlayer .seek{ -webkit-appearance:none; width:85%; height:10px; margin:0 auto; border-radius:999px; background:linear-gradient(to right, rgba(255,255,255,.2) 0%, rgba(255,255,255,.2) 100%); border:1px solid rgba(255,255,255,.1); cursor:pointer; box-shadow: inset 0 1px 2px rgba(0,0,0,.3); transition: all 0.2s ease }
+#rightPlayer .seek:hover{ transform: scaleY(1.2); border-color: rgba(255,255,255,.3); box-shadow: inset 0 1px 2px rgba(0,0,0,.3), 0 0 8px rgba(124,58,237,.3) }
 #rightPlayer .seek::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent2)); box-shadow:0 0 12px var(--pl-glow); transition:transform .2s; position:relative; z-index:2 }
+#rightPlayer .seek::-webkit-slider-thumb:hover{ transform: scale(1.2); box-shadow:0 0 16px var(--pl-glow) }
 #rightPlayer .controls{ display:flex; justify-content:center; align-items:center; gap:24px; margin-top:16px }
 #rightPlayer .controls button{ border:none; background:none; font-size:20px; cursor:pointer; color:var(--pl-fg); transition:transform .25s, color .25s }
 #rightPlayer .controls button:hover{ transform:scale(1.2); color:var(--pl-accent) }

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>AURA — Favoritos</title>
   @vite('resources/css/like.css')
 </head>
@@ -65,7 +66,7 @@
         }
       @endphp
 
-      <div class="song-row">
+      <div class="song-row" data-song-id="{{ $song->id }}">
         <div class="song-left">
           <img src="{{ $coverUrl }}" alt="cover">
           <div class="song-info">
@@ -73,6 +74,11 @@
             <p>{{ $song->title }}</p>
           </div>
         </div>
+
+        <!-- Botón de reproducir -->
+        <button class="play-song-btn" title="Reproducir" data-id="{{ $song->id }}" data-src="{{ $audioUrl }}" data-title="{{ $song->title }}" data-artist="{{ $song->title }}" data-cover="{{ $coverUrl }}">
+          <i class="fa-solid fa-play"></i>
+        </button>
 
         <div class="song-duration">{{ $song->duration ?? '0:00' }}</div>
 
@@ -105,6 +111,121 @@
 
     @include('components.footer')
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Función para formatear tiempo
+      function formatTime(seconds) {
+        if (!seconds || !isFinite(seconds)) return '--:--';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      // Animación hover para filas de canciones
+      function initSongHoverEffects() {
+        document.querySelectorAll('.song-row').forEach(row => {
+          row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+            this.style.boxShadow = '0 12px 24px rgba(0,0,0,.15)';
+            this.style.zIndex = '10';
+          });
+
+          row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+            this.style.boxShadow = 'none';
+            this.style.zIndex = '1';
+          });
+        });
+      }
+
+      // Calcular duración real de las canciones
+      function calculateDurations() {
+        document.querySelectorAll('.song-row').forEach(row => {
+          const audioUrl = row.querySelector('.play-song-btn')?.dataset.src;
+          const durationEl = row.querySelector('.song-duration');
+
+          if (audioUrl && durationEl && durationEl.textContent.trim() === '0:00') {
+            const audio = new Audio();
+            audio.preload = 'metadata';
+            audio.src = audioUrl;
+
+            audio.addEventListener('loadedmetadata', () => {
+              const duration = formatTime(audio.duration);
+              durationEl.textContent = duration;
+              durationEl.style.opacity = '1';
+
+              // Opcional: enviar al servidor para guardar en BD
+              const songId = row.dataset.songId;
+              if (songId) {
+                fetch(`/canciones/${songId}/update-duration`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                  },
+                  body: JSON.stringify({ duration: audio.duration })
+                }).catch(() => {
+                  // Silenciar errores de actualización
+                });
+              }
+            });
+
+            audio.addEventListener('error', () => {
+              durationEl.textContent = '--:--';
+            });
+          }
+        });
+      }
+
+      // Botones de reproducir en filas de canciones
+      document.querySelectorAll('.play-song-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const data = {
+            id: this.dataset.id,
+            src: this.dataset.src,
+            title: this.dataset.title,
+            artist: this.dataset.artist,
+            cover: this.dataset.cover
+          };
+          if (window.AuraPlayer && window.AuraPlayer.play) {
+            window.AuraPlayer.play(data);
+          }
+        });
+      });
+
+      // Botón de reproducir en la tarjeta de favoritos
+      const favoritePlayBtn = document.querySelector('.favorite-actions .btn:first-child');
+      if (favoritePlayBtn) {
+        favoritePlayBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const firstSongBtn = document.querySelector('.play-song-btn');
+          if (firstSongBtn) {
+            firstSongBtn.click();
+          }
+        });
+      }
+
+      // Botón de aleatorio en la tarjeta de favoritos
+      const favoriteShuffleBtn = document.querySelector('.favorite-actions .btn:last-child');
+      if (favoriteShuffleBtn) {
+        favoriteShuffleBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const songBtns = document.querySelectorAll('.play-song-btn');
+          if (songBtns.length > 0) {
+            const randomIndex = Math.floor(Math.random() * songBtns.length);
+            songBtns[randomIndex].click();
+          }
+        });
+      }
+
+      // Inicializar efectos hover
+      initSongHoverEffects();
+
+      // Calcular duraciones al cargar la página
+      calculateDurations();
+    });
+  </script>
 
 </body>
 </html>
