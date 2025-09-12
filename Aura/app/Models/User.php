@@ -58,6 +58,8 @@ class User extends Authenticatable
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
+    
+
     public function followings()
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
@@ -81,6 +83,9 @@ class User extends Authenticatable
     /* ==============================
        ACCESSORS AVATAR / BANNER / PORTADA
        ============================== */
+
+
+       
 
     public function getAvatarUrlAttribute()
     {

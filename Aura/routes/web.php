@@ -16,9 +16,17 @@ use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\LikeApiController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
+
+
+
 
 // Modelos usados en closures
 use App\Models\Album;
+use App\Models\User;
 
 // ===== Página principal =====
 Route::get('/', fn () => view('welcome'))->name('welcome');
@@ -97,10 +105,40 @@ Route::middleware('auth')->group(function () {
     Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
 
     // ===== Admin =====
-    Route::get('/admin', fn() => view('/admin/admin'))->name('admin');
-    Route::get('/albumadmin', fn() => view('/admin/albumadmin'))->name('albumadmin');
-    Route::get('/artistasadmin', fn() => view('/admin/artistasadmin'))->name('artistasadmin');
-    Route::get('/usuarioadmin', fn() => view('/admin/usuarioadmin'))->name('usuarioadmin');
+   function checkAdminAccess() {
+    if (!Auth::check()) {
+        return false;
+    }
+
+    $user = Auth::user();
+    return $user->email === 'sf977996@gmail.com' && Hash::check('123', $user->password);
+}
+
+// ===== Rutas restringidas =====
+Route::get('/admin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+    }
+    return view('admin.admin');
+})->name('admin');
+
+Route::get('/albumadmin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+    }
+    return view('admin.albumadmin');
+})->name('albumadmin');
+
+Route::get('/usuarioadmin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+    }
+    $usuarios = User::all();
+    return view('admin.usuarioadmin', compact('usuarios'));
+})->name('usuarioadmin');
+
+Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+
     /*
     |--------------------------------------------------------------------------
     | Álbumes
