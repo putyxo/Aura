@@ -3,15 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Álbumes — {{ ($user->nombre_artistico ?? $user->nombre ?? 'Artista') ?? 'Artista' }}</title>
+<title>{{ __('albums.title') }} — {{ ($user->nombre_artistico ?? $user->nombre ?? __('albums.artist')) ?? __('albums.artist') }}</title>
 
   <!-- Fuentes y estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   @vite('resources/css/menu_album.css')
 
-<<<<<<< HEAD
-=======
+
   @php
     // ====== FALLBACKS PARA EVITAR "Undefined variable $user" ======
     use Illuminate\Support\Str;
@@ -43,7 +42,6 @@
     });
     $albumPages = $albumsNormalized->chunk(4); // 4 álbumes por página
   @endphp
->>>>>>> Parte-ubitzo
 </head>
 <body>
   @includeIf('components.sidebar')
@@ -91,7 +89,6 @@
                       ? drive_img_url($album->portada, 360) . '&v=' . time()
                       : asset('img/default-album.png');
 
-<<<<<<< HEAD
                     $tracksData = $album->songs->map(function($song) {
                       return [
                         'title' => $song->titulo,
@@ -105,13 +102,11 @@
                        data-title="{{ $album->titulo }}"
                        data-tracks='{{ $tracksJson }}'>
                     <div class="card-link">
-=======
                     $isOwner = $user && Auth::check() && Auth::id() === ($user->id ?? null);
                   @endphp
 
                   <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
                     <a href="{{ route('album.show', $album->id) }}" class="card-link">
->>>>>>> Parte-ubitzo
                       <div class="card-img">
                         <img src="{{ $albumCover }}" alt="Portada" loading="lazy" decoding="async">
                         <span class="album-play"><i class="fa-solid fa-play"></i></span>
@@ -171,7 +166,6 @@
       const prev = document.getElementById('albumsPrev');
       const next = document.getElementById('albumsNext');
       const label = document.getElementById('albumsPageLabel');
-<<<<<<< HEAD
       if (track) {
         let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
         function update() {
@@ -362,7 +356,7 @@
         });
       }
     });
-=======
+
       if (!track) return;
 
       let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
@@ -387,7 +381,6 @@
       ensureWidths();
       update();
     })();
->>>>>>> Parte-ubitzo
   </script>
 </body>
 </html>

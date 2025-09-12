@@ -33,4 +33,11 @@ return [
     'created' => 'Album created successfully',
     'updated' => 'Album updated successfully',
     'deleted' => 'Album deleted successfully',
+
+    // Menu items
+    'playlist' => 'Playlists',
+    'menu' => 'Menu',
+    'seguidos' => 'Followed',
+    'recientes' => 'Recent',
+    'perfil' => 'Profile',
 ];

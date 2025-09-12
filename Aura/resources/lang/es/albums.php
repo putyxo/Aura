@@ -33,4 +33,11 @@ return [
     'created' => 'Álbum creado exitosamente',
     'updated' => 'Álbum actualizado exitosamente',
     'deleted' => 'Álbum eliminado exitosamente',
+
+    // Elementos del menú
+    'playlist' => 'Listas de reproducción',
+    'menu' => 'Menú',
+    'seguidos' => 'Seguidos',
+    'recientes' => 'Recientes',
+    'perfil' => 'Perfil',
 ];
