@@ -2,18 +2,117 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Album;
 use App\Models\Cancion;
 use App\Services\GoogleDriveOAuthService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
-class AlbumController extends Controller
+class ProfileController extends Controller
 {
     /**
-     * Guardar un nuevo álbum
+     * Mostrar el formulario del perfil del usuario.
      */
-    public function store(Request $request, GoogleDriveOAuthService $drive)
+    public function edit(Request $request): View
+    {
+        // Obtener el usuario autenticado
+        $user = $request->user();
+
+        // Obtener los álbumes asociados al usuario
+        $albumes = Album::where('user_id', $user->id)->get();
+
+        // Normalizar los álbumes para la vista
+        $albumsNormalized = collect($albumes)->map(function($a) {
+            return (object)[
+                'id'      => $a->id,
+                'titulo'  => $a->title ?? $a->titulo ?? 'Sin título',
+                'portada' => $a->cover_path ?? $a->portada ?? null,
+            ];
+        });
+
+        // Paginación de los álbumes (4 álbumes por página)
+        $albumPages = $albumsNormalized->chunk(4);
+
+        // Pasar datos a la vista
+        return view('profile.edit', [
+            'user' => $user,
+            'albumPages' => $albumPages,
+        ]);
+    }
+
+    /**
+     * Mostrar los álbumes del usuario.
+     */
+    public function menuAlbum(Request $request): View
+    {
+        // Obtener el usuario autenticado
+        $user = $request->user();
+
+        // Obtener los álbumes asociados al usuario
+        $albumes = Album::where('user_id', $user->id)->get();
+
+        // Calcular el número de seguidores
+        $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
+
+        // Pasar datos a la vista
+        return view('menu_album', [
+            'user' => $user,
+            'albumes' => $albumes,
+            'followersCount' => $followersCount,
+        ]);
+    }
+
+    /**
+     * Actualizar la información del perfil del usuario.
+     */
+    public function update(ProfileUpdateRequest $request): RedirectResponse
+    {
+        $request->user()->fill($request->validated());
+
+        // Si el email ha cambiado, eliminar la verificación de email
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Eliminar la cuenta del usuario.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        // Validar que el password ingresado sea correcto
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        // Desconectar al usuario
+        Auth::logout();
+
+        // Eliminar al usuario de la base de datos
+        $user->delete();
+
+        // Invalidar la sesión
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
+    }
+
+    /**
+     * Guardar un nuevo álbum.
+     */
+    public function storeAlbum(Request $request, GoogleDriveOAuthService $drive)
     {
         // Validar los datos del álbum
         $request->validate([
@@ -46,26 +145,13 @@ class AlbumController extends Controller
         // Guardar el álbum en la base de datos
         $album = Album::create($data);
 
-        return redirect()->route('album.show', $album->id)
-                         ->with('success', 'Álbum creado correctamente.');
+        return redirect()->route('profile.edit')->with('success', 'Álbum creado correctamente.');
     }
 
     /**
-     * Mostrar un álbum específico
+     * Eliminar un álbum (y sus canciones).
      */
-    public function show($id)
-    {
-        // Obtener el álbum por su ID
-        $album = Album::findOrFail($id);
-
-        // Pasar el álbum a la vista
-        return view('menu_album', compact('album'));
-    }
-
-    /**
-     * Eliminar un álbum (y sus canciones). Ruta: DELETE /album/{id}
-     */
-    public function destroy($id, GoogleDriveOAuthService $drive)
+    public function destroyAlbum($id, GoogleDriveOAuthService $drive)
     {
         $album = Album::findOrFail($id);
 
@@ -74,10 +160,10 @@ class AlbumController extends Controller
             abort(403, 'Acción no autorizada.');
         }
 
-        // 1) Intentar borrar portada del álbum en Drive
+        // Intentar borrar portada del álbum en Drive
         $this->deleteFromDriveIfPossible($drive, $album->cover_id ?? $album->cover_path ?? null);
 
-        // 2) Borrar canciones del álbum (DB + archivos)
+        // Borrar canciones del álbum (DB + archivos)
         $songs = Cancion::where('album_id', $album->id)->get();
         foreach ($songs as $s) {
             $this->deleteFromDriveIfPossible($drive, $s->cover_id ?? $s->cover_url ?? $s->portada ?? null);
@@ -85,7 +171,7 @@ class AlbumController extends Controller
             $s->delete();
         }
 
-        // 3) Borrar el álbum
+        // Borrar el álbum
         $album->delete();
 
         return back()->with('success', 'Álbum eliminado correctamente.');
@@ -109,35 +195,11 @@ class AlbumController extends Controller
     }
 
     /**
-     * Extrae un fileId válido desde:
-     *  - un id "crudo"
-     *  - una URL de Drive ( /d/{id} o ?id=... )
-     *  - una URL propia con ?id=...
+     * Extrae un fileId válido desde una URL o ID crudo.
      */
     private function extractDriveId($value): ?string
     {
-        if (!$value) return null;
-        $v = trim((string)$value);
-
-        // Si ya parece un ID crudo
-        if (strpos($v, 'http') !== 0) {
-            return preg_match('/^[A-Za-z0-9_\-]{20,}$/', $v) ? $v : null;
-        }
-
-        // Si es URL y trae ?id=...
-        $q = parse_url($v, PHP_URL_QUERY);
-        if ($q) {
-            parse_str($q, $p);
-            if (!empty($p['id']) && preg_match('/^[A-Za-z0-9_\-]{10,}$/', $p['id'])) {
-                return $p['id'];
-            }
-        }
-
-        // Si es URL tipo /d/{id}
-        if (preg_match('~/(?:d|folders)/([^/?#]+)~', $v, $m)) {
-            return $m[1];
-        }
-
-        return null;
+        // Lógica para extraer el ID de Drive (si aplica)
+        return $value ? Str::after($value, 'drive.com/file/d/') : null;
     }
 }

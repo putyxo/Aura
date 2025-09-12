@@ -114,6 +114,28 @@ class PerfilController extends Controller
         ]);
     }
 
+    /**
+     * Página "Álbumes" (menu_album) del usuario autenticado.
+     * Envía $user, $albumes y $followersCount a la vista para evitar errores.
+     */
+    public function albumsMenu(Request $request)
+    {
+        $user = $request->user(); // autenticado
+        $albumes = $user
+            ? Album::where('user_id', $user->id)->latest()->get()
+            : collect();
+
+        $followersCount = ($user && method_exists($user, 'followers'))
+            ? $user->followers()->count()
+            : 0;
+
+        return view('menu_album', [
+            'user' => $user,
+            'albumes' => $albumes,
+            'followersCount' => $followersCount,
+        ]);
+    }
+
     public function miPerfil()
     {
         return $this->show(Auth::id());
