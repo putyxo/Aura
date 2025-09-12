@@ -42,7 +42,10 @@
     <div id="queueEmpty" class="queue-empty" hidden>No hay canciones en cola.</div>
   </div>
   <!-- === /Fila de reproducción === -->
-
+<!-- Panel: Karaoke -->
+<div id="karaokePanel" class="karaoke-panel" hidden>
+  <div id="karaokeLines" class="karaoke-lines"></div>
+</div>
   <!-- Panel flotante: agregar a playlist -->
   <div id="playlistModal" class="playlist-modal" hidden>
     <div class="playlist-modal-content">
@@ -317,7 +320,62 @@
       if (window.AuraQueue?.noteNowPlaying) window.AuraQueue.noteNowPlaying({id,src,title,artist,cover});
     }
   };
+// === Karaoke ===
+const karaokePanel = document.getElementById('karaokePanel');
+const karaokeLines = document.getElementById('karaokeLines');
+let karaokeData = [];
+let karaokeActive = false;
 
+function loadLyrics(songId){
+  karaokeData = [];
+  karaokeLines.innerHTML = '';
+  if (!songId) return;
+  fetch(`/canciones/${songId}/lyrics`, { headers:{ 'Accept':'application/json' } })
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.content) return;
+      const lines = d.content.split(/\n/).filter(Boolean);
+      lines.forEach(line=>{
+        const match = line.match(/\[(\d+):(\d+)(?:\.(\d+))?\]\s*(.*)/);
+        if(match){
+          const min = parseInt(match[1]);
+          const sec = parseInt(match[2]);
+          const ms  = parseInt(match[3]||0);
+          const t = min*60 + sec + ms/100;
+          karaokeData.push({time:t, text:match[4]});
+          const div = document.createElement('div');
+          div.className='karaoke-line';
+          div.textContent=match[4];
+          karaokeLines.appendChild(div);
+        }
+      });
+    }).catch(console.error);
+}
+
+function syncKaraoke(){
+  if(!karaokeActive || !karaokeData.length) return;
+  const now = audio.currentTime;
+  let idx=-1;
+  for(let i=0;i<karaokeData.length;i++){
+    if(now >= karaokeData[i].time) idx=i; else break;
+  }
+  if(idx>=0){
+    [...karaokeLines.children].forEach((el,i)=>{
+      el.classList.toggle('active', i===idx);
+      if(i===idx) el.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  }
+}
+audio.addEventListener('timeupdate', syncKaraoke);
+
+// Hook al reproducir
+const oldPlay = window.AuraPlayer.play;
+window.AuraPlayer.play = (s)=>{
+  oldPlay(s);
+  loadLyrics(s.id);
+  karaokePanel.hidden = false;
+  karaokeActive = true;
+};
   // Botones externos .cancion-item
   function bindSongButtons(root=document){
     root.querySelectorAll('.cancion-item').forEach(btn=>{
@@ -974,4 +1032,34 @@
   #rightPlayer.player-card{ display:none }
   .main-content{ margin-right:var(--player-gap) }
 }
+
+#rightPlayer .karaoke-panel{
+  flex:1;
+  background:#0f1020;
+  border-top:1px solid var(--pl-line);
+  overflow-y:auto;
+  padding:12px;
+}
+#rightPlayer .karaoke-lines{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#rightPlayer .karaoke-line{
+  font-size:14px;
+  color:#aaa;
+  line-height:1.4;
+  padding:4px 8px;
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+  align-self:flex-start;
+  max-width:85%;
+}
+#rightPlayer .karaoke-line.active{
+  color:#fff;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent2));
+  align-self:center;
+}
+
 </style>

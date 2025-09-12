@@ -13,11 +13,14 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Models\Cancion;
 use App\Models\Album;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\LyricsController;
+
 
 // ===== Página principal =====
 Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -47,6 +50,9 @@ Route::middleware(['web','auth'])->group(function () {
     Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
     Route::get('/canciones/{cancion}/liked', [CancionController::class, 'liked'])->name('canciones.liked');
     Route::get('/like', [CancionController::class, 'like'])->name('like');
+Route::get('/cancion/{cancion}', [CancionController::class, 'show'])
+    ->name('cancion.show');
+Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
 
     // 📂 Listar playlists del usuario autenticado
     Route::get('/api/my-playlists', [PlaylistController::class, 'myPlaylists']);
