@@ -7,8 +7,7 @@ body {
   line-height: 1.6;
 }
 
-/* Única definición de hidden */
-.hidden { display: none !important; }
+.hidden { display: none; }
 
 /* ===== TITULO ===== */
 .section-title {
@@ -125,7 +124,9 @@ body {
   box-shadow: 0 0 10px rgba(236,72,153,.3);
 }
 
-.dz-content { pointer-events: none; }
+.dz-content {
+  pointer-events: none;
+}
 
 .dz-icon {
   font-size: 2rem;
@@ -200,7 +201,7 @@ body {
 }
 
 /* ===== BOTONES ===== */
-#btn-submit, .btn-volver, .btn-close {
+#btn-submit, .btn-volver {
   background: linear-gradient(135deg, #a855f7, #7c3aed);
   color: #fff;
   font-weight: 600;
@@ -211,7 +212,7 @@ body {
   transition: all .3s;
 }
 
-#btn-submit:hover, .btn-volver:hover, .btn-close:hover {
+#btn-submit:hover, .btn-volver:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(168,85,247,.45);
 }
@@ -221,52 +222,12 @@ body {
   align-self: flex-start;
 }
 
-/* Botón deshabilitado durante revisión */
-button:disabled,
-input:disabled,
-select:disabled,
-textarea:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-}
-
-/* ===== OVERLAY REVISIÓN ===== */
-.overlay{
-  position: fixed;
-  inset: 0;
-  background: rgba(9,10,15,.72);
-  display: grid;
-  place-items: center;
-  z-index: 9999;
-}
-
-.overlay-card{
-  width: min(520px, 92vw);
-  background: #11131a;
-  color: #e8eaf2;
-  border: 1px solid #2a2f3b;
-  border-radius: 16px;
-  padding: 28px 24px;
-  text-align: center;
-  box-shadow: 0 16px 48px rgba(0,0,0,.55);
-}
-
-.spinner{
-  width: 56px;
-  height: 56px;
-  margin: 8px auto 14px;
-  border: 4px solid #2b2f3a;
-  border-top-color: #8b5cf6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* ===== ANIMACIONES ===== */
+/* ===== ANIMACIÓN ===== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.hidden {
+  display: none !important;
 }
