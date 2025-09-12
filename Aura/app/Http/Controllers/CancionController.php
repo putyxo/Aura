@@ -159,4 +159,27 @@ class CancionController extends Controller
 
         return null;
     }
+
+public function lyrics(\App\Models\Cancion $cancion)
+{
+    if ($cancion->lyric) {
+        return response()->json([
+            'song_id' => $cancion->id,
+            'lyrics'  => $cancion->lyric->content,
+            'synced'  => (bool) $cancion->lyric->synced,
+            'status'  => 'ready',
+        ]);
+    }
+
+    // Si no hay letra, dispara job
+    \App\Jobs\GenerateLyricsJob::dispatch($cancion->id);
+
+    return response()->json([
+        'song_id' => $cancion->id,
+        'lyrics'  => null,
+        'synced'  => false,
+        'status'  => 'pending',
+    ]);
+}
+
 }

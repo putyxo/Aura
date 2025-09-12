@@ -42,7 +42,10 @@
     <div id="queueEmpty" class="queue-empty" hidden>No hay canciones en cola.</div>
   </div>
   <!-- === /Fila de reproducción === -->
-
+<!-- Panel: Karaoke -->
+<div id="karaokePanel" class="karaoke-panel" hidden>
+  <div id="karaokeLines" class="karaoke-lines"></div>
+</div>
   <!-- Panel flotante: agregar a playlist -->
   <div id="playlistModal" class="playlist-modal" hidden>
     <div class="playlist-modal-content">
@@ -352,7 +355,62 @@
       if (window.AuraQueue?.noteNowPlaying) window.AuraQueue.noteNowPlaying({id,src,title,artist,cover});
     }
   };
+// === Karaoke ===
+const karaokePanel = document.getElementById('karaokePanel');
+const karaokeLines = document.getElementById('karaokeLines');
+let karaokeData = [];
+let karaokeActive = false;
 
+function loadLyrics(songId){
+  karaokeData = [];
+  karaokeLines.innerHTML = '';
+  if (!songId) return;
+  fetch(`/canciones/${songId}/lyrics`, { headers:{ 'Accept':'application/json' } })
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.content) return;
+      const lines = d.content.split(/\n/).filter(Boolean);
+      lines.forEach(line=>{
+        const match = line.match(/\[(\d+):(\d+)(?:\.(\d+))?\]\s*(.*)/);
+        if(match){
+          const min = parseInt(match[1]);
+          const sec = parseInt(match[2]);
+          const ms  = parseInt(match[3]||0);
+          const t = min*60 + sec + ms/100;
+          karaokeData.push({time:t, text:match[4]});
+          const div = document.createElement('div');
+          div.className='karaoke-line';
+          div.textContent=match[4];
+          karaokeLines.appendChild(div);
+        }
+      });
+    }).catch(console.error);
+}
+
+function syncKaraoke(){
+  if(!karaokeActive || !karaokeData.length) return;
+  const now = audio.currentTime;
+  let idx=-1;
+  for(let i=0;i<karaokeData.length;i++){
+    if(now >= karaokeData[i].time) idx=i; else break;
+  }
+  if(idx>=0){
+    [...karaokeLines.children].forEach((el,i)=>{
+      el.classList.toggle('active', i===idx);
+      if(i===idx) el.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  }
+}
+audio.addEventListener('timeupdate', syncKaraoke);
+
+// Hook al reproducir
+const oldPlay = window.AuraPlayer.play;
+window.AuraPlayer.play = (s)=>{
+  oldPlay(s);
+  loadLyrics(s.id);
+  karaokePanel.hidden = false;
+  karaokeActive = true;
+};
   // Botones externos .cancion-item
   function bindSongButtons(root=document){
     root.querySelectorAll('.cancion-item').forEach(btn=>{
@@ -690,139 +748,33 @@ window.addEventListener('load', renderQueue);
   .main-content{ margin-right:var(--player-gap) }
 }
 
-
-
-/* Estilos para la lista de reproducción */
-#rightPlayer .play-list {
-  flex: 1;
-  background: #1c1e2b; /* Fondo oscuro para la cola */
-  padding: 0;
-  overflow-y: auto;
-  position: relative;
-  border-top: 2px solid rgba(255, 255, 255, 0.08); /* Línea de separación */
+#rightPlayer .karaoke-panel{
+  flex:1;
+  background:#0f1020;
+  border-top:1px solid var(--pl-line);
+  overflow-y:auto;
+  padding:12px;
 }
-
-/* Estilo para cada canción que se agrega a la cola */
-#rightPlayer #queueList .queue-item {
-  display: grid;
-  grid-template-columns: 48px 1fr 80px 48px; /* Imagen, info, botones */
-  gap: 12px;
-  align-items: center;
-  background: #191a2a; /* Fondo oscuro */
-  border-radius: 12px;
-  padding: 12px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08); /* Línea de separación */
-  cursor: grabbing; /* Cursor cuando se arrastra */
-  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; /* Transición fluida */
-  opacity: 0; /* Inicia con opacidad 0 */
-  animation: fadeIn 0.5s forwards; /* Animación al agregar */
+#rightPlayer .karaoke-lines{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
-
-#rightPlayer #queueList .queue-item:hover {
-  background: #23243a;
-  transform: translateY(-5px); /* Levanta un poco la canción */
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* Efecto de sombra */
+#rightPlayer .karaoke-line{
+  font-size:14px;
+  color:#aaa;
+  line-height:1.4;
+  padding:4px 8px;
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+  align-self:flex-start;
+  max-width:85%;
 }
-
-/* Efecto de animación al agregar la canción */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+#rightPlayer .karaoke-line.active{
+  color:#fff;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent2));
+  align-self:center;
 }
-
-#rightPlayer #queueList .queue-item img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-#rightPlayer #queueList .queue-item img:hover {
-  transform: scale(1.1); /* Efecto de aumento en la imagen */
-}
-
-#rightPlayer #queueList .queue-item .info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-#rightPlayer #queueList .queue-item .info b {
-  font-size: 14px;
-  color: #f8f9fb; /* Texto blanco */
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-#rightPlayer #queueList .queue-item .info small {
-  font-size: 12px;
-  color: #a8a9b8; /* Texto gris */
-  opacity: 0.8;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-#rightPlayer #queueList .queue-item .qi-play {
-  background: #2b2d46;
-  color: #fff;
-  border: none;
-  border-radius: 9px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-#rightPlayer #queueList .queue-item .qi-play:hover {
-  background: #3a3d62;
-}
-
-#rightPlayer #queueList .queue-item .remove-from-queue {
-  background: none;
-  border: none;
-  color: #ff6b6b;
-  font-size: 14px;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-#rightPlayer #queueList .queue-item .remove-from-queue:hover {
-  color: #ff3a3a;
-}
-
-#rightPlayer #queueList .drop-indicator {
-  width: 100%;
-  height: 0;
-  margin: 0;
-  border-radius: 0;
-  border: 2px dashed #6d64c4;
-  background: rgba(109, 100, 196, .10);
-  opacity: 0;
-  transition: height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
-}
-
-#rightPlayer #queueList .drop-indicator.show {
-  height: 58px;
-  margin: 8px 0;
-  opacity: 1;
-}
-
-/* Estilos para el mensaje vacío cuando no hay canciones en la cola */
-#rightPlayer .queue-empty {
-  opacity: 0.7;
-  font-size: 13px;
-  padding: 14px;
-  border-top: 1px dashed #2b2d46;
-  text-align: center;
-}
-
 
 </style>

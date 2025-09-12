@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cancion extends Model
 {
@@ -49,19 +50,23 @@ class Cancion extends Model
                     ->withTimestamps();
     }
 
+    // 🎤 Relación con la letra
+    public function lyric(): HasOne
+    {
+        return $this->hasOne(Lyric::class, 'song_id');
+    }
+
     // Accesor para la portada
     public function getCoverUrlAttribute(): string
     {
         return $this->cover_path 
-            ? $this->cover_path // ya guardas URL completa en DB
+            ? $this->cover_path 
             : asset('img/default-song.png');
     }
 
     // Accesor para el audio
     public function getAudioUrlAttribute(): string
     {
-        return $this->audio_path 
-            ? $this->audio_path // igual, ya guardas URL completa
-            : '';
+        return $this->audio_path ?? '';
     }
 }

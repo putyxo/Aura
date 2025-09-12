@@ -14,19 +14,15 @@ use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
-use App\Http\Controllers\LikeController;
-use App\Http\Controllers\LikeApiController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-
-
-
-
-
-// Modelos usados en closures
+use App\Http\Controllers\Auth\PasswordController;
+use App\Models\Cancion;
 use App\Models\Album;
-use App\Models\User;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\SupportController;
+use App\Http\Controllers\LyricsController;
+
 
 // ===== Página principal =====
 Route::get('/', fn () => view('welcome'))->name('welcome');
@@ -51,7 +47,15 @@ Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked']
     ->name('api.canciones.like.state');
 
 // ===== Rutas protegidas (requieren login) =====
-Route::middleware('auth')->group(function () {
+Route::middleware(['web','auth'])->group(function () {
+
+        // Cuenta
+    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
+    Route::post('/cuenta/password', [PasswordController::class, 'update'])
+        ->name('perfil.changePassword');
+
+            Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])
+        ->name('perfil.language');
 
     /*
     |---------------------------------------------------------------------------  
@@ -83,6 +87,9 @@ Route::middleware('auth')->group(function () {
 
     // (Antigua) Página "Me gusta" de canciones (si la usas)
     Route::get('/like', [CancionController::class, 'like'])->name('like');
+Route::get('/cancion/{cancion}', [CancionController::class, 'show'])
+    ->name('cancion.show');
+Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
 
     /*
     |---------------------------------------------------------------------------  
@@ -98,14 +105,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
     Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
     Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
-    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
+Route::post('/cuenta/password', [PasswordController::class, 'update'])
+    ->name('perfil.changePassword')
+    ->middleware('auth');
     Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
-    Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
-    Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
-    Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
+// Cambiar tipo de cuenta (usuario ↔ artista)
+Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
+    ->name('perfil.toggleRole');
+
+Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])->name('perfil.language');
 
     // ===== Admin =====
    function checkAdminAccess() {
@@ -172,11 +183,16 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     */
     Route::get('/media/{id}', [DriveMediaController::class, 'stream'])->name('media.drive');
 
-    /*
-    |---------------------------------------------------------------------------  
-    | Perfil (artistas/usuarios)
-    |---------------------------------------------------------------------------  
-    */
+    // Playlist show individual
+    Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
+
+    // Playlist (grilla y creación)
+    Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
+    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
+
+
+    Route::post('/support/send', [SupportController::class, 'send'])->name('support.send');
+    // Perfil
     Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
     Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
     Route::post('/perfil/song', [PerfilController::class, 'storeSong'])->name('perfil.storeSong');
@@ -223,23 +239,19 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     */
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
+    Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
+    // ===== Recursos de Playlist (RESTful) =====
+Route::resource('playlists', PlaylistController::class);
 
-    //Album
-    Route::delete('/menu_album', [AlbumController::class, 'destroy'])->name('album.destroy');
-
-    // ===== API JSON opcional para likes (sin colisión con la HTML) =====  
-    Route::post('/api/canciones/{cancion}/like/toggle', [LikeApiController::class, 'toggle'])
-        ->name('api.canciones.like.toggle');
-    Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
-        ->name('api.canciones.like.state');
-    // ===== Eliminar canción (coincide con tu Blade: route('cancion.destroy', $id)) =====  
-    Route::delete('/cancion/{cancion}', [CancionController::class, 'destroy'])->name('cancion.destroy');
-    Route::delete('/canciones/{cancion}', [CancionController::class, 'destroy'])->name('canciones.destroy');
+Route::get('/locale-test', function () {
+    return [
+        'session' => session('locale'),
+        'user'    => auth()->check() ? auth()->user()->idioma : null,
+        'app'     => app()->getLocale(),
+    ];
+    });
 });
 
-// ===== Recurso RESTful de Playlists =====
-// (Déjalo público aquí; si lo quieres privado, muévelo al middleware 'auth')
-Route::resource('playlists', PlaylistController::class);
 
 // ===== Google Drive OAuth / Upload =====
 Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogle']);
@@ -256,16 +268,42 @@ require __DIR__ . '/auth.php';
 Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });
+Route::post('/languages/{lang}', function (string $lang) {
+    if (!in_array($lang, ['es', 'en'])) {
+        $lang = 'en';
+    }
 
-// ===== Traductor =====
+    if (Auth::check()) {
+        $user = Auth::user();
+        $user->idioma = $lang;
+        $user->save();
+    } else {
+        Session::put('locale', $lang);
+    }
+
+    App::setLocale($lang);
+
+    return back()->with('status', __('account.language_changed'));
+})->name('languages');
+// ===== Ruta para el traductor =====
 Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');
 
-use App\Http\Controllers\EqualizerController;
+Route::get('/locale-test', function () {
+ if (Auth::check() && Auth::user()->idioma) {
+        app()->setLocale(Auth::user()->idioma);
+    }
 
-Route::post('/equalizer/save', [EqualizerController::class, 'save'])
-    ->name('eq.save')
-    ->middleware('auth');
+    return [
+        'user'   => Auth::user()->idioma ?? null,
+        'locale' => app()->getLocale(),
+        'text'   => __('messages.welcome'),
+    ];
+});
 
-Route::get('/preferencias', [\App\Http\Controllers\PreferenciasController::class, 'index'])
-    ->name('preferencias')
-    ->middleware('auth');
+Route::get('/auth-check', function () {
+    return [
+        'logged_in' => auth()->check(),
+        'user'      => auth()->user(),
+    ];
+});
+

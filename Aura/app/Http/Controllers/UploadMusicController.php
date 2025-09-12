@@ -65,7 +65,7 @@ class UploadMusicController extends Controller
             'cover_path' => $coverUrl,
             'status'     => 'published',
         ]);
-
+    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
         return redirect()
             ->route('busqueda_individual')
             ->with('ok', "Canción subida: {$cancion->title}")
@@ -121,27 +121,30 @@ class UploadMusicController extends Controller
             // 3) Subir múltiples canciones a Drive y ligarlas al álbum
             $titles = $request->input('titles', []);
             foreach ($request->file('tracks') as $i => $mp3) {
-                $base     = pathinfo($mp3->getClientOriginalName(), PATHINFO_FILENAME);
-                $name     = $titles[$i] ?? $base;
-                $nameSlug = Str::slug($name) ?: ('track-'.($i+1));
-                $mp3Name  = $slug.'-'.$nameSlug.'.'.$mp3->getClientOriginalExtension();
+    $base     = pathinfo($mp3->getClientOriginalName(), PATHINFO_FILENAME);
+    $name     = $titles[$i] ?? $base;
+    $nameSlug = Str::slug($name) ?: ('track-'.($i+1));
+    $mp3Name  = $slug.'-'.$nameSlug.'.'.$mp3->getClientOriginalExtension();
 
-                // Sube MP3 a Drive
-                $audio    = $drive->uploadPublic($mp3->getRealPath(), $mp3Name, 'audio/mpeg', $folderId);
-                $audioUrl = $audio['directUrl'];
+    // Sube MP3 a Drive
+    $audio    = $drive->uploadPublic($mp3->getRealPath(), $mp3Name, 'audio/mpeg', $folderId);
+    $audioUrl = $audio['directUrl'];
 
-                // Crea canción ligada al álbum (heredando portada del álbum para la pista)
-                Cancion::create([
-                    'user_id'    => $user->id,
-                    'album_id'   => $album->id,
-                    'title'      => $name,
-                    'genre'      => $data['genre'] ?? null, // hereda el género del álbum (si se envió)
-                    'audio_path' => $audioUrl,
-                    'cover_path' => $albumCoverUrl,         // hereda portada del álbum
-                    'duration'   => null,                   // calcula luego con job si quieres
-                    'status'     => 'published',
-                ]);
-            }
+    // Crea canción ligada al álbum
+    $cancion = Cancion::create([
+        'user_id'    => $user->id,
+        'album_id'   => $album->id,
+        'title'      => $name,
+        'genre'      => $data['genre'] ?? null,
+        'audio_path' => $audioUrl,
+        'cover_path' => $albumCoverUrl,
+        'duration'   => null,
+        'status'     => 'published',
+    ]);
+
+    // 🔥 Generar letra automática en background
+    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
+}
 
             return redirect()
                 ->route('busqueda_album')

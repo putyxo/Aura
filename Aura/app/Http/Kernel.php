@@ -6,6 +6,11 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+        public function __construct(\Illuminate\Contracts\Foundation\Application $app, \Illuminate\Routing\Router $router)
+    {
+        dd('🔥 Este Kernel se está usando');
+        parent::__construct($app, $router);
+    }
     /**
      * The application's global HTTP middleware stack.
      *
@@ -27,10 +32,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-
-            // 👇 Aquí agregas tu SetLocale
             \App\Http\Middleware\SetLocale::class,
-
+            \App\Http\Middleware\TestMiddleware::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
