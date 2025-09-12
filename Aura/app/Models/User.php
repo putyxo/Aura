@@ -96,4 +96,9 @@ public function likes()
     return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
                 ->withTimestamps();
 }
+
+public function equalizer()
+{
+    return $this->hasOne(UserEqualizer::class);
+}
 }

@@ -75,6 +75,20 @@
   audio.preload = 'metadata';
   audio.playsInline = true;
 
+  /* === Hook para el Ecualizador === */
+  if (window.bindEqualizerTo) {
+    window.bindEqualizerTo(audio);              // se conecta si el EQ ya está cargado
+  } else {
+    window.__AURA_EQ_WAIT__ = audio;            // si el EQ carga después, lo recogerá
+    document.addEventListener('aura:eq-ready', ()=> {
+      if (window.bindEqualizerTo && window.__AURA_EQ_WAIT__) {
+        window.bindEqualizerTo(window.__AURA_EQ_WAIT__);
+        window.__AURA_EQ_WAIT__ = null;
+      }
+    }, { once:true });
+  }
+  /* === /Hook para el Ecualizador === */
+
   const playBtn  = el.querySelector('.play-btn');
   const prevBtn  = el.querySelector('.prev');
   const nextBtn  = el.querySelector('.next');
@@ -402,6 +416,7 @@
 })();
 </script>
 <!-- === /Script del reproductor === -->
+
 
 <!-- === Script de Cola (persistente + sync + auto-shuffle en perfiles) === -->
 <script>
