@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Perfil — {{ $user->nombre_artistico ?? 'Invitado' }} · Aura</title>
 
-  <!-- Hints de red para acelerar -->
+  <!-- Hints de red -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
@@ -14,7 +14,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer">
 
-  @vite('resources/css/ed_perfil.css')
+  {{-- CSS --}}
+  @vite(['resources/css/ed_perfil.css', 'resources/js/ed-perfil.js'])
 
   @php
     use Illuminate\Support\Str;
@@ -49,7 +50,7 @@
   <link rel="preload" as="image" href="{{ $bannerLow }}">
 </head>
 <body>
-<div id="page-profile" data-auth="{{ $isAuth ? 1 : 0 }}" data-owner="{{ $isOwner ? 1 : 0 }}"><!-- SCOPING para aislar estilos del perfil -->
+<div id="page-profile" data-auth="{{ $isAuth ? 1 : 0 }}" data-owner="{{ $isOwner ? 1 : 0 }}">
 
   @include('components.sidebar')
   @include('components.traductor')
@@ -65,30 +66,29 @@
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="hero-border" aria-hidden="true"></div>
 
-        <!-- Botón info arriba IZQUIERDA (siempre) -->
+        <!-- Info -->
         <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm info-btn" id="openBio" title="Ver biografía">
           <i class="fa-solid fa-circle-info"></i>
         </button>
 
-        <!-- Botón editar arriba DERECHA (solo dueño) -->
+        <!-- Editar (solo dueño) -->
         @if($isOwner)
-          <div class="edit-btn">
-            <button class="pf-btn pf-btn--primary pf-btn--sm" id="editBtn">
-              <i class="fa-solid fa-pen"></i><span>Editar</span>
-            </button>
-          </div>
+        <div class="edit-btn">
+          <button class="pf-btn pf-btn--primary pf-btn--sm" id="editBtn">
+            <i class="fa-solid fa-pen"></i><span>Editar</span>
+          </button>
+        </div>
         @endif
 
-        <!-- Título con estilo “Tu cuenta” -->
+        <!-- Título y seguir -->
         <div class="hero-head">
           <div class="text-shield">
             <h1 class="hero-title" id="artistName">{{ $user->nombre_artistico ?? 'Artista' }}</h1>
           </div>
 
-          <!-- Seguir / Dejar de seguir (debajo del título) — SIEMPRE RENDERIZADO -->
           <div class="follow-under-name">
             @if($isOwner)
-              {{-- No mostrar seguir si eres el dueño --}}
+              {{-- nada --}}
             @elseif($isAuth)
               @php
                 $hasToggle = \Illuminate\Support\Facades\Route::has('follow.toggle');
@@ -113,20 +113,18 @@
                 @endif
               @endif
             @else
-              <a href="{{ $loginUrl }}" class="pf-btn follow-pill">
-                <i class="fa-solid fa-user-plus"></i> Seguir
-              </a>
+              <a href="{{ $loginUrl }}" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</a>
             @endif
           </div>
         </div>
 
-        <!-- Metas abajo del banner -->
+        <!-- Metas -->
         <div class="profile-footer">
           <span class="meta"><i class="fa-solid fa-headphones"></i> {{ num_format_sp($listenersCount) }} oyentes mensuales</span>
           <span class="meta"><i class="fa-solid fa-user-group"></i> {{ num_format_sp($followersCount) }} seguidores</span>
         </div>
 
-        <!-- Avatar centrado y fuera del banner -->
+        <!-- Avatar -->
         <div class="avatar-wrap xl">
           @if($user && $user->avatar)
             <img id="avatarPreviewLive" class="avatar-img"
@@ -141,7 +139,7 @@
 
     <!-- ===== CONTENIDO MÚSICA ===== -->
     <section class="music-layout no-clip">
-      <!-- CANCIONES -->
+      <!-- CANCIONES (mantener fondo) -->
       <div class="music-column left-col no-clip">
         <div class="section-title"><h2><i class="fa-solid fa-music"></i> Canciones</h2></div>
 
@@ -179,10 +177,12 @@
 
               <div class="song-actions">
                 @auth
-                  <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like">@csrf
-                    <button type="submit" class="icon-chip" title="Me gusta"><i class="fa-regular fa-heart"></i></button>
-                  </form>
-                  <button class="icon-chip" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
+                  <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">@csrf
+                  <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
+                    <i class="fa-regular fa-heart"></i>
+                  </button>
+                </form>
+                  <button class="icon-chip add-playlist-btn" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
                 @else
                   <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
                   <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
@@ -327,7 +327,6 @@
       $relPages = $normalizedReleases->chunk(8); // 4×2 por página
     @endphp
 
-    @php $isOwner = $isOwner; @endphp
     <section class="releases-section no-clip" id="releasesSection">
       <div class="releases-head">
         <h2><i class="fa-solid fa-bolt"></i> Últimos lanzamientos</h2>
@@ -343,7 +342,6 @@
                 <div class="releases-grid-4x2">
                   @foreach($rPage as $item)
                     @php
-                      /* Imagen más ligera para velocidad: 240px */
                       $rCover = $item['cover_url'] ?? ($item['cover'] ? (function_exists('drive_img_url') ? drive_img_url($item['cover'], 240) : $item['cover']) . '&v=' . time() : asset('img/default-album.png'));
                       $cls = 'card release-card' . ($isOwner ? ' has-trash' : '');
                     @endphp
@@ -371,14 +369,6 @@
                         <a class="card-link" href="{{ $item['href'] }}" aria-label="Abrir álbum"></a>
                       @else
                         <button type="button" class="card-link play-release" aria-label="Reproducir"></button>
-                        @if(!empty($item['audio_url']))
-                          <button class="cancion-item" style="display:none"
-                                  data-id="{{ $item['id'] }}"
-                                  data-src="{{ $item['audio_url'] }}"
-                                  data-title="{{ $item['titulo'] }}"
-                                  data-artist="{{ $user->nombre_artistico ?? 'Desconocido' }}"
-                                  data-cover="{{ $rCover }}"></button>
-                        @endif
                       @endif
                     </div>
                   @endforeach
@@ -418,7 +408,7 @@
       </div>
     </div>
 
-    <!-- ===== MODAL EDITAR PERFIL (con Configuración avanzada) ===== -->
+    <!-- ===== MODAL EDITAR PERFIL ===== -->
     @if($isOwner)
     <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="modal-content glass wide">
@@ -432,7 +422,6 @@
           </div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabbar sticky" role="tablist">
           <button type="button" class="tab-btn active" data-tab="basic"><i class="fa-solid fa-wrench"></i> Básico</button>
           <button type="button" class="tab-btn" data-tab="advanced"><i class="fa-solid fa-sliders"></i> Configuración avanzada</button>
@@ -440,7 +429,6 @@
 
         <form action="{{ route('perfil.update') }}" method="POST" enctype="multipart/form-data">
           @csrf
-          <!-- BÁSICO -->
           <div class="tab-pane" data-pane="basic">
             <div class="modal-grid">
               <div class="modal-field col">
@@ -477,7 +465,6 @@
             </div>
           </div>
 
-          <!-- CONFIGURACIÓN AVANZADA -->
           <div class="tab-pane hidden" data-pane="advanced">
             <div class="adv-grid">
               <div class="adv-card">
@@ -524,7 +511,7 @@
     </div>
     @endif
 
-    <!-- ===== MODAL BIOGRAFÍA (ayuda) ===== -->
+    <!-- ===== MODAL BIOGRAFÍA ===== -->
     <div class="modal" id="bioModal" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="modal-content bio">
         <div class="modal-header">
@@ -555,299 +542,10 @@
 
 </div><!-- /#page-profile -->
 
-<!-- ===== JS ===== -->
-<script>
-(function(){
-  const rootSel = '#page-profile';
-  const once = (k)=>{const r=document.querySelector(rootSel); if(!r||r.dataset[k]) return false; r.dataset[k]=1; return true;}
-  const ri = window.requestIdleCallback || function(cb){ setTimeout(cb, 1); };
+{{-- JS principal por Vite (NO quité nada) --}}
+@vite('resources/js/ed_perfil.js')
 
-  function initProfile(){
-    const root = document.querySelector(rootSel); if(!root) return;
-    document.body.classList.remove('blurred','modal-open');
-
-    // Animación hover para filas de canciones
-    function initSongHoverEffects() {
-      rootEl.querySelectorAll('.song-row').forEach(row => {
-        row.addEventListener('mouseenter', function() {
-          this.style.transform = 'translateY(-8px) scale(1.02)';
-          this.style.boxShadow = '0 12px 24px rgba(0,0,0,.15)';
-          this.style.zIndex = '10';
-          this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        });
-
-        row.addEventListener('mouseleave', function() {
-          this.style.transform = 'translateY(0) scale(1)';
-          this.style.boxShadow = 'none';
-          this.style.zIndex = '1';
-        });
-      });
-    }
-
-    // Inicializar efectos hover
-    initSongHoverEffects();
-
-    /* Banner progresivo (crítico visual) */
-    if (once('banner')) {
-      const b = root.querySelector('.profile-banner');
-      if (b?.dataset.hires){
-        const hi = new Image(); hi.src = b.dataset.hires; hi.decoding = 'async';
-        hi.onload = ()=>{ b.style.backgroundImage = `url('${b.dataset.hires}')`; b.classList.add('loaded'); };
-      }
-    }
-
-    /* Canción clicable (crítico UX) */
-    if (once('rows')){
-      root.querySelectorAll('.song-row').forEach(row => {
-        const play = () => row.querySelector('.cancion-item')?.click();
-        row.addEventListener('click', (e) => {
-          if (e.target.closest('.icon-chip') || e.target.closest('.kebab-menu')) return;
-          play();
-        }, { passive:true });
-      });
-    }
-
-    /* Inicializaciones NO críticas -> en idle */
-    ri(() => {
-      /* Menú 3 puntos */
-      if (once('kebab')){
-        root.querySelectorAll('.more-btn').forEach(btn=>{
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const wrap = btn.closest('.menu-wrap');
-            const menu = wrap.querySelector('.kebab-menu');
-            menu.classList.toggle('open');
-            btn.setAttribute('aria-expanded', menu.classList.contains('open'));
-          });
-        });
-        document.addEventListener('click', ()=> {
-          root.querySelectorAll('.kebab-menu.open').forEach(m => m.classList.remove('open'));
-        }, { passive:true });
-      }
-
-      /* Carrusel álbumes + altura filas */
-      (function albums(){
-        const track = document.getElementById('albumsTrack');
-        const viewport = document.getElementById('albumsViewport');
-        const prev = document.getElementById('albumsPrev');
-        const next = document.getElementById('albumsNext');
-        const label = document.getElementById('albumsPageLabel');
-        if(!track || !viewport) return;
-        let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
-        const updateAlbums = () => {
-          track.style.transform = `translateX(-${page * 100}%)`;
-          prev && (prev.disabled = (page === 0));
-          next && (next.disabled = (page >= pages - 1));
-          label && (label.textContent = pages ? `Página ${page+1} de ${pages}` : '');
-        };
-        prev?.addEventListener('click', ()=>{ if (page>0) { page--; updateAlbums(); }});
-        next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; updateAlbums(); }});
-        updateAlbums();
-      })();
-
-      /* Carrusel ÚLTIMOS LANZAMIENTOS */
-      (function releases(){
-        const track = document.getElementById('releasesTrack');
-        if(!track) return;
-        const prev = document.getElementById('releasesPrev');
-        const next = document.getElementById('releasesNext');
-        const pager = document.getElementById('releasesPager');
-        let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
-
-        // Construir paginador
-        pager.innerHTML = '';
-        for (let i=0;i<pages;i++){
-          const d = document.createElement('div');
-          d.className = 'dot' + (i===0 ? ' active':'');
-          d.role = 'button'; d.tabIndex = 0; d.ariaLabel = `Ir a página ${i+1}`;
-          d.addEventListener('click', ()=>{ page = i; update(); });
-          pager.appendChild(d);
-        }
-
-        function update(){
-          track.style.transform = `translateX(-${page * 100}%)`;
-          prev && (prev.disabled = (page === 0));
-          next && (next.disabled = (page >= pages - 1));
-          [...pager.children].forEach((el,idx)=> el.classList.toggle('active', idx===page));
-        }
-
-        prev?.addEventListener('click', ()=>{ if (page>0) { page--; update(); }});
-        next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; update(); }});
-        update();
-      })();
-
-      /* Modal editar + previews + tabs + avanzadas (solo si existe) */
-      (function modals(){
-        const editModal = document.getElementById('editModal');
-        if(!editModal) return;
-        const openEdit  = document.getElementById('editBtn');
-        const closeEdit1= document.getElementById('closeEdit');
-        const closeEdit2= document.getElementById('closeEditTop');
-        const closeEdit = ()=> editModal?.setAttribute('aria-hidden','true');
-        const pageRoot  = document.querySelector('#page-profile');
-
-        function openModal(tab='basic'){
-          editModal?.setAttribute('aria-hidden','false');
-          editModal?.querySelectorAll('.tab-btn').forEach(b=>{
-            const is = b.dataset.tab === tab; b.classList.toggle('active', is);
-          });
-          editModal?.querySelectorAll('.tab-pane').forEach(p=>{
-            const is = p.dataset.pane === tab; p.classList.toggle('hidden', !is);
-          });
-        }
-        openEdit?.addEventListener('click', ()=> openModal('basic'));
-        closeEdit1?.addEventListener('click', closeEdit);
-        closeEdit2?.addEventListener('click', closeEdit);
-        editModal?.addEventListener('click', (e)=>{ if(e.target===editModal) closeEdit(); });
-
-        // Tabs
-        editModal?.querySelectorAll('.tab-btn').forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            const tab = btn.dataset.tab;
-            editModal.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
-            editModal.querySelectorAll('.tab-pane').forEach(p=> p.classList.toggle('hidden', p.dataset.pane !== tab));
-          });
-        });
-
-        // Previews Avanzado
-        const accInput  = document.getElementById('accColor');
-        const darkRange = document.getElementById('darknessRange');
-        const tintRgb   = document.getElementById('tintRgb');
-        function setVar(name, value){ pageRoot?.style.setProperty(name, value); }
-
-        accInput?.addEventListener('input', ()=>{
-          const hex = accInput.value;
-          setVar('--aurp-accent', hex);
-          setVar('--aurp-accent-2', hex);
-        });
-
-        function setScrimLevels(f){
-          const clamp = v => Math.max(0, Math.min(1, v));
-          setVar('--scrim-a', clamp(0.56 * f));
-          setVar('--scrim-b', clamp(0.78 * f));
-          setVar('--scrim-c', clamp(0.92 * f));
-          setVar('--scrim-d', clamp(0.98 * f));
-        }
-        darkRange?.addEventListener('input', ()=>{
-          const f = parseFloat(darkRange.value || '0.94') / 0.94; // 1 = default
-          setScrimLevels(f);
-        });
-
-        tintRgb?.addEventListener('change', ()=>{
-          const ok = /^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$/.test(tintRgb.value);
-          if(ok) setVar('--banner-tint-rgb', tintRgb.value.trim());
-        });
-
-        // Previews de archivos
-        const avatarInput = document.getElementById('avatarInput');
-        const avatarPrev  = document.getElementById('avatarPreview');
-        const avatarLive  = document.getElementById('avatarPreviewLive');
-        const bannerInput = document.getElementById('bannerInput');
-        const bannerPrev  = document.getElementById('bannerPreview');
-        document.querySelector('#page-profile .avatar-edit')?.addEventListener('click', ()=> avatarInput?.click());
-        document.querySelector('#page-profile .banner-edit')?.addEventListener('click', ()=> bannerInput?.click());
-        avatarInput?.addEventListener('change', ()=>{
-          const f = avatarInput.files?.[0]; if(!f) return;
-          const url = URL.createObjectURL(f);
-          if (avatarPrev) { avatarPrev.src = url; avatarPrev.style.display='block'; }
-          if (avatarLive) { avatarLive.src = url; }
-        });
-        bannerInput?.addEventListener('change', ()=>{
-          const f = bannerInput.files?.[0]; if(!f) return;
-          const url = URL.createObjectURL(f);
-          const banner = document.querySelector('#page-profile .profile-banner');
-          if (bannerPrev) { bannerPrev.src = url; bannerPrev.style.display='block'; }
-          if (banner)     { banner.style.backgroundImage = `url('${url}')`; }
-        });
-      })();
-
-      /* Confirm eliminar */
-      (function confirmDelete(){
-        const cModal = document.getElementById('confirmModal');
-        if(!cModal) return;
-        const cCover = document.getElementById('confirmCover');
-        const cTitle = document.getElementById('confirmTitle');
-        const cSub   = document.getElementById('confirmSubtitle');
-        const dForm  = document.getElementById('deleteForm');
-        const dangerBtn = document.getElementById('confirmDeleteBtn');
-        const cancelBtn = document.getElementById('cancelDelete');
-        let lastFocused = null;
-
-        const focusableSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-        function trapFocus(container, e){
-          const f = [...container.querySelectorAll(focusableSel)].filter(el=>!el.disabled && el.offsetParent !== null);
-          if (!f.length) return; const first = f[0], last = f[f.length - 1];
-          if (e.key === 'Tab'){
-            if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
-            else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
-          }
-        }
-        function openConfirm(type, action, title, cover){
-          lastFocused = document.activeElement;
-          cCover.src = cover || '';
-          cTitle.textContent = '¿Deseas eliminar ' + (type === 'album' ? 'este álbum?' : 'esta canción?');
-          cSub.textContent   = title || '';
-          dForm.action       = action;
-          cModal.setAttribute('aria-hidden','false');
-          document.body.classList.add('blurred','modal-open');
-          dangerBtn.focus();
-
-          const onKey = (e)=>{
-            if (e.key === 'Escape'){ closeConfirm(); }
-            if (e.key === 'Enter' && cModal.getAttribute('aria-hidden') === 'false' && document.activeElement !== cancelBtn){
-              e.preventDefault(); dangerBtn.click();
-            }
-            trapFocus(cModal, e);
-          };
-          cModal._escHandler = onKey;
-          document.addEventListener('keydown', onKey);
-        }
-        function closeConfirm(){
-          cModal.setAttribute('aria-hidden','true');
-          document.body.classList.remove('blurred','modal-open');
-          if (cModal._escHandler){
-            document.removeEventListener('keydown', cModal._escHandler);
-            cModal._escHandler = null;
-          }
-          lastFocused?.focus?.();
-        }
-        document.querySelectorAll('#page-profile .open-delete').forEach(btn=>{
-          btn.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            openConfirm(btn.dataset.type, btn.dataset.action, btn.dataset.title, btn.dataset.cover);
-          });
-        });
-        cancelBtn?.addEventListener('click', closeConfirm);
-        cModal?.addEventListener('click', (e)=>{ if (e.target === cModal) closeConfirm(); });
-      })();
-
-      /* Modal BIO (ayuda) */
-      (function bio(){
-        const modal = document.getElementById('bioModal');
-        const open  = document.getElementById('openBio');
-        const closeTop = document.getElementById('closeBioTop');
-        const closeBtn = document.getElementById('closeBio');
-        const close = () => modal?.setAttribute('aria-hidden','true');
-
-        open?.addEventListener('click', ()=> modal?.setAttribute('aria-hidden','false'));
-        closeTop?.addEventListener('click', close);
-        closeBtn?.addEventListener('click', close);
-        modal?.addEventListener('click', (e)=>{ if(e.target===modal) close(); });
-        document.addEventListener('keydown', (e)=> {
-          if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') close();
-        }, { passive:true });
-      })();
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', initProfile);
-  document.addEventListener('turbo:load', initProfile);
-  document.addEventListener('turbo:render', initProfile);
-  window.addEventListener('pageshow', (e)=>{ if(e.persisted) initProfile(); });
-})();
-</script>
-
-<!-- ===== Medición dinámica de sidebar y reproductor derecho ===== -->
+<!-- ===== Medición dinámica de sidebar y reproductor derecho (igual que tenías) ===== -->
 <script>
 (function () {
   const rootEl = document.getElementById('page-profile') || document.documentElement;
@@ -883,6 +581,36 @@
   document.body && mo.observe(document.body, {attributes:true, attributeFilter:['class']});
   measure();
 })();
+</script>
+
+<!-- (tu snippet extra para abrir/cerrar el modal — lo mantengo para que no se pierda nada) -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.__extraEditModalWired) return; // evita doble wiring
+  window.__extraEditModalWired = true;
+
+  const editBtn = document.getElementById("editBtn");
+  const cancelBtn = document.getElementById("cancelEdit");
+  const modal = document.getElementById("editModal");
+
+  if (!editBtn || !modal) return;
+
+  editBtn.addEventListener("click", () => {
+    modal.setAttribute("aria-hidden", "false");
+  });
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      modal.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.setAttribute("aria-hidden", "true");
+    }
+  });
+});
 </script>
 </body>
 </html>

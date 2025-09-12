@@ -16,7 +16,7 @@
 <style>
   /* ===== Fondo global reutilizable (morado + oscuros) ===== */
   .fondo-aura{
-    position:fixed; inset:-0; pointer-events:none; z-index:-999;
+    position:fixed; inset:-0; pointer-events:none; z-index:-9999;
     --bg-deep: #090012;
     --bg-dark: #0c0714;
     --bg-spot-1: #1b0b2b;
