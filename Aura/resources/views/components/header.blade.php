@@ -125,6 +125,91 @@
       </div>
     </div>
   </div>
+
+
+  <!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
+<div id="global-eq" style="display:none">
+  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+    <input 
+      type="range" 
+      min="-12" max="12" step="0.5"
+      value="{{ optional(auth()->user()->equalizer)->{'band_'.$freq} ?? 0 }}"
+      data-freq="{{ $freq }}"
+      class="eq-slider-global"
+    >
+  @endforeach
+
+  <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
+         value="{{ optional(auth()->user()->equalizer)->preamp ?? 0 }}">
+</div>
+
+<script>
+(() => {
+  const FREQS = [60,170,310,600,1000,3000,6000,12000,14000,16000];
+  const dbToGain = db => Math.pow(10, db/20);
+
+  const sliders = document.querySelectorAll('.eq-slider-global');
+  const preamp = document.getElementById('global-preamp');
+
+  let ac, filters=[], gPreamp, srcNode;
+
+  function ensureCtx(){
+    if (ac) return;
+    ac = new (window.AudioContext||window.webkitAudioContext)();
+
+    filters = FREQS.map(freq=>{
+      const f = ac.createBiquadFilter();
+      f.type = 'peaking';
+      f.frequency.value = freq;
+      f.Q.value = 1.0;
+      f.gain.value = 0;
+      return f;
+    });
+
+    gPreamp = ac.createGain();
+    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
+
+    for (let i=0;i<filters.length-1;i++) filters[i].connect(filters[i+1]);
+    filters[filters.length-1].connect(gPreamp);
+    gPreamp.connect(ac.destination);
+
+    // Conectar al player global (si existe)
+    const audio = document.querySelector('#player audio, audio#player');
+    if (audio) {
+      try {
+        srcNode = ac.createMediaElementSource(audio);
+        srcNode.connect(filters[0]);
+      } catch(e) {
+        console.warn("EQ ya conectado");
+      }
+    }
+  }
+
+  // Aplicar valores iniciales guardados
+  function applyInitialValues(){
+    ensureCtx();
+    sliders.forEach((sl, idx)=>{
+      const db = parseFloat(sl.value);
+      filters[idx].gain.value = db;
+    });
+    const dbPreamp = parseFloat(preamp.value);
+    gPreamp.gain.value = dbToGain(dbPreamp);
+  }
+
+  document.addEventListener('DOMContentLoaded', applyInitialValues);
+
+  // API pública global para reconectar cuando cambies canción
+  window.bindEqualizerTo=function(audioEl){
+    if (!audioEl) return;
+    ensureCtx();
+    const media = ac.createMediaElementSource(audioEl);
+    media.connect(filters[0]);
+    srcNode = media;
+  };
+})();
+</script>
+
+
 </header>
 
 <style>
@@ -378,205 +463,10 @@
 /* ================= AURA HEADER JS (prefijo ah-) ================= */
 (() => {
   const qs  = (s, r=document) => r.querySelector(s);
-  const qsa = (s, r=document) => [...r.querySelectorAll(s)];
-  const debounce = (fn, ms=220) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
   /* Navegación */
   qs('#ahBackBtn')?.addEventListener('click', ()=> history.back());
   qs('#ahForwardBtn')?.addEventListener('click', ()=> history.forward());
-
-  /* Buscador */
-  const $input = qs('.ah-search-input');
-  const $box   = qs('#ahSearchResults');
-
-  const closeResults = () => { if(!$box) return; $box.style.display='none'; $box.setAttribute('aria-expanded','false'); };
-  const openResults  = () => { if(!$box) return; $box.style.display='block'; $box.setAttribute('aria-expanded','true'); };
-
-  const renderItems = (list=[]) => {
-    if (!list.length) { $box.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`; return; }
-    $box.innerHTML = list.map(item => {
-      if (item.tipo === 'cancion') {
-        return `
-          <div class="ah-sr-item ah-sr-song" role="option" tabindex="-1" data-id="${item.id}">
-            <img src="${item.avatar}" alt="">
-            <div><span class="ah-sr-main">${item.nombre}</span><span class="ah-sr-sub">🎵 Canción — ${item.artist || ''}</span></div>
-            <button class="ah-hidden-btn" style="display:none"
-                    data-id="${item.id}" data-src="${item.audio || ''}"
-                    data-title="${item.nombre}" data-artist="${item.artist || 'Desconocido'}"
-                    data-cover="${item.avatar}"></button>
-          </div>`;
-      }
-      const sub = item.tipo === 'usuario' ? '👤 Usuario' : '📀 Álbum';
-      return `
-        <a href="${item.url}" class="ah-sr-item" role="option" tabindex="-1">
-          <img src="${item.avatar}" alt="">
-          <div><span class="ah-sr-main">${item.nombre}</span><span class="ah-sr-sub">${sub}</span></div>
-        </a>`;
-    }).join('');
-  };
-
-  const bindSongClicks = () => {
-    qsa('.ah-sr-song', $box).forEach(el => {
-      if (el.dataset.bound) return;
-      el.dataset.bound = 'true';
-      el.addEventListener('click', () => {
-        const btn = el.querySelector('.ah-hidden-btn'); if (btn) btn.click();
-        closeResults();
-      });
-    });
-  };
-
-  const search = debounce(async () => {
-    const q = ($input?.value || '').trim();
-    if (!$box) return;
-    if (q.length < 2) { $box.innerHTML = `<div class="ah-skel">Escribe al menos 2 letras…</div>`; openResults(); return; }
-    $box.innerHTML = `<div class="ah-skel">Buscando…</div>`; openResults();
-    try {
-      const res  = await fetch(`/buscar?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) $box.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`;
-      else { renderItems(data); bindSongClicks(); }
-    } catch { $box.innerHTML = `<div class="ah-skel">Error al buscar</div>`; }
-  }, 260);
-
-  if ($input && $box) {
-    $input.addEventListener('input', search);
-    document.addEventListener('click', (e) => { if (!$box.contains(e.target) && e.target !== $input) closeResults(); });
-
-    // navegación con teclado
-    let idx = -1;
-    const move = (d) => {
-      const items = qsa('.ah-sr-item', $box);
-      if (!items.length) return;
-      idx = (idx + d + items.length) % items.length;
-      items.forEach(i => i.classList.remove('is-active'));
-      items[idx].classList.add('is-active');
-      items[idx].scrollIntoView({ block: 'nearest' });
-    };
-    $input.addEventListener('keydown', (e) => {
-      const items = qsa('.ah-sr-item', $box);
-      if (!items.length) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); move(-1); }
-      if (e.key === 'Enter' && idx >= 0) {
-        e.preventDefault();
-        const t = items[idx];
-        if (t.classList.contains('ah-sr-song')) { const b = t.querySelector('.ah-hidden-btn'); b && b.click(); }
-        else if (t.tagName === 'A') { window.location.href = t.getAttribute('href'); }
-        closeResults();
-      }
-      if (e.key === 'Escape') closeResults();
-    });
-  }
-
-  /* ===== Historial de búsqueda (localStorage por usuario) ===== */
-  (() => {
-    if (!$input || !$box) return;
-
-    const USER_ID = @json(Auth::id());
-    const KEY = 'ah_search_history_' + (USER_ID ?? 'guest');
-    const MAX = 12;
-
-    const read = () => {
-      try{ const a = JSON.parse(localStorage.getItem(KEY)||'[]'); return Array.isArray(a)?a.filter(Boolean):[]; }
-      catch{ return []; }
-    };
-    const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr.slice(0,MAX))); }catch{} };
-    const remember = (q) => {
-      q = (q||'').trim();
-      if (q.length < 2) return;
-      let arr = read().filter(s => s.toLowerCase() !== q.toLowerCase());
-      arr.unshift(q);
-      write(arr);
-    };
-    const removeOne = (q) => {
-      q = (q||'').trim();
-      write(read().filter(s => s.toLowerCase() !== q.toLowerCase()));
-      renderHistory($input.value);
-    };
-    const clearAll = () => { write([]); renderHistory($input.value); };
-
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    function historyItemHTML(q){
-      const e = esc(q);
-      return `
-        <div class="ah-sr-item ah-his-item" role="option" tabindex="-1" data-q="${e}">
-          <i class="fa-regular fa-clock" aria-hidden="true"></i>
-          <div class="ah-his-text">${e}</div>
-          <button class="ah-his-del" title="Quitar" aria-label="Quitar del historial"><i class="fa-solid fa-xmark"></i></button>
-        </div>`;
-    }
-
-    function renderHistory(filter=''){
-      const list = read().filter(s => s.toLowerCase().includes((filter||'').toLowerCase()));
-      if (!list.length){
-        $box.innerHTML = `<div class="ah-skel">Sin historial</div>`;
-        openResults();
-        return false;
-      }
-      $box.innerHTML = `
-        <div class="ah-his-head">
-          <span><i class="fa-regular fa-clock"></i> Búsquedas recientes</span>
-          <button class="ah-his-clear" type="button">Limpiar</button>
-        </div>
-        <div class="ah-his-list">
-          ${list.map(historyItemHTML).join('')}
-        </div>`;
-      openResults();
-      return true;
-    }
-
-    // Mostrar historial al enfocar y cuando el término es corto
-    $input.addEventListener('focus', () => {
-      if (($input.value||'').trim().length < 2) renderHistory('');
-    });
-    $input.addEventListener('input', () => {
-      const q = ($input.value||'').trim();
-      if (q.length < 2){ renderHistory(q); return; }
-      // Si hay >=2 caracteres, el buscador normal pinta resultados.
-    });
-
-    // Enter sin selección visible: guarda lo escrito
-    $input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter'){
-        const q = ($input.value||'').trim();
-        if (q.length >= 2) remember(q);
-      }
-    });
-
-    // Delegación de clicks dentro del panel (usar/limpiar historial)
-    $box.addEventListener('click', (e) => {
-      const clearBtn = e.target.closest('.ah-his-clear');
-      if (clearBtn){ clearAll(); return; }
-
-      const del = e.target.closest('.ah-his-del');
-      if (del){
-        e.stopPropagation();
-        const it = del.closest('.ah-his-item');
-        if (it) removeOne(it.dataset.q || it.querySelector('.ah-his-text')?.textContent || '');
-        return;
-      }
-
-      const it = e.target.closest('.ah-his-item');
-      if (it){
-        const q = it.dataset.q || it.querySelector('.ah-his-text')?.textContent || '';
-        $input.value = q;
-        remember(q);
-        closeResults();
-        // dispara el buscador existente
-        $input.dispatchEvent(new Event('input', { bubbles:true }));
-      }
-    });
-
-    // Si el usuario hace clic en cualquier resultado "normal", recuerda el término actual
-    document.addEventListener('click', (e) => {
-      const resItem = e.target.closest('.ah-sr-item');
-      if (!resItem) return;
-      const q = ($input.value||'').trim();
-      if (q.length >= 2) remember(q);
-    }, true);
-  })();
 
   /* Notificaciones (ajuste de borde seguro) */
   const notifBtn   = document.getElementById('ahNotifBtn');
@@ -599,9 +489,21 @@
   };
 
   if (notifBtn && notifPanel && notifWrap) {
-    const openN = () => { notifWrap.classList.add('open'); notifBtn.setAttribute('aria-expanded','true'); notifPanel.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>applyPopoverShift(notifPanel)); };
-    const closeN= () => { notifWrap.classList.remove('open'); notifBtn.setAttribute('aria-expanded','false'); notifPanel.setAttribute('aria-hidden','true'); };
-    notifBtn.addEventListener('click', (e)=>{ e.stopPropagation(); notifWrap.classList.contains('open') ? closeN() : openN(); });
+    const openN = () => {
+      notifWrap.classList.add('open');
+      notifBtn.setAttribute('aria-expanded','true');
+      notifPanel.setAttribute('aria-hidden','false');
+      requestAnimationFrame(()=>applyPopoverShift(notifPanel));
+    };
+    const closeN= () => {
+      notifWrap.classList.remove('open');
+      notifBtn.setAttribute('aria-expanded','false');
+      notifPanel.setAttribute('aria-hidden','true');
+    };
+    notifBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      notifWrap.classList.contains('open') ? closeN() : openN();
+    });
     document.addEventListener('click', (e)=>{ if (!notifWrap.contains(e.target)) closeN(); });
     window.addEventListener('resize', ()=>{ if (notifWrap.classList.contains('open')) applyPopoverShift(notifPanel); });
   }
@@ -628,11 +530,22 @@
   if ($root && $btn && $dd) {
     if (!$btn.dataset.bound) {
       $btn.dataset.bound = 'true';
-      const open = () => { $root.classList.add('open'); $btn.setAttribute('aria-expanded','true'); $dd.setAttribute('aria-hidden','false'); requestAnimationFrame(applyDropdownShift); };
-      const close= () => { $root.classList.remove('open'); $btn.setAttribute('aria-expanded','false'); $dd.setAttribute('aria-hidden','true'); };
+      const open = () => {
+        $root.classList.add('open');
+        $btn.setAttribute('aria-expanded','true');
+        $dd.setAttribute('aria-hidden','false');
+        requestAnimationFrame(applyDropdownShift);
+      };
+      const close= () => {
+        $root.classList.remove('open');
+        $btn.setAttribute('aria-expanded','false');
+        $dd.setAttribute('aria-hidden','true');
+      };
       const toggle = () => $root.classList.contains('open') ? close() : open();
 
-      $btn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toggle(); });
+      $btn.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation(); toggle();
+      });
       document.addEventListener('click', (e)=>{ if (!$root.contains(e.target)) close(); });
       document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') close(); });
       window.addEventListener('resize', ()=>{ if ($root.classList.contains('open')) applyDropdownShift(); });
@@ -642,7 +555,10 @@
       $pref && $pref.addEventListener('click', ()=>{ console.log('Abrir preferencias'); close(); });
 
       const langSwitch = document.getElementById('ahLangSwitch');
-      const i18n = { es:{ search:'Buscar canciones, artistas...' }, en:{ search:'Search tracks, artists...' } };
+      const i18n = {
+        es:{ search:'Buscar canciones, artistas...' },
+        en:{ search:'Search tracks, artists...' }
+      };
       const applyLangUI = (lang) => {
         langSwitch.setAttribute('aria-checked', lang==='en' ? 'true' : 'false');
         langSwitch.dataset.lang = lang;
@@ -655,7 +571,10 @@
         try { localStorage.setItem('ahLang', next); } catch(_){}
         try {
           const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
-          await fetch(`/locale/toggle?lang=${next}`, { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token}});
+          await fetch(`/locale/toggle?lang=${next}`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token}
+          });
         } catch(_){}
         window.dispatchEvent(new CustomEvent('lang:toggle', { detail:{ lang: next } }));
       });
@@ -670,6 +589,7 @@
   }
 })();
 </script>
+
 
 <!-- ======= OVERRIDES para que nada quede encima o debajo (fijo arriba) ======= -->
 <style>
@@ -695,4 +615,142 @@
     addEventListener('resize', apply);
     new ResizeObserver(apply).observe(hdr);
   })();
+</script>
+
+<script>
+/* ================== AURA SEARCH (MÚSICA + ARTISTAS + ÁLBUMES) ================== */
+(() => {
+  const input = document.querySelector('.ah-search-input');
+  const resultsBox = document.getElementById('ahSearchResults');
+  if (!input || !resultsBox) return;
+
+  const debounce = (fn, ms = 260) => {
+    let t;
+    return (...a) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...a), ms);
+    };
+  };
+
+  // Mostrar / ocultar
+  const openResults = () => { resultsBox.style.display = 'block'; resultsBox.setAttribute('aria-expanded','true'); };
+  const closeResults = () => { resultsBox.style.display = 'none'; resultsBox.setAttribute('aria-expanded','false'); };
+
+  // Renderizar resultados globales
+  const renderItems = (list = []) => {
+    if (!list.length) {
+      resultsBox.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`;
+      return;
+    }
+    resultsBox.innerHTML = list.map(item => {
+      if (item.tipo === 'cancion') {
+        return `
+          <div class="ah-sr-item ah-sr-song" role="option" tabindex="-1">
+            <img src="${item.avatar}" alt="">
+            <div>
+              <span class="ah-sr-main">${item.nombre}</span>
+              <span class="ah-sr-sub">🎵 Canción — ${item.artist || ''}</span>
+            </div>
+            <button class="ah-hidden-btn" style="display:none"
+              data-id="${item.id}" data-src="${item.audio || ''}"
+              data-title="${item.nombre}" data-artist="${item.artist || 'Desconocido'}"
+              data-cover="${item.avatar}"></button>
+          </div>`;
+      }
+      const sub = item.tipo === 'usuario' ? '👤 Usuario' : '📀 Álbum';
+      return `
+        <a href="${item.url}" class="ah-sr-item" role="option" tabindex="-1">
+          <img src="${item.avatar}" alt="">
+          <div>
+            <span class="ah-sr-main">${item.nombre}</span>
+            <span class="ah-sr-sub">${sub}</span>
+          </div>
+        </a>`;
+    }).join('');
+    openResults();
+
+    // Click en canciones → reproducir en el reproductor
+    resultsBox.querySelectorAll('.ah-sr-song').forEach(el => {
+      if (el.dataset.bound) return;
+      el.dataset.bound = 'true';
+      el.addEventListener('click', () => {
+        const btn = el.querySelector('.ah-hidden-btn');
+        if (btn) {
+          const audio = document.querySelector('#player audio'); // tu <audio> en el footer
+          if (audio) {
+            audio.src = btn.dataset.src;
+            audio.play();
+            if (window.bindEqualizerTo) window.bindEqualizerTo(audio);
+
+            // Opcional: actualizar UI del player
+            const cover = document.querySelector('#rightPlayer .cover');
+            const title = document.querySelector('#rightPlayer .song-name');
+            const artist = document.querySelector('#rightPlayer .song-autor');
+            if (cover) cover.src = btn.dataset.cover;
+            if (title) title.textContent = btn.dataset.title;
+            if (artist) artist.textContent = btn.dataset.artist;
+          }
+        }
+        closeResults();
+      });
+    });
+  };
+
+  // Buscar en backend
+  const search = debounce(async () => {
+    const q = (input.value || '').trim();
+    if (q.length < 2) {
+      resultsBox.innerHTML = `<div class="ah-skel">Escribe al menos 2 letras…</div>`;
+      openResults();
+      return;
+    }
+    resultsBox.innerHTML = `<div class="ah-skel">Buscando…</div>`;
+    openResults();
+    try {
+      const res = await fetch(`/buscar?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        resultsBox.innerHTML = `<div class="ah-skel">No se encontraron resultados</div>`;
+      } else {
+        renderItems(data);
+      }
+    } catch {
+      resultsBox.innerHTML = `<div class="ah-skel">Error al buscar</div>`;
+    }
+  });
+
+  // Eventos
+  input.addEventListener('input', search);
+  document.addEventListener('click', e => {
+    if (!resultsBox.contains(e.target) && e.target !== input) closeResults();
+  });
+
+  // Navegación con teclado
+  let idx = -1;
+  const move = d => {
+    const items = [...resultsBox.querySelectorAll('.ah-sr-item')];
+    if (!items.length) return;
+    idx = (idx + d + items.length) % items.length;
+    items.forEach(i => i.classList.remove('is-active'));
+    items[idx].classList.add('is-active');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  };
+  input.addEventListener('keydown', e => {
+    const items = [...resultsBox.querySelectorAll('.ah-sr-item')];
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); move(-1); }
+    if (e.key === 'Enter' && idx >= 0) {
+      e.preventDefault();
+      const t = items[idx];
+      if (t.classList.contains('ah-sr-song')) {
+        const b = t.querySelector('.ah-hidden-btn'); b && b.click();
+      } else if (t.tagName === 'A') {
+        window.location.href = t.getAttribute('href');
+      }
+      closeResults();
+    }
+    if (e.key === 'Escape') closeResults();
+  });
+})();
 </script>

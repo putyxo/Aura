@@ -215,3 +215,17 @@ Route::get('/test-helper', function () {
 
 // ===== Traductor =====
 Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');
+
+
+
+
+use App\Http\Controllers\EqualizerController;
+
+Route::post('/equalizer/save', [EqualizerController::class, 'save'])
+    ->name('eq.save')
+    ->middleware('auth');
+
+
+    Route::get('/preferencias', [\App\Http\Controllers\PreferenciasController::class, 'index'])
+    ->name('preferencias')
+    ->middleware('auth');
