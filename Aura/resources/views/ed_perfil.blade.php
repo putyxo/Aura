@@ -178,10 +178,10 @@
               <div class="song-actions">
                 @auth
                   <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">@csrf
-                    <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
-                      <i class="fa-regular fa-heart"></i>
-                    </button>
-                  </form>
+                  <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
+                    <i class="fa-regular fa-heart"></i>
+                  </button>
+                </form>
                   <button class="icon-chip add-playlist-btn" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
                 @else
                   <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
