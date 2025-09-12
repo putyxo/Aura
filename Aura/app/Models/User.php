@@ -58,6 +58,8 @@ class User extends Authenticatable
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
+    
+
     public function followings()
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
@@ -82,6 +84,9 @@ class User extends Authenticatable
        ACCESSORS AVATAR / BANNER / PORTADA
        ============================== */
 
+
+       
+
     public function getAvatarUrlAttribute()
     {
         return $this->avatar
@@ -103,6 +108,16 @@ class User extends Authenticatable
             : asset('img/default-cover.png');
     }
 
+public function likes1()
+{
+    return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
+                ->withTimestamps();
+}
+
+public function equalizer()
+{
+    return $this->hasOne(UserEqualizer::class);
+}
     /* ==============================
        ME GUSTA (LIKES)
        ============================== */
@@ -118,6 +133,4 @@ class User extends Authenticatable
     {
         return $this->likedSongs();
     }
-
-    
 }
