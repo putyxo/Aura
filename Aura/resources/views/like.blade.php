@@ -24,60 +24,13 @@
     @include('components.fondo')
 
     {{-- HOTFIX: garantiza que $likedSongs exista como Collection --}}
-@php
-  use Illuminate\Support\Str;
-
-  $title  = $song->title  ?? $song->titulo  ?? $song->name ?? 'Sin título';
-  $artist = optional($song->user)->nombre_artistico ?? optional($song->user)->nombre ?? 'Artista';
-
-  // --- COVER robusto (ID de Drive, URL de Drive o URL común) ---
-  $coverRaw = $song->cover_path ?? $song->portada ?? $song->imagen ?? null;
-  $cover    = asset('img/default-cover.jpg');
-
-  if ($coverRaw) {
-      $coverId = null;
-
-      if (!Str::startsWith($coverRaw, ['http://','https://'])) {
-          // Probable ID de Drive crudo (alfanumérico largo)
-          $coverId = $coverRaw;
-      } elseif (Str::contains($coverRaw, 'drive.google')) {
-          if (preg_match('~/d/([^/]+)~', $coverRaw, $m))       $coverId = $m[1];
-          elseif (preg_match('~[?&]id=([^&]+)~', $coverRaw, $m)) $coverId = $m[1];
+    @php
+      if (!isset($likedSongs) || is_null($likedSongs)) {
+          $likedSongs = collect();
+      } elseif (is_array($likedSongs)) {
+          $likedSongs = collect($likedSongs);
       }
-
-      if ($coverId) {
-          // Si tienes helper de imágenes de Drive, úsalo para servir versión ligera
-          if (function_exists('drive_img_url')) {
-              $cover = drive_img_url($coverId, 260) . '&v=' . time();
-          } else {
-              $cover = route('media.drive', ['id' => $coverId]);
-          }
-      } else {
-          $cover = $coverRaw;
-      }
-  }
-
-  // --- AUDIO robusto (ID de Drive, URL de Drive o URL común) ---
-  $audioRaw = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
-  $audio    = null;
-
-  if ($audioRaw) {
-      $audioId = null;
-
-      if (!Str::startsWith($audioRaw, ['http://','https://'])) {
-          $audioId = $audioRaw;
-      } elseif (Str::contains($audioRaw, 'drive.google')) {
-          if (preg_match('~/d/([^/]+)~', $audioRaw, $m))        $audioId = $m[1];
-          elseif (preg_match('~[?&]id=([^&]+)~', $audioRaw, $m))  $audioId = $m[1];
-      }
-
-      $audio = $audioId ? route('media.drive', ['id' => $audioId]) : $audioRaw;
-  }
-
-  $dur       = $song->duration ?? $song->duracion ?? null;
-  $searchKey = Str::lower(($title ?? '') . ' ' . $artist);
-@endphp
-
+    @endphp
 
     <main class="main-content lk-page" data-page="likes">
       <div class="lk-shell">
@@ -118,61 +71,62 @@
         {{-- ================== GRID ================== --}}
         <section class="lk-grid" id="lkGrid" data-count="{{ $likedSongs->count() }}">
 
-         @php
-  $title  = $song->title  ?? $song->titulo  ?? $song->name ?? 'Sin título';
-  $artist = optional($song->user)->nombre_artistico ?? optional($song->user)->nombre ?? 'Artista';
+          @forelse($likedSongs as $song)
+            @php
+              // Campos tolerantes (ES/EN) para diferentes esquemas
+              $title  = $song->title  ?? $song->titulo  ?? $song->name ?? 'Sin título';
+              $artist = optional($song->user)->nombre_artistico ?? optional($song->user)->nombre ?? 'Artista';
 
-  // --- COVER robusto (ID/URL de Drive o URL común) ---
-  $coverRaw = $song->cover_path ?? $song->portada ?? $song->imagen ?? null;
-  $cover    = asset('img/default-cover.jpg');
+              // --- COVER robusto (ID/URL de Drive o URL común) ---
+              $coverRaw = $song->cover_path ?? $song->portada ?? $song->imagen ?? null;
+              $cover    = asset('img/default-cover.jpg');
 
-  if ($coverRaw) {
-      $coverId = null;
+              if ($coverRaw) {
+                  $coverId = null;
 
-      if (!\Illuminate\Support\Str::startsWith($coverRaw, ['http://','https://'])) {
-          // Probable ID crudo de Drive
-          $coverId = $coverRaw;
-      } elseif (\Illuminate\Support\Str::contains($coverRaw, 'drive.google')) {
-          if (preg_match('~/d/([^/]+)~', $coverRaw, $m))       $coverId = $m[1];
-          elseif (preg_match('~[?&]id=([^&]+)~', $coverRaw, $m)) $coverId = $m[1];
-      }
+                  if (!\Illuminate\Support\Str::startsWith($coverRaw, ['http://','https://'])) {
+                      // Probable ID crudo de Drive
+                      $coverId = $coverRaw;
+                  } elseif (\Illuminate\Support\Str::contains($coverRaw, 'drive.google')) {
+                      if (preg_match('~/d/([^/]+)~', $coverRaw, $m))         $coverId = $m[1];
+                      elseif (preg_match('~[?&]id=([^&]+)~', $coverRaw, $m)) $coverId = $m[1];
+                  }
 
-      if ($coverId) {
-          $cover = function_exists('drive_img_url')
-              ? drive_img_url($coverId, 260) . '&v=' . time()
-              : route('media.drive', ['id' => $coverId]);
-      } else {
-          $cover = $coverRaw;
-      }
-  }
+                  if ($coverId) {
+                      $cover = function_exists('drive_img_url')
+                          ? drive_img_url($coverId, 260) . '&v=' . time()
+                          : route('media.drive', ['id' => $coverId]);
+                  } else {
+                      $cover = $coverRaw;
+                  }
+              }
 
-  // --- AUDIO robusto (ID/URL de Drive o URL común) ---
-  $audioRaw = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
-  $audio    = null;
+              // --- AUDIO robusto (ID/URL de Drive o URL común) ---
+              $audioRaw = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
+              $audio    = null;
 
-  if ($audioRaw) {
-      $audioId = null;
+              if ($audioRaw) {
+                  $audioId = null;
 
-      if (!\Illuminate\Support\Str::startsWith($audioRaw, ['http://','https://'])) {
-          $audioId = $audioRaw;
-      } elseif (\Illuminate\Support\Str::contains($audioRaw, 'drive.google')) {
-          if (preg_match('~/d/([^/]+)~', $audioRaw, $m))        $audioId = $m[1];
-          elseif (preg_match('~[?&]id=([^&]+)~', $audioRaw, $m))  $audioId = $m[1];
-      }
+                  if (!\Illuminate\Support\Str::startsWith($audioRaw, ['http://','https://'])) {
+                      $audioId = $audioRaw;
+                  } elseif (\Illuminate\Support\Str::contains($audioRaw, 'drive.google')) {
+                      if (preg_match('~/d/([^/]+)~', $audioRaw, $m))         $audioId = $m[1];
+                      elseif (preg_match('~[?&]id=([^&]+)~', $audioRaw, $m)) $audioId = $m[1];
+                  }
 
-      $audio = $audioId ? route('media.drive', ['id' => $audioId]) : $audioRaw;
-  }
+                  $audio = $audioId ? route('media.drive', ['id' => $audioId]) : $audioRaw;
+              }
 
-  $dur       = $song->duration ?? $song->duracion ?? null;
-  $searchKey = \Illuminate\Support\Str::lower(($title ?? '') . ' ' . $artist);
-@endphp
-
+              $durSec    = is_numeric($song->duration ?? $song->duracion ?? null) ? (int)($song->duration ?? $song->duracion) : 0;
+              $searchKey = mb_strtolower(($title ?? '') . ' ' . $artist, 'UTF-8');
+            @endphp
 
             <article
               class="lk-tile"
               title="{{ $title }}"
               data-name="{{ $searchKey }}"
-              data-duration="{{ $dur ?? 0 }}"
+              data-duration="{{ $durSec }}"
               data-song-id="{{ $song->id }}"
             >
               <a class="lk-tile__link" aria-label="Abrir {{ $title }}"></a>
@@ -206,12 +160,12 @@
                   <div class="lk-time">
                     <span class="lk-time__current">0:00</span>
                     <span class="lk-time__sep">/</span>
-                    <span class="lk-time__total">{{ $dur ? gmdate('i:s', max(0,$dur)) : '--:--' }}</span>
+                    <span class="lk-time__total">{{ $durSec ? gmdate('i:s', max(0,$durSec)) : '--:--' }}</span>
                   </div>
                 </div>
 
                 <div class="lk-player__bar">
-                  <input class="lk-seek" type="range" min="0" max="{{ $dur ?? 0 }}" value="0" step="1" aria-label="Barra de progreso">
+                  <input class="lk-seek" type="range" min="0" max="{{ $durSec }}" value="0" step="1" aria-label="Barra de progreso">
                 </div>
               </div>
 
@@ -237,7 +191,7 @@
   </div>
 </div>
 
-{{-- ======= JS (inline) mini-player + buscador + SYNC con footer ======= --}}
+{{-- ======= JS (inline) mini-player + buscador + persistencia + SYNC con footer ======= --}}
 <script>
 (() => {
   // ===== Utilidades DOM =====
@@ -254,6 +208,9 @@
   const CSRF      = (document.querySelector('meta[name="csrf-token"]')?.content) || '{{ csrf_token() }}';
   const USER_ID   = @json(Auth::id());
   const UID       = (USER_ID ?? 'guest');
+
+  // BroadcastChannel (multi-pestaña + footer)
+  let bc = null; try { bc = new BroadcastChannel('aura-player'); } catch {}
 
   // ===== Claves de almacenamiento =====
   const STORE_LIKES   = `aura_likes_v1_${UID}`;
@@ -274,18 +231,11 @@
   const byId  = (id) => $(`.lk-tile[data-song-id="${CSS.escape(String(id))}"]`);
 
   const isHttp = (u) => /^https?:\/\//i.test(u||'');
+  const looksLikeDriveId = (t) => /^[A-Za-z0-9_-]{15,}$/.test(t||'');
   const resolveDrive = (idOrUrl, {image=false}={}) => {
     if (!idOrUrl) return image ? DEF_COVER : '';
-    // Si ya es URL http(s), úsala tal cual
     if (isHttp(idOrUrl)) return idOrUrl;
-
-    // Si parece un ID (alfanumérico largo), arma la ruta
-    if (/^[A-Za-z0-9_-]{15,}$/.test(idOrUrl)) {
-      // Si tienes un endpoint de imágenes (drive_img_url) en PHP, ya lo usamos en Blade.
-      // En JS nos conformamos con la vista genérica del backend:
-      return DRIVE_VIEW_TMPL.replace('FILE_ID', idOrUrl);
-    }
-    return idOrUrl;
+    return looksLikeDriveId(idOrUrl) ? DRIVE_VIEW_TMPL.replace('FILE_ID', idOrUrl) : idOrUrl;
   };
 
   // ===== Construye una tarjeta =====
@@ -363,8 +313,6 @@
     const tCur     = $('.lk-time__current', tile);
     const tTot     = $('.lk-time__total', tile);
 
-    let current = null;
-
     const togglePlay = () => {
       if (!audio) return;
       const playing = !audio.paused;
@@ -386,7 +334,6 @@
         audio.play().catch(()=>{});
         btnPlay?.querySelector('i')?.classList.replace('fa-play','fa-pause');
         coverBtn?.querySelector('i')?.classList.replace('fa-play','fa-pause');
-        current = audio;
       }
     };
 
@@ -567,8 +514,7 @@
   }
 
   document.addEventListener('aura:like-changed', handleLikeChanged);
-
-  let bc = null; try { bc = new BroadcastChannel('aura-player'); bc.onmessage = (ev)=> handleLikeChanged(ev); } catch {}
+  if (bc) bc.onmessage = (ev)=> handleLikeChanged(ev);
 
   // ===== Inicio: bindear existentes, restaurar estado, etc. =====
   // 1) Bind inicial a las tarjetas renderizadas por Blade

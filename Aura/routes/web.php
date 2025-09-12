@@ -82,25 +82,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/playlists/create', [PlaylistController::class, 'quickStore']);
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
 
-<<<<<<< HEAD
-    /*
-    |--------------------------------------------------------------------------
-    | Vistas principales (Blade suelto)
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/menu', fn () => view('menu'))->name('menu');
-    Route::get('/menu_artista', fn () => view('menu_artista'))->name('menu_artista');
-    Route::get('/playlist_card', fn () => view('playlist_card'))->name('playlist_card');
-    Route::get('/preferencias', fn () => view('preferencias'))->name('preferencias');
-    Route::get('/cuenta', fn () => view('cuenta'))->name('cuenta');
-    Route::get('/editar-perfil', fn () => view('editar-perfil'))->name('editar-perfil');
-    Route::get('/seguridad', fn () => view('seguridad'))->name('seguridad');
-    Route::get('/cambiar-usuario', fn () => view('cambiar-usuario'))->name('cambiar-usuario');
-    Route::get('/recientes', fn () => view('recientes'))->name('recientes');
-    Route::get('/admin', fn () => view('admin'))->name('admin');
-    Route::get('/estadisticas', fn () => view('estadisticas'))->name('estadisticas');
-    Route::get('/artistasadmin', fn () => view('artistasadmin'))->name('artistasadmin');
-=======
     // ===== Vistas principales (Blade suelto) =====
     Route::get('/menu', fn() => view('menu'))->name('menu');
     Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
@@ -115,7 +96,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
     Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
->>>>>>> Parte-wifi
 
     /*
     |--------------------------------------------------------------------------
@@ -199,13 +179,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
 
-<<<<<<< HEAD
-    /*
-    |--------------------------------------------------------------------------
-    | Eliminar canción (coincide con Blades antiguos)
-    |--------------------------------------------------------------------------
-    */
-=======
 
     //Album
     Route::delete('/menu_album}', [AlbumController::class, 'destroy'])->name('album.destroy');
@@ -216,7 +189,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
         ->name('api.canciones.like.state');
     // ===== Eliminar canción (coincide con tu Blade: route('cancion.destroy', $id)) =====
->>>>>>> Parte-wifi
     Route::delete('/cancion/{cancion}', [CancionController::class, 'destroy'])->name('cancion.destroy');
     Route::delete('/canciones/{cancion}', [CancionController::class, 'destroy'])->name('canciones.destroy');
 });
