@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
-  @vite('resources/css/artistasadmin.css')
+  @vite('resources/css/usuarioadmin.css')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -25,7 +25,7 @@
         <div class="page-studio studio">
 
           <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Artistas</h1>
+            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Usuario</h1>
             <div class="studio__filters">
               <div class="studio__search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -89,7 +89,7 @@
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="1" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
-            </div>      
+            </div>
 
           </div>
 
