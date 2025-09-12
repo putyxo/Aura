@@ -12,7 +12,12 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Models\Album;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\SupportController;
 
 // ===== Página principal =====
 Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -28,7 +33,15 @@ Route::get('/perfil/{user}/lanzamientos', [PerfilController::class, 'releasesAll
     ->name('perfil.releasesAll');
 
 // ===== Rutas protegidas (requieren login) =====
-Route::middleware('auth')->group(function () {
+Route::middleware(['web','auth'])->group(function () {
+
+        // Cuenta
+    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
+    Route::post('/cuenta/password', [PasswordController::class, 'update'])
+        ->name('perfil.changePassword');
+
+            Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])
+        ->name('perfil.language');
 
     // ❤️ Like de canciones
     Route::post('/canciones/{cancion}/like', [CancionController::class, 'toggleLike'])->name('canciones.like');
@@ -48,11 +61,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
     Route::get('/follow_artist', fn() => view('follow_artist'))->name('follow_artist');
     Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
-    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
+Route::post('/cuenta/password', [PasswordController::class, 'update'])
+    ->name('perfil.changePassword')
+    ->middleware('auth');
     Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
+// Cambiar tipo de cuenta (usuario ↔ artista)
+Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
+    ->name('perfil.toggleRole');
+
+Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])->name('perfil.language');
 
     // Álbumes
     Route::get('/album/{id}', [AlbumController::class, 'show'])->name('album.show');
@@ -75,6 +95,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
     Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
 
+
+    Route::post('/support/send', [SupportController::class, 'send'])->name('support.send');
     // Perfil
     Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
     Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
@@ -106,10 +128,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
+    // ===== Recursos de Playlist (RESTful) =====
+Route::resource('playlists', PlaylistController::class);
+
+Route::get('/locale-test', function () {
+    return [
+        'session' => session('locale'),
+        'user'    => auth()->check() ? auth()->user()->idioma : null,
+        'app'     => app()->getLocale(),
+    ];
+    });
 });
 
-// ===== Recursos de Playlist (RESTful) =====
-Route::resource('playlists', PlaylistController::class);
 
 // ===== Google Drive =====
 Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogle']);
@@ -126,6 +156,42 @@ require __DIR__.'/auth.php';
 Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });
+Route::post('/languages/{lang}', function (string $lang) {
+    if (!in_array($lang, ['es', 'en'])) {
+        $lang = 'en';
+    }
 
+    if (Auth::check()) {
+        $user = Auth::user();
+        $user->idioma = $lang;
+        $user->save();
+    } else {
+        Session::put('locale', $lang);
+    }
+
+    App::setLocale($lang);
+
+    return back()->with('status', __('account.language_changed'));
+})->name('languages');
 // ===== Ruta para el traductor =====
 Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');
+
+Route::get('/locale-test', function () {
+ if (Auth::check() && Auth::user()->idioma) {
+        app()->setLocale(Auth::user()->idioma);
+    }
+
+    return [
+        'user'   => Auth::user()->idioma ?? null,
+        'locale' => app()->getLocale(),
+        'text'   => __('messages.welcome'),
+    ];
+});
+
+Route::get('/auth-check', function () {
+    return [
+        'logged_in' => auth()->check(),
+        'user'      => auth()->user(),
+    ];
+});
+
