@@ -3,264 +3,193 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AURA — Historial de canciones reproducidas</title>
-  @vite('resources/css/recientes.css')
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>AURA — Recientes</title>
+
+  <!-- Fuentes + Iconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Vite -->
+  @vite(['resources/css/recientes.css','resources/js/recientes.js'])
 </head>
 <body>
+<div class="app">
   <div class="with-sidebar">
     @include('components.sidebar')
+    @include('components.header')
+    @include('components.traductor')
+    @include('components.fondo')
 
-    <main class="main-content">
-      <div id="historyContainer" class="history-container">
-        <h2>Historial de canciones reproducidas</h2>
-        <ul id="historyList" class="history-list"></ul>
-        <div id="emptyState" class="empty-state">
-          <h3>Aún no se ha reproducido ninguna canción</h3>
-        </div>
+    <!-- ROOT AISLADO -->
+    <main id="axrcRoot"
+          class="axrc axrc-main main-content"
+          data-axrc-max-mb="5"
+          data-user-id="{{ auth()->id() ?? 'guest' }}"
+    >
+      <div class="axrc-shell">
+
+        <!-- HERO -->
+        <section class="axrc-hero" aria-label="Tus Canciones Recientes">
+          <div class="axrc-hero__bg"></div>
+
+          <div class="axrc-hero__row">
+            <div class="axrc-hero__content">
+              <div class="axrc-hero__icon">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+              </div>
+              <div>
+                <h1 class="axrc-hero__title">Tus Canciones Recientes</h1>
+                <p class="axrc-hero__sub">Revisa las canciones que has escuchado recientemente.</p>
+              </div>
+            </div>
+            <div class="axrc-hero__actions">
+              <button class="axrc-btn axrc-btn-primary" id="axrcClearHistory">
+                <i class="fa-solid fa-trash"></i> <span>Limpiar Historial</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="axrc-hero__toolbar" role="toolbar" aria-label="Herramientas de recientes">
+            <div class="axrc-toolbar__left">
+              <div class="axrc-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input id="axrcSearch" type="search" placeholder="Buscar canción..." aria-label="Buscar canción" autocomplete="off">
+                <button class="axrc-clear" id="axrcClearSearch" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="axrc-filters">
+                <button class="axrc-chip is-active" data-sort="recientes">Recientes</button>
+                <button class="axrc-chip" data-sort="hoy">Hoy</button>
+                <button class="axrc-chip" data-sort="semana">Esta semana</button>
+                <button class="axrc-chip" data-sort="mes">Este mes</button>
+              </div>
+            </div>
+            <div class="axrc-toolbar__right">
+              <button class="axrc-btn axrc-btn-ghost" id="axrcSelectMode" aria-pressed="false">
+                <i class="fa-regular fa-square"></i><span class="axrc-btn-text">Seleccionar</span>
+              </button>
+              <button class="axrc-btn axrc-btn-ghost axrc-is-danger" id="axrcDeleteSelected" disabled>
+                <i class="fa-regular fa-trash-can"></i><span class="axrc-btn-text">Eliminar</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Toast por sesión -->
+        @if(session('ok'))
+          <div class="axrc-toast axrc-toast-ok is-shown" role="status" aria-live="polite">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>{{ session('ok') }}</span>
+          </div>
+        @endif
+        <!-- Toast runtime -->
+        <div id="axrcToast" class="axrc-toast" role="status" aria-live="polite" hidden></div>
+
+        <!-- GRID -->
+        <section class="axrc-grid" id="axrcGrid">
+          <!-- Empty state -->
+          <div class="axrc-tile axrc-empty-state" id="axrcEmptyState" style="grid-column:1/-1;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <h3>Aún no se ha reproducido ninguna canción</h3>
+            <p>¡Empieza a escuchar música para ver tu historial! 🎵</p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Backdrop + Modal (confirmar limpiar) -->
+      <div id="axrcModalBackdrop" class="axrc-modal-backdrop" hidden></div>
+
+      <div id="axrcModal" class="axrc-modal" hidden role="dialog" aria-modal="true" aria-labelledby="axrcModalTitle">
+        <form id="axrcForm" action="#" method="POST" novalidate>
+          @csrf
+          <div class="axrc-modal-header">
+            <h3 id="axrcModalTitle" class="axrc-modal-title">Limpiar Historial</h3>
+            <button class="axrc-modal-close" id="axrcCloseModal" type="button" aria-label="Cerrar">×</button>
+          </div>
+
+          <div class="axrc-modal-body">
+            <p>¿Estás seguro de que quieres limpiar todo el historial de canciones reproducidas? Esta acción no se puede deshacer.</p>
+          </div>
+
+          <div class="axrc-actions">
+            <button type="button" class="axrc-btn axrc-btn-secondary" id="axrcCancel">Cancelar</button>
+            <button type="button" class="axrc-btn axrc-btn-danger" id="axrcConfirmClear">
+              <i class="fa-regular fa-trash-can"></i> Limpiar
+            </button>
+          </div>
+        </form>
       </div>
     </main>
 
     @include('components.footer')
   </div>
+</div>
 
-  <script>
-    (function() {
-      const userId = @json(Auth::id());
-      const HISTORY_KEY = 'song_history_' + userId;
-      const historyList = document.getElementById('historyList');
-      const emptyState = document.getElementById('emptyState');
+<script>
+  // Set global variables
+  window.userId = @json(Auth::id());
+  window.defaultCover = '{{ asset('img/default-cancion.png') }}';
+</script>
 
-      function renderHistory() {
-        const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-        if (!history.length) {
-          emptyState.style.display = 'block';
-          historyList.style.display = 'none';
-          return;
-        }
-        emptyState.style.display = 'none';
-        historyList.style.display = 'block';
-        historyList.innerHTML = '';
-        history.forEach((song, index) => {
-          const li = document.createElement('li');
-          li.className = 'history-item';
-          li.style.opacity = '0';
-          li.style.transform = 'translateY(20px)';
-          li.style.transition = 'all 0.3s ease';
-          li.innerHTML = `
-            <img src="${song.cover || '{{ asset('img/default-cancion.png') }}'}" alt="Portada" class="history-cover" />
-            <div class="history-info">
-              <span class="history-title" title="${song.title}">${song.title}</span>
-              <span class="history-artist" title="${song.artist}">${song.artist}</span>
-            </div>
-            <div class="history-actions">
-              <button class="history-play-btn" data-index="${index}" title="Reproducir">
-                <i class="fas fa-play"></i>
-              </button>
-              <button class="history-add-queue-btn" data-index="${index}" title="Agregar a cola">
-                <i class="fas fa-plus"></i>
-              </button>
-            </div>
-          `;
-          historyList.appendChild(li);
+<!-- Guard-rails de layout: calcula márgenes seguros según sidebar/header/footer/player -->
+<script>
+(() => {
+  const root = document.querySelector('#axrcRoot.axrc');
 
-          // Animate item appearance
-          setTimeout(() => {
-            li.style.opacity = '1';
-            li.style.transform = 'translateY(0)';
-          }, index * 50);
-        });
+  function setVar(name, px){
+    const v = (Math.max(0, Math.round(px || 0))) + 'px';
+    document.documentElement.style.setProperty(name, v);
+    root?.style.setProperty(name, v);
+  }
 
-        // Add event listeners to buttons
-        attachButtonListeners();
-      }
+  function widthIfDockedLeft(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(r.left) < 2 ? r.width : 0;
+  }
 
-      function attachButtonListeners() {
-        // Play buttons
-        document.querySelectorAll('.history-play-btn').forEach(btn => {
-          // Add hover animations
-          btn.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1) rotate(5deg)';
-            this.style.transition = 'all 0.2s ease';
-          });
-          btn.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1) rotate(0deg)';
-          });
+  function widthIfDockedRight(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
+  }
 
-          btn.addEventListener('click', function() {
-            // Click animation
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-              this.style.transform = 'scale(1.1) rotate(5deg)';
-            }, 100);
+  function heightIfDockedTop(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return r.top <= 0 ? r.height : 0;
+  }
 
-            const index = this.dataset.index;
-            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-            const song = history[index];
-            if (song && window.AuraPlayer) {
-              window.AuraPlayer.play({
-                id: song.id,
-                src: song.src || '',
-                title: song.title,
-                artist: song.artist,
-                cover: song.cover
-              });
-            }
-          });
-        });
+  function heightIfDockedBottom(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerHeight - r.bottom) < 2 ? r.height : 0;
+  }
 
-        // Add to queue buttons
-        document.querySelectorAll('.history-add-queue-btn').forEach(btn => {
-          // Add hover animations
-          btn.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1) rotate(-5deg)';
-            this.style.transition = 'all 0.2s ease';
-          });
-          btn.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1) rotate(0deg)';
-          });
+  function measure(){
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('[class*="side"]');
+    const player  = document.querySelector('.player, .right-player') || document.querySelector('[class*="player"]');
+    const header  = document.querySelector('.header') || document.querySelector('header');
+    const footer  = document.querySelector('.footer') || document.querySelector('footer');
 
-          btn.addEventListener('click', function() {
-            // Click animation
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-              this.style.transform = 'scale(1.1) rotate(-5deg)';
-            }, 100);
+    setVar('--safe-left',   widthIfDockedLeft(sidebar));
+    setVar('--safe-right',  widthIfDockedRight(player));
+    setVar('--safe-top',    heightIfDockedTop(header));
+    setVar('--safe-bottom', heightIfDockedBottom(footer));
+  }
 
-            const index = this.dataset.index;
-            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-            const song = history[index];
-            if (song && window.AuraQueue) {
-              window.AuraQueue.addToEnd([{
-                id: song.id,
-                title: song.title,
-                artist: song.artist,
-                cover: song.cover,
-                src: song.src || ''
-              }]);
-              showNotification('Canción agregada a la cola', 'success');
-            }
-          });
-        });
-      }
+  const ro = new ResizeObserver(measure);
+  ['.sidebar','[class*="side"]','.player','.right-player','[class*="player"]','.header','header','.footer','footer']
+    .forEach(sel => document.querySelectorAll(sel).forEach(el => ro.observe(el)));
 
-      function showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-
-        // Style the notification
-        Object.assign(notification.style, {
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          color: '#fff',
-          fontWeight: '500',
-          zIndex: '1000',
-          opacity: '0',
-          transform: 'translateY(-20px) scale(0.8)',
-          transition: 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-        });
-
-        if (type === 'success') {
-          notification.style.backgroundColor = '#22c55e';
-          notification.style.borderLeft = '4px solid #16a34a';
-        } else {
-          notification.style.backgroundColor = '#7c3aed';
-          notification.style.borderLeft = '4px solid #6d28d9';
-        }
-
-        document.body.appendChild(notification);
-
-        // Animate in with bounce effect
-        setTimeout(() => {
-          notification.style.opacity = '1';
-          notification.style.transform = 'translateY(0) scale(1)';
-        }, 10);
-
-        // Add a subtle pulse animation
-        let pulseCount = 0;
-        const pulseInterval = setInterval(() => {
-          if (pulseCount < 2) {
-            notification.style.transform = 'translateY(0) scale(1.02)';
-            setTimeout(() => {
-              notification.style.transform = 'translateY(0) scale(1)';
-            }, 100);
-            pulseCount++;
-          } else {
-            clearInterval(pulseInterval);
-          }
-        }, 500);
-
-        // Remove after 3 seconds with exit animation
-        setTimeout(() => {
-          notification.style.opacity = '0';
-          notification.style.transform = 'translateY(-20px) scale(0.8)';
-          setTimeout(() => {
-            if (notification.parentNode) {
-              notification.parentNode.removeChild(notification);
-            }
-          }, 400);
-        }, 3000);
-      }
-
-      // Listen for storage changes to update history in real-time
-      window.addEventListener('storage', function(e) {
-        if (e.key === HISTORY_KEY) {
-          // Add a smooth transition when history updates
-          historyList.style.opacity = '0.7';
-          setTimeout(() => {
-            renderHistory();
-            historyList.style.opacity = '1';
-          }, 150);
-        }
-      });
-
-      // Add loading animation on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('historyContainer');
-        container.style.opacity = '0';
-        container.style.transform = 'translateY(30px)';
-        container.style.transition = 'all 0.6s ease';
-
-        setTimeout(() => {
-          container.style.opacity = '1';
-          container.style.transform = 'translateY(0)';
-        }, 100);
-
-        renderHistory();
-      });
-
-      // Add smooth transitions for empty state changes
-      function updateEmptyStateVisibility() {
-        const hasHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length > 0;
-        const emptyState = document.getElementById('emptyState');
-        const historyList = document.getElementById('historyList');
-
-        if (hasHistory) {
-          emptyState.style.opacity = '0';
-          setTimeout(() => {
-            emptyState.style.display = 'none';
-            historyList.style.display = 'block';
-            setTimeout(() => {
-              historyList.style.opacity = '1';
-            }, 50);
-          }, 300);
-        } else {
-          historyList.style.opacity = '0';
-          setTimeout(() => {
-            historyList.style.display = 'none';
-            emptyState.style.display = 'block';
-            setTimeout(() => {
-              emptyState.style.opacity = '1';
-            }, 50);
-          }, 300);
-        }
-      }
-    })();
-  </script>
+  window.addEventListener('resize', measure);
+  window.addEventListener('orientationchange', measure);
+  document.addEventListener('DOMContentLoaded', measure);
+  measure();
+})();
+</script>
 </body>
 </html>
