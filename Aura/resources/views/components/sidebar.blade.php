@@ -23,13 +23,9 @@
       <i class="fa-solid fa-user-check"></i><span class="label">Tus Seguidos</span>
     </a>
 
-    <a href="{{ url('/menu_album') }}" class="item">
-      <i class="fa-solid fa-book-bookmark"></i><span class="label">Tus Albumes</span>
-    </a>
 
-    <a href="{{ url('/recientes') }}" class="item">
-      <i class="fa-solid fa-list"></i><span class="label">Recientes</span>
-    </a>
+
+
 
     <div class="menu-sep"></div>
   </nav>

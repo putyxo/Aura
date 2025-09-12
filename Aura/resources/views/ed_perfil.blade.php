@@ -176,17 +176,19 @@
               <div class="song-duration">{{ $dur }}</div>
 
               <div class="song-actions">
-                @auth
-                  <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">@csrf
-                  <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
-                    <i class="fa-regular fa-heart"></i>
-                  </button>
-                </form>
-                  <button class="icon-chip add-playlist-btn" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
-                @else
-                  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
-                  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
-                @endauth
+@auth
+  <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">
+    @csrf
+    <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
+      <i class="fa-regular fa-heart"></i>
+    </button>
+  </form>
+@else
+  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
+  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
+@endauth
+
+
 
                 <div class="menu-wrap">
                   <button class="icon-chip more-btn" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
@@ -274,13 +276,13 @@
 
                       <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
                         <a href="{{ route('album.show', $album->id) }}" class="card-link">
-                          <div class="card-img">
-                            <img src="{{ $albumCover }}" alt="Portada" loading="lazy" decoding="async">
-                            <span class="album-play"><i class="fa-solid fa-play"></i></span>
-                          </div>
-                          <h4 class="album-title">{{ $album->titulo }}</h4>
-                          <p class="album-sub">Por {{ $user->nombre_artistico ?? $user->nombre }}</p>
-                        </a>
+  <div class="card-img">
+    <img src="{{ $albumCover }}" alt="Portada" loading="lazy" decoding="async">
+    <span class="album-play"><i class="fa-solid fa-play"></i></span>
+  </div>
+  <h4 class="album-title">{{ $album->titulo }}</h4>
+  <p class="album-sub">Por {{ $user->nombre_artistico ?? $user->nombre }}</p>
+</a>
 
                         @if($isOwner)
                           <button class="trash-float open-delete"
@@ -583,34 +585,47 @@
 })();
 </script>
 
-<!-- (tu snippet extra para abrir/cerrar el modal — lo mantengo para que no se pierda nada) -->
+<!-- Código de "like" y "añadir a cola" -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.__extraEditModalWired) return; // evita doble wiring
-  window.__extraEditModalWired = true;
+document.querySelectorAll('.like-btn').forEach(button => {
+  const songId = button.closest('form').dataset.songId;
 
-  const editBtn = document.getElementById("editBtn");
-  const cancelBtn = document.getElementById("cancelEdit");
-  const modal = document.getElementById("editModal");
+  // Verificar el estado del "like" al cargar la página
+  fetch(`/canciones/${songId}/liked`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.liked) {
+        button.innerHTML = '<i class="fa-solid fa-heart" style="color:#aa029c"></i>';  // Estado de "like" activado
+      } else {
+        button.innerHTML = '<i class="fa-regular fa-heart"></i>';  // Estado de "like" desactivado
+      }
+    })
+    .catch(err => console.error('Error al verificar el estado del like:', err));
 
-  if (!editBtn || !modal) return;
+  // Alternar "like" cuando se haga clic en el botón
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-  editBtn.addEventListener("click", () => {
-    modal.setAttribute("aria-hidden", "false");
-  });
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => {
-      modal.setAttribute("aria-hidden", "true");
-    });
-  }
-
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.setAttribute("aria-hidden", "true");
-    }
+    fetch(`/canciones/${songId}/like`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.liked) {
+        button.innerHTML = '<i class="fa-solid fa-heart" style="color:#aa029c"></i>';
+      } else {
+        button.innerHTML = '<i class="fa-regular fa-heart"></i>';
+      }
+    })
+    .catch(err => console.error('Error al alternar el me gusta:', err));
   });
 });
 </script>
+
 </body>
 </html>

@@ -510,9 +510,24 @@
 
     updateCount(); ensureEmptyMessage(); applySearch(); saveNow();
   }
-  document.addEventListener('aura:like-changed', handleLikeChanged);
-  if (bc) bc.onmessage = (ev)=> handleLikeChanged(ev);
+document.addEventListener('aura:like-changed', (event) => {
+  const { song, liked } = event.detail;
+  const songElement = document.querySelector(`.lk-tile[data-song-id="${song.id}"]`);
+  
+  if (songElement) {
+    const heartButton = songElement.querySelector('.lk-like');
+    if (liked) {
+      heartButton.classList.add('is-liked');
+    } else {
+      heartButton.classList.remove('is-liked');
+    }
+  }
 
+  // Actualizar el contador
+  const likeCount = document.getElementById('lkCount');
+  const currentCount = parseInt(likeCount.textContent, 10);
+  likeCount.textContent = liked ? currentCount + 1 : currentCount - 1;
+});
   /* ===== Bind inicial ===== */
   tiles().forEach(bindTile);
 

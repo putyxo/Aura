@@ -12,9 +12,12 @@ class Album extends Model
         'user_id', 'title', 'genre', 'cover_path', 'release_date',
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
-    }
+    // In Album model (App\Models\Album)
+public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
 
     public function songs() {
         return $this->hasMany(Cancion::class, 'album_id');

@@ -13,14 +13,13 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
-class ProfileController extends Controller
+class AlbumController extends Controller
 {
     /**
      * Mostrar el formulario del perfil del usuario.
      */
     public function edit(Request $request): View
     {
-        // Obtener el usuario autenticado
         $user = $request->user();
 
         // Obtener los álbumes asociados al usuario
@@ -38,7 +37,6 @@ class ProfileController extends Controller
         // Paginación de los álbumes (4 álbumes por página)
         $albumPages = $albumsNormalized->chunk(4);
 
-        // Pasar datos a la vista
         return view('profile.edit', [
             'user' => $user,
             'albumPages' => $albumPages,
@@ -50,7 +48,6 @@ class ProfileController extends Controller
      */
     public function menuAlbum(Request $request): View
     {
-        // Obtener el usuario autenticado
         $user = $request->user();
 
         // Obtener los álbumes asociados al usuario
@@ -59,13 +56,40 @@ class ProfileController extends Controller
         // Calcular el número de seguidores
         $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
 
-        // Pasar datos a la vista
         return view('menu_album', [
             'user' => $user,
             'albumes' => $albumes,
             'followersCount' => $followersCount,
         ]);
     }
+
+    /**
+     * Mostrar un álbum específico dentro de `menu_album`.
+     */
+    public function show($id): View
+{
+    // Retrieve the album by its ID and eager load the user relationship
+    $album = Album::with('user')->findOrFail($id);
+    $user = $album->user; // User who created the album
+
+    // Retrieve the liked songs for the authenticated user (if applicable)
+    $likedSongs = Auth::user()->likedSongs; // Assuming 'likedSongs' is a relationship or method in the User model
+
+    // Retrieve all albums of the user to display in the pagination
+    $albumes = Album::where('user_id', $user->id)->get();
+    $albumPages = $albumes->chunk(4);  // Chunk albums for pagination
+
+    // Pass the album, user, liked songs, and album pages to the view
+    return view('menu_album', [
+        'user' => $user,
+        'albumes' => $albumes,
+        'followersCount' => method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0),
+        'albumPages' => $albumPages,
+        'selectedAlbum' => $album,  // Pass the selected album
+        'likedSongs' => $likedSongs // Pass the liked songs
+    ]);
+}
+
 
     /**
      * Actualizar la información del perfil del usuario.
@@ -89,7 +113,6 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // Validar que el password ingresado sea correcto
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
@@ -123,7 +146,7 @@ class ProfileController extends Controller
         ]);
 
         $data = $request->only(['title', 'genre', 'release_date']);
-        $data['user_id'] = auth()->id(); // Asociar el usuario autenticado
+        $data['user_id'] = auth()->id();
 
         // Subir portada del álbum (opcional) a Google Drive
         if ($request->hasFile('cover')) {
@@ -135,10 +158,9 @@ class ProfileController extends Controller
             // Usando GoogleDriveOAuthService para subir la imagen
             $cover = $drive->uploadPublic($img->getRealPath(), $imgName, $imgMime);
 
-            // Guardar la URL de la portada y (si existe) el id del archivo
             $data['cover_path'] = $cover['directUrl'] ?? null;
             if (!empty($cover['id'])) {
-                $data['cover_id'] = $cover['id']; // <- si tienes esta columna, mejor para borrar luego
+                $data['cover_id'] = $cover['id'];
             }
         }
 
@@ -178,7 +200,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Borra un archivo en Drive si podemos deducir su fileId
+     * Borra un archivo en Drive si podemos deducir su fileId.
      */
     private function deleteFromDriveIfPossible(GoogleDriveOAuthService $drive, $value): void
     {
@@ -199,7 +221,6 @@ class ProfileController extends Controller
      */
     private function extractDriveId($value): ?string
     {
-        // Lógica para extraer el ID de Drive (si aplica)
         return $value ? Str::after($value, 'drive.com/file/d/') : null;
     }
 }

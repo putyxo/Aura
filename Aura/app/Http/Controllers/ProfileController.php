@@ -13,55 +13,43 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Mostrar el formulario del perfil del usuario.
      */
     public function edit(Request $request): View
-    {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
-    }
-
-    /**
-     * Mostrar los álbumes del usuario.
-     */
-    public function menuAlbum(Request $request): View
     {
         // Obtener el usuario autenticado
         $user = $request->user();
 
-        // Obtener los álbumes asociados al usuario con sus canciones
-        $albumes = Album::where('user_id', $user->id)->with(['songs' => function($query) {
-            $query->select('id', 'album_id', 'titulo', 'audio_path');
-        }])->get();
+        // Obtener los álbumes asociados al usuario
+        $albumes = Album::where('user_id', $user->id)->get();
 
-        // Agrupar álbumes en páginas de 4 (para grid 2x2)
-        $albumPages = $albumes->chunk(4);
+        // Normalizar los álbumes para la vista
+        $albumsNormalized = collect($albumes)->map(function($a) {
+            return (object)[
+                'id'      => $a->id,
+                'titulo'  => $a->title ?? $a->titulo ?? 'Sin título',
+                'portada' => $a->cover_path ?? $a->portada ?? null,
+            ];
+        });
 
-        // Obtener las canciones que el usuario ha dado like, con información del álbum
-        $likedSongs = $user->likes()->with(['album' => function($query) {
-            $query->select('id', 'titulo');
-        }])->select('id', 'titulo', 'audio_path', 'album_id')->get();
-
-        // Calcular el número de seguidores
-        $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
+        // Paginación de los álbumes (4 álbumes por página)
+        $albumPages = $albumsNormalized->chunk(4);
 
         // Pasar datos a la vista
-        return view('menu_album', [
+        return view('profile.edit', [
             'user' => $user,
             'albumPages' => $albumPages,
-            'likedSongs' => $likedSongs,
-            'followersCount' => $followersCount,
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Actualizar la información del perfil del usuario.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
 
+        // Si el email ha cambiado, eliminar la verificación de email
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
@@ -72,7 +60,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Eliminar la cuenta del usuario.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -82,10 +70,13 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Desconectar al usuario
         Auth::logout();
 
+        // Eliminar al usuario de la base de datos
         $user->delete();
 
+        // Invalidar la sesión
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

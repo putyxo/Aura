@@ -23,9 +23,7 @@
     <div class="ah-right">
       <!-- Notificaciones -->
       <div class="ah-pop ah-notif">
-        <button class="ah-btn" id="ahNotifBtn" type="button" aria-expanded="false" aria-controls="ahNotifPanel" title="Notificaciones">
-          <i class="fa-regular fa-bell"></i>
-        </button>
+       
         <div class="ah-popover" id="ahNotifPanel" role="dialog" aria-hidden="true">
           <div class="ah-popover-head"><span>Notificaciones</span></div>
           <div class="ah-popover-body">

@@ -75,20 +75,6 @@
   audio.preload = 'metadata';
   audio.playsInline = true;
 
-  /* === Hook para el Ecualizador === */
-  if (window.bindEqualizerTo) {
-    window.bindEqualizerTo(audio);              // se conecta si el EQ ya está cargado
-  } else {
-    window.__AURA_EQ_WAIT__ = audio;            // si el EQ carga después, lo recogerá
-    document.addEventListener('aura:eq-ready', ()=> {
-      if (window.bindEqualizerTo && window.__AURA_EQ_WAIT__) {
-        window.bindEqualizerTo(window.__AURA_EQ_WAIT__);
-        window.__AURA_EQ_WAIT__ = null;
-      }
-    }, { once:true });
-  }
-  /* === /Hook para el Ecualizador === */
-
   const playBtn  = el.querySelector('.play-btn');
   const prevBtn  = el.querySelector('.prev');
   const nextBtn  = el.querySelector('.next');
@@ -154,16 +140,16 @@
   playBtn.addEventListener('click', () => {
     if (audio.paused){
       audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; }).catch(()=>{});
-    }else{
+    } else {
       audio.pause(); playBtn.innerHTML='<i class="fas fa-play"></i>';
     }
   });
 
-  // Integración con la cola (atrás/adelante/siguiente)
   prevBtn.addEventListener('click', ()=> {
     if (window.AuraQueue?.back) window.AuraQueue.back();
     else audio.currentTime = 0;
   });
+
   nextBtn.addEventListener('click', ()=> {
     if (window.AuraQueue?.forwardOrNext) window.AuraQueue.forwardOrNext();
   });
@@ -202,11 +188,13 @@
       time: audio.currentTime, playing: !audio.paused
     }));
   }
+
   function initVolume(){
     const v = localStorage.getItem('player_volume');
     audio.volume = (v!=null) ? Number(v) : 0.7;
     paintVolume();
   }
+
   function loadState(){
     const raw = localStorage.getItem(KEY);
     if (!raw){ initVolume(); return; }
@@ -224,8 +212,8 @@
       uiSync();
       if (s.playing){
         audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; })
-          .catch(()=>{
-            const resume=()=>{
+          .catch(()=> {
+            const resume=()=> {
               audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; });
               document.removeEventListener('click',resume,true);
             };
@@ -237,44 +225,75 @@
     initVolume();
     if (currentSongId) checkLikeStatus(currentSongId);
   }
+
   setInterval(saveState, 1000);
   window.addEventListener('beforeunload', saveState);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveState(); });
   document.addEventListener('turbo:before-cache', ()=>{ saveState(); });
   loadState();
 
-  likeBtn.addEventListener('click', ()=>{
+  likeBtn.addEventListener('click', () => {
     if (!currentSongId) return;
+
     fetch(`/canciones/${currentSongId}/like`, {
-      method:'POST',
-      headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' }
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': CSRF, 
+        'Accept': 'application/json'
+      }
     })
-    .then(r=>r.json())
-    .then(d=>{
-      likeBtn.innerHTML = d.liked
+    .then(response => response.json())
+    .then(data => {
+      likeBtn.innerHTML = data.liked
         ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>'
         : '<i class="fa-regular fa-heart"></i>';
-    }).catch(()=>{});
+    })
+    .catch(() => {
+      console.error('Error al alternar el like');
+    });
   });
+
+  // Verifica el estado del like al cargar la página
+  fetch(`/canciones/${currentSongId}/liked`, {
+      headers: {
+          'Accept': 'application/json'
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      // Actualiza el botón con el estado actual del like
+      likeBtn.innerHTML = data.liked
+          ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>' 
+          : '<i class="fa-regular fa-heart"></i>';
+  })
+  .catch(() => {
+      console.error('Error al verificar el estado del like');
+  });
+
   function checkLikeStatus(id){
     fetch(`/canciones/${id}/liked`, { headers:{ 'Accept':'application/json' } })
-      .then(r=>r.json())
-      .then(d=>{
-        likeBtn.innerHTML = d.liked
-          ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>'
-          : '<i class="fa-regular fa-heart"></i>';
-      }).catch(()=>{});
+      .then(response => response.json())
+      .then(data => {
+        if (data.liked) {
+          likeBtn.innerHTML = '<i class="fa-solid fa-heart" style="color:#aa029c"></i>';
+        } else {
+          likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+        }
+      })
+      .catch(() => {
+        console.error('Error al verificar el estado del like');
+      });
   }
 
-  plBtn.addEventListener('click', ()=>{
+  plBtn.addEventListener('click', ()=> {
     if (!currentSongId) return alert('Selecciona una canción primero 🎵');
     plModal.hidden = false;
     fetch('/api/my-playlists', { headers:{ 'Accept':'application/json' } })
       .then(r=>r.json())
-      .then(list=>{
+      .then(list=> {
         plList.innerHTML='';
         if(!list || !list.length){ plList.innerHTML="<li style='opacity:.85'>No tienes playlists creadas</li>"; return; }
-        list.forEach(pl=>{
+        list.forEach(pl=> {
           const li=document.createElement('li');
           li.innerHTML = `<span>${pl.nombre}</span><i class="fa-solid fa-plus"></i>`;
           li.onclick = ()=> addToPlaylist(pl.id);
@@ -282,6 +301,7 @@
         });
       }).catch(()=>{ plList.innerHTML="<li>Error cargando playlists</li>"; });
   });
+
   plClose.addEventListener('click', ()=> plModal.hidden = true);
   document.addEventListener('click', (e) => {
     if (plModal.hidden) return;
@@ -290,7 +310,7 @@
   });
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') plModal.hidden = true; });
 
-  plCreate.addEventListener('click', ()=>{
+  plCreate.addEventListener('click', ()=> {
     const name=(plInput.value||'').trim();
     if(!name) return alert('Escribe un nombre para la playlist');
     fetch('/api/playlists/create', {
@@ -308,6 +328,7 @@
       if(currentSongId) addToPlaylist(d.id);
     }).catch(()=> alert('No se pudo crear la playlist'));
   });
+
   function addToPlaylist(playlistId){
     fetch(`/playlists/${playlistId}/add-song/${currentSongId}`, {
       method:'POST',
@@ -336,7 +357,7 @@
   function bindSongButtons(root=document){
     root.querySelectorAll('.cancion-item').forEach(btn=>{
       if(btn.dataset.bound) return;
-      btn.addEventListener('click', ()=>{
+      btn.addEventListener('click', ()=> {
         const s = {
           id: btn.dataset.id,
           src: btn.dataset.src,
@@ -350,6 +371,7 @@
       btn.dataset.bound='true';
     });
   }
+
   bindSongButtons();
   document.addEventListener('turbo:load', ()=> bindSongButtons(document));
 
@@ -399,7 +421,7 @@
   handle.addEventListener('touchstart', onDown, { passive:false });
 
   // teclado accesible
-  handle.addEventListener('keydown', (e)=>{
+  handle.addEventListener('keydown', (e)=> {
     const cur = parseInt(getComputedStyle(ROOT).getPropertyValue('--player-width'));
     if (e.key === 'ArrowLeft'){
       const w = Math.max(MIN_WIDTH, cur - STEP);
@@ -414,416 +436,94 @@
     }
   });
 })();
-</script>
-<!-- === /Script del reproductor === -->
 
 
-<!-- === Script de Cola (persistente + sync + auto-shuffle en perfiles) === -->
-<script>
-(function(){
-  const root   = document.getElementById('rightPlayer');
-  if (!root) return;
 
-  const listEl  = root.querySelector('#queueList');
-  const emptyEl = root.querySelector('#queueEmpty');
-  const countEl = root.querySelector('#queueCount');
-  const DEF_COVER = "{{ asset('img/default-cancion.png') }}";
 
-  // Identidad de usuario para aislar el storage por cuenta
-  const USER_ID = @json(Auth::id());
-  const SUFFIX  = (USER_ID ?? 'guest');
 
-  // Claves de almacenamiento
-  const STORAGE = {
-    QUEUE   : `aura_queue_v1_${SUFFIX}`,
-    SOURCE  : `aura_queue_source_v1_${SUFFIX}`, // {type:'profile'|'playlist'|..., id, seed}
-    SETTINGS: `aura_settings_v1_${SUFFIX}`      // { shuffle:boolean }
-  };
 
-  // Canal de sincronización entre pestañas
-  const TAB_ID = crypto.randomUUID();
-  let bc = null;
-  try { bc = new BroadcastChannel('aura-player'); } catch (_){}
-
-  // Estado en memoria
-  let queue = [];
-  let nowPlaying = null;
-  window._auraBackStack    = window._auraBackStack || [];
-  window._auraForwardStack = window._auraForwardStack || [];
-  let sourceInfo = null; // quién armó la cola
-  let settings = readJSON(STORAGE.SETTINGS, { shuffle:false });
-
-  // Utilidades
-  function readJSON(key, fallback){
-    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-    catch { return fallback; }
-  }
-  function writeJSON(key, value){
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-  function fmtTime(s){
-    if (!Number.isFinite(s)) return '--:--';
-    return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-  }
-  function seeded(seed){
-    let x = (seed>>>0) || (Math.random()*0xffffffff)>>>0;
-    return ()=>{ x ^= x<<13; x ^= x>>>17; x ^= x<<5; return (x>>>0)/0xffffffff; };
-  }
-  function shuffleArray(arr, seed=null){
-    const rnd = seed==null ? Math.random : seeded(seed);
-    const a = arr.slice();
-    for (let i=a.length-1;i>0;i--){
-      const j = Math.floor(rnd()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
-    }
-    return a;
-  }
-  function normalizeSong(s){
-    return {
-      id:       s.id ?? s.ID ?? s.song_id ?? crypto.randomUUID(),
-      title:    s.title ?? s.titulo ?? s.name ?? 'Sin título',
-      artist:   s.artist ?? s.artista ?? 'Artista',
-      cover:    s.cover ?? s.portada ?? DEF_COVER,
-      src:      s.src ?? s.audio ?? s.audio_url ?? s.url ?? '',
-      duration: s.duration ?? s.duracion ?? '--:--'
-    };
-  }
-  function dedupeById(list){
-    const out=[], seen=new Set();
-    for (const s of list){
-      if (!s?.id) continue;
-      if (!seen.has(s.id)){ seen.add(s.id); out.push(s); }
-    }
-    return out;
-  }
-
-  // Persistencia + Sync
-  function persistAll({silent=false}={}){
-    writeJSON(STORAGE.QUEUE, queue);
-    writeJSON(STORAGE.SOURCE, sourceInfo);
-    writeJSON(STORAGE.SETTINGS, settings);
-    updateCount();
-    if (!silent) broadcast({ type:'QUEUE_UPDATED', from:TAB_ID });
-  }
-  function restoreAll(){
-    queue      = (readJSON(STORAGE.QUEUE, [])||[]).map(normalizeSong);
-    sourceInfo = readJSON(STORAGE.SOURCE, null);
-    settings   = { shuffle:false, ...readJSON(STORAGE.SETTINGS, {}) };
-    renderQueue();
-  }
-  function onStorage(e){
-    if (!e) return;
-    if ([STORAGE.QUEUE, STORAGE.SOURCE, STORAGE.SETTINGS].includes(e.key)){
-      restoreAll();
-    }
-  }
-  window.addEventListener('storage', onStorage);
-
-  function broadcast(payload){ if (bc) try{ bc.postMessage(payload); } catch {} }
-  if (bc){
-    bc.onmessage = (ev)=>{
-      const msg = ev.data;
-      if (!msg || msg.from === TAB_ID) return;
-      if (msg.type === 'REQUEST_QUEUE'){
-        // Otra pestaña recién abrió y no tiene cola
-        broadcast({ type:'PUSH_QUEUE', from:TAB_ID, queue, sourceInfo, settings });
-      }
-      if (msg.type === 'PUSH_QUEUE'){
-        // Adoptamos solo si aquí no hay cola
-        if (!queue.length){
-          queue      = (msg.queue||[]).map(normalizeSong);
-          sourceInfo = msg.sourceInfo || null;
-          settings   = { shuffle:false, ...(msg.settings||{}) };
-          persistAll({silent:true});
-          renderQueue();
-        }
-      }
-      if (msg.type === 'QUEUE_UPDATED'){
-        restoreAll();
-      }
-    };
-    // Si esta pestaña arranca “vacía”, pide a otra
-    if (!readJSON(STORAGE.QUEUE, []).length){
-      broadcast({ type:'REQUEST_QUEUE', from:TAB_ID });
-    }
-  }
-
-  // Auto-shuffle en páginas de perfil
-  function maybeAutoShuffleFromProfile(){
-    const body = document.body;
-    if (!body || body.dataset.page !== 'profile') return;
-    const raw = body.dataset.profileSongs;
-    if (!raw) return;
-
-    let songs = [];
-    try { songs = JSON.parse(raw); } catch { songs=[]; }
-    if (!Array.isArray(songs) || !songs.length) return;
-
-    const profileId = body.dataset.profileId || 'profile';
-
-    const isDifferentSource =
-      !sourceInfo ||
-      sourceInfo.type !== 'profile' ||
-      String(sourceInfo.id) !== String(profileId);
-
-    if (isDifferentSource || !queue.length){
-      setQueue(songs, { source:{type:'profile', id:profileId}, shuffle:true, persist:true });
-    }
-  }
-
-  // API de Cola
-  function setQueue(songs, {source=null, shuffle=false, persist=true}={}){
-    const base  = dedupeById((songs||[]).map(normalizeSong));
-    let final   = base;
-    let seed    = null;
-    if (shuffle){
-      seed  = Date.now();
-      final = shuffleArray(base, seed);
-    }
-    queue      = final;
-    sourceInfo = source ? { ...source, seed } : null;
-    renderQueue();
-    if (persist) persistAll();
-  }
-
-  function addToEnd(songs, {dedupe=true}={}){
-    const list = (songs||[]).map(normalizeSong);
-    const seen = new Set(queue.map(s=>s.id));
-    for (const s of list){
-      if (!dedupe || !seen.has(s.id)){
-        seen.add(s.id);
-        queue.push(s);
-      }
-    }
-    renderQueue(); persistAll();
-  }
-
-  function playFromQueue(index){
-    if (index<0 || index>=queue.length) return;
-    const s = queue[index];
-    if (nowPlaying) window._auraBackStack.push(nowPlaying);
-    window._auraForwardStack = [];
-    window.AuraPlayer?.play(s);
-    nowPlaying = s;
-
-    // elimina el elemento reproducido de la cola
-    queue.splice(index,1);
-    renderQueue(); persistAll();
-  }
-
-  function back(){
-    const prev = window._auraBackStack.pop();
-    if (!prev) return;
-    if (nowPlaying) window._auraForwardStack.push(nowPlaying);
-    window.AuraPlayer?.play(prev);
-    nowPlaying = prev;
-  }
-
-  function forwardOrNext(){
-    if (window._auraForwardStack.length){
-      const nx = window._auraForwardStack.pop();
-      if (nowPlaying) window._auraBackStack.push(nowPlaying);
-      window.AuraPlayer?.play(nx);
-      nowPlaying = nx;
-    } else {
-      next();
-    }
-  }
-
-  function next(){
-    if (!queue.length) return;
-    playFromQueue(0);
-  }
-
-  function onEnded(){
-    window._auraForwardStack = [];
-    next();
-  }
-
-  function noteNowPlaying(s){ nowPlaying = s || nowPlaying; }
-
-  function externalPlay(s){
-    const song = normalizeSong(s||{});
-    // Si existe en cola, elimínala (evita duplicado)
-    const idx = queue.findIndex(x => (song.id && x.id===song.id) || (!!song.src && x.src===song.src));
-    if (nowPlaying) window._auraBackStack.push(nowPlaying);
-    window._auraForwardStack = [];
-    window.AuraPlayer?.play(song);
-    nowPlaying = song;
-    if (idx>=0){ queue.splice(idx,1); renderQueue(); persistAll(); }
-  }
-
-  // ====== Render + Drag & Drop ======
-  let listListenersBound = false;
-
-  function updateCount(){
-    if (!countEl) return;
-    const n = queue.length;
-    countEl.textContent = n ? n : '';
-    emptyEl.hidden = n>0;
-  }
-
-  function ensureDurations(){
-    queue.forEach((s,i)=>{
-      if (s.duration && s.duration!=='--:--') return;
-      if (!s.src) return;
-      const a = new Audio();
-      a.preload = 'metadata';
-      a.src = s.src;
-      a.addEventListener('loadedmetadata', ()=>{
-        s.duration = fmtTime(a.duration);
-        const li = listEl.children[i];
-        if (li){ const d = li.querySelector('.dur'); if (d) d.textContent = s.duration; }
-        persistAll({silent:true});
-      }, { once:true });
-    });
-  }
-
-  const dropIndicator = document.createElement('li');
-  dropIndicator.className = 'drop-indicator';
-
-  function renderQueue(){
-    listEl.innerHTML = '';
-    queue.forEach((s, i)=>{
-      const li = document.createElement('li');
-      li.className = 'queue-item';
-      li.setAttribute('draggable','true');
-      li.dataset.index = i;
-
-      li.innerHTML = `
-        <span class="num">${i+1}</span>
-        <button class="drag-handle" title="Arrastrar" aria-label="Arrastrar"><i class="fa-solid fa-grip-vertical"></i></button>
-        <img src="${s.cover || DEF_COVER}" alt="cover">
-        <div class="info">
-          <b title="${s.title}">${s.title}</b>
-          <small title="${s.artist}">${s.artist}</small>
-        </div>
-        <span class="dur">${s.duration || '--:--'}</span>
-        <button class="qi-play" title="Reproducir"><i class="fa-solid fa-play"></i></button>
-      `;
-
-      const playThis = ()=> playFromQueue(i);
-      li.addEventListener('click', playThis);
-      li.querySelector('.qi-play').addEventListener('click', (e)=>{ e.stopPropagation(); playThis(); });
-
-      li.addEventListener('dragstart', (e)=>{
-        e.dataTransfer.setData('text/plain', String(i));
-        li.classList.add('dragging');
-      });
-      li.addEventListener('dragend', ()=>{
-        li.classList.remove('dragging');
-        hideDropIndicator();
-      });
-
-      listEl.appendChild(li);
-    });
-
-    if (!listListenersBound){
-      listEl.addEventListener('dragover', onDragOver);
-      listEl.addEventListener('drop', onDrop);
-      listListenersBound = true;
-    }
-    updateCount();
-    ensureDurations();
-  }
-
-  function indexFromY(y){
-    const items = [...listEl.querySelectorAll('.queue-item:not(.dragging)')];
-    let closest = { offset: Number.NEGATIVE_INFINITY, index: items.length };
-    items.forEach((child, idx)=>{
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height/2;
-      if (offset < 0 && offset > closest.offset){
-        closest = { offset, index: idx };
-      }
-    });
-    return closest.index;
-  }
-  function showDropIndicator(atIndex){
-    const children = [...listEl.querySelectorAll('.queue-item:not(.dragging)')];
-    if (atIndex >= children.length) {
-      listEl.appendChild(dropIndicator);
-    } else {
-      listEl.insertBefore(dropIndicator, children[atIndex]);
-    }
-    requestAnimationFrame(()=> dropIndicator.classList.add('show'));
-  }
-  function hideDropIndicator(){
-    dropIndicator.classList.remove('show');
-    if (dropIndicator.parentNode){
-      setTimeout(()=> dropIndicator.parentNode && dropIndicator.parentNode.removeChild(dropIndicator), 160);
-    }
-  }
-  function onDragOver(e){ e.preventDefault(); const idx = indexFromY(e.clientY); showDropIndicator(idx); }
-  function onDrop(e){
+document.querySelectorAll('.menu-item[data-action="queue"]').forEach(button => {
+  button.addEventListener('click', (e) => {
     e.preventDefault();
-    const from = Number(e.dataTransfer.getData('text/plain'));
-    const to   = [...listEl.querySelectorAll('.queue-item:not(.dragging), .drop-indicator')].indexOf(dropIndicator);
-    hideDropIndicator();
-    if (Number.isNaN(from) || to<0) return;
-    const item = queue.splice(from,1)[0];
-    queue.splice(to,0,item);
-    renderQueue(); persistAll();
+
+    const songId = button.closest('.song-row').dataset.songId;  // Obtén el ID de la canción
+    const songTitle = button.closest('.song-row').querySelector('.song-title').innerText;
+    const songArtist = button.closest('.song-row').querySelector('.artist-name').innerText;
+    const songCover = button.closest('.song-row').querySelector('.song-thumb img').src;
+    const songDuration = button.closest('.song-row').querySelector('.song-duration').innerText;
+    const songUrl = button.closest('.song-row').dataset.src;  // URL del audio
+
+    // Aquí añadimos la canción a la cola
+    addSongToQueue({
+      id: songId,
+      title: songTitle,
+      artist: songArtist,
+      cover: songCover,
+      duration: songDuration,
+      url: songUrl
+    });
+
+    alert('¡Canción añadida a la cola!');
+  });
+});
+
+// Función para añadir canción a la cola
+function addSongToQueue(song) {
+  const queue = JSON.parse(localStorage.getItem('aura_queue')) || [];
+
+  // Evitar duplicados
+  if (!queue.some(existingSong => existingSong.id === song.id)) {
+    queue.push(song);
+    localStorage.setItem('aura_queue', JSON.stringify(queue));
+    renderQueue();  // Renderizar la cola después de añadir la canción
   }
+}
 
-  // ====== Inicialización ======
-  function collectSongsFromDOM(){
-    const btns = Array.from(document.querySelectorAll('.cancion-item'));
-    return btns.map(btn => ({
-      id     : btn.dataset.id || null,
-      src    : btn.dataset.src || '',
-      title  : btn.dataset.title || 'Sin título',
-      artist : btn.dataset.artist || 'Artista',
-      cover  : btn.dataset.cover || DEF_COVER,
-      duration: btn.dataset.duration || '--:--'
-    }));
-  }
+// Función para renderizar la cola
+function renderQueue() {
+  const queueList = document.getElementById('queueList');
+  queueList.innerHTML = '';
 
-  function bootstrap(){
-    // 1) Restaura lo que ya exista
-    restoreAll();
+  const queue = JSON.parse(localStorage.getItem('aura_queue')) || [];
 
-    // 2) Si no había cola, intenta inicial con lo que hay en la página
-    if (!queue.length){
-      const fromDom = collectSongsFromDOM();
-      if (fromDom.length){
-        setQueue(fromDom, { source:{type:'page', id:location.pathname}, shuffle:false, persist:true });
-      }
-    }
+  queue.forEach(song => {
+    const li = document.createElement('li');
+    li.classList.add('queue-item');
+    li.innerHTML = `
+      <img src="${song.cover}" alt="Cover" class="queue-item-cover">
+      <div class="queue-item-info">
+        <b>${song.title}</b>
+        <span>${song.artist}</span>
+        <span>${song.duration}</span>
+      </div>
+      <button class="remove-from-queue" data-id="${song.id}">Eliminar</button>
+    `;
+    queueList.appendChild(li);
 
-    // 3) Si es un perfil, auto-shuffle si cambia el perfil o no hay cola
-    maybeAutoShuffleFromProfile();
+    // Añadir funcionalidad para eliminar de la cola
+    li.querySelector('.remove-from-queue').addEventListener('click', () => {
+      removeSongFromQueue(song.id);
+    });
+  });
+}
 
-    // 4) Expone API global (usada por tu reproductor)
-    window.AuraQueue = {
-      render: renderQueue,
-      syncFromDocument: ()=>{}, // ya no necesario (persistimos)
-      externalPlay,
-      back,
-      forwardOrNext,
-      next,
-      onEnded,
-      noteNowPlaying,
-      addToEnd,
-      setQueue, // por si quieres encolar manualmente
-      toggleShuffle(force=null){
-        const want = force==null ? !settings.shuffle : !!force;
-        settings.shuffle = want;
-        persistAll();
-      },
-      settings(){ return { ...settings }; },
-      source(){ return sourceInfo; },
-      queue(){ return queue.slice(); }
-    };
-  }
+// Función para eliminar canción de la cola
+function removeSongFromQueue(songId) {
+  let queue = JSON.parse(localStorage.getItem('aura_queue')) || [];
+  queue = queue.filter(song => song.id !== songId);
+  localStorage.setItem('aura_queue', JSON.stringify(queue));
+  renderQueue();
+}
 
-  // Listo
-  bootstrap();
+// Renderizar la cola cuando se carga la página
+window.addEventListener('load', renderQueue);
 
-  // También re-intenta al cargar con Turbo
-  document.addEventListener('turbo:load', bootstrap);
-})();
+
 </script>
+
+
+
+
 <!-- === /Script de Cola === -->
 
 <style>
@@ -989,4 +689,140 @@
   #rightPlayer.player-card{ display:none }
   .main-content{ margin-right:var(--player-gap) }
 }
+
+
+
+/* Estilos para la lista de reproducción */
+#rightPlayer .play-list {
+  flex: 1;
+  background: #1c1e2b; /* Fondo oscuro para la cola */
+  padding: 0;
+  overflow-y: auto;
+  position: relative;
+  border-top: 2px solid rgba(255, 255, 255, 0.08); /* Línea de separación */
+}
+
+/* Estilo para cada canción que se agrega a la cola */
+#rightPlayer #queueList .queue-item {
+  display: grid;
+  grid-template-columns: 48px 1fr 80px 48px; /* Imagen, info, botones */
+  gap: 12px;
+  align-items: center;
+  background: #191a2a; /* Fondo oscuro */
+  border-radius: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08); /* Línea de separación */
+  cursor: grabbing; /* Cursor cuando se arrastra */
+  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; /* Transición fluida */
+  opacity: 0; /* Inicia con opacidad 0 */
+  animation: fadeIn 0.5s forwards; /* Animación al agregar */
+}
+
+#rightPlayer #queueList .queue-item:hover {
+  background: #23243a;
+  transform: translateY(-5px); /* Levanta un poco la canción */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* Efecto de sombra */
+}
+
+/* Efecto de animación al agregar la canción */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#rightPlayer #queueList .queue-item img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+#rightPlayer #queueList .queue-item img:hover {
+  transform: scale(1.1); /* Efecto de aumento en la imagen */
+}
+
+#rightPlayer #queueList .queue-item .info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#rightPlayer #queueList .queue-item .info b {
+  font-size: 14px;
+  color: #f8f9fb; /* Texto blanco */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#rightPlayer #queueList .queue-item .info small {
+  font-size: 12px;
+  color: #a8a9b8; /* Texto gris */
+  opacity: 0.8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#rightPlayer #queueList .queue-item .qi-play {
+  background: #2b2d46;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#rightPlayer #queueList .queue-item .qi-play:hover {
+  background: #3a3d62;
+}
+
+#rightPlayer #queueList .queue-item .remove-from-queue {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+#rightPlayer #queueList .queue-item .remove-from-queue:hover {
+  color: #ff3a3a;
+}
+
+#rightPlayer #queueList .drop-indicator {
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border-radius: 0;
+  border: 2px dashed #6d64c4;
+  background: rgba(109, 100, 196, .10);
+  opacity: 0;
+  transition: height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+}
+
+#rightPlayer #queueList .drop-indicator.show {
+  height: 58px;
+  margin: 8px 0;
+  opacity: 1;
+}
+
+/* Estilos para el mensaje vacío cuando no hay canciones en la cola */
+#rightPlayer .queue-empty {
+  opacity: 0.7;
+  font-size: 13px;
+  padding: 14px;
+  border-top: 1px dashed #2b2d46;
+  text-align: center;
+}
+
+
 </style>
