@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\LyricsController;
 
-
 // ===== Página principal =====
 Route::get('/', fn () => view('welcome'))->name('welcome');
 
@@ -54,7 +53,7 @@ Route::middleware(['web','auth'])->group(function () {
     Route::post('/cuenta/password', [PasswordController::class, 'update'])
         ->name('perfil.changePassword');
 
-            Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])
+    Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])
         ->name('perfil.language');
 
     /*
@@ -112,6 +111,7 @@ Route::post('/cuenta/password', [PasswordController::class, 'update'])
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
+    
 // Cambiar tipo de cuenta (usuario ↔ artista)
 Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
     ->name('perfil.toggleRole');
@@ -190,7 +190,6 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
     Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
 
-
     Route::post('/support/send', [SupportController::class, 'send'])->name('support.send');
     // Perfil
     Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
@@ -241,16 +240,18 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
     // ===== Recursos de Playlist (RESTful) =====
-Route::resource('playlists', PlaylistController::class);
+    Route::resource('playlists', PlaylistController::class);
 
-Route::get('/locale-test', function () {
-    return [
-        'session' => session('locale'),
-        'user'    => auth()->check() ? auth()->user()->idioma : null,
-        'app'     => app()->getLocale(),
-    ];
+    Route::get('/locale-test', function () {
+        return [
+            'session' => session('locale'),
+            'user'    => auth()->check() ? auth()->user()->idioma : null,
+            'app'     => app()->getLocale(),
+        ];
     });
+
 });
+Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
 
 
 // ===== Google Drive OAuth / Upload =====
@@ -268,6 +269,7 @@ require __DIR__ . '/auth.php';
 Route::get('/test-helper', function () {
     return drive_direct_url('https://drive.google.com/file/d/1OdB2xNkFQsg9S6yG-PaLM8W79_WuK1js/view');
 });
+
 Route::post('/languages/{lang}', function (string $lang) {
     if (!in_array($lang, ['es', 'en'])) {
         $lang = 'en';
@@ -285,11 +287,12 @@ Route::post('/languages/{lang}', function (string $lang) {
 
     return back()->with('status', __('account.language_changed'));
 })->name('languages');
+
 // ===== Ruta para el traductor =====
 Route::post('/traducir', [TraductorController::class, 'traducir'])->name('traducir');
 
 Route::get('/locale-test', function () {
- if (Auth::check() && Auth::user()->idioma) {
+    if (Auth::check() && Auth::user()->idioma) {
         app()->setLocale(Auth::user()->idioma);
     }
 
@@ -306,4 +309,3 @@ Route::get('/auth-check', function () {
         'user'      => auth()->user(),
     ];
 });
-
