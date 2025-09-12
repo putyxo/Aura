@@ -103,7 +103,7 @@ class User extends Authenticatable
             : asset('img/default-cover.png');
     }
 
-public function likes()
+public function likes1()
 {
     return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
                 ->withTimestamps();
