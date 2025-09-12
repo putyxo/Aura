@@ -92,11 +92,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
-    Route::get('/admin', fn() => view('admin'))->name('admin');
     Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
     Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
 
+    // ===== Admin =====
+    Route::get('/admin', fn() => view('/admin/admin'))->name('admin');
+    Route::get('/albumadmin', fn() => view('/admin/albumadmin'))->name('albumadmin');
+    Route::get('/artistasadmin', fn() => view('/admin/artistasadmin'))->name('artistasadmin');
+    Route::get('/usuarioadmin', fn() => view('/admin/usuarioadmin'))->name('usuarioadmin');
     /*
     |--------------------------------------------------------------------------
     | Álbumes
