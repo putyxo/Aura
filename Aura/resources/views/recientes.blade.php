@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>AURA — Recientes</title>
+  <title>AURA — {{ __('recent.title') }}</title>
 
   <!-- Fuentes + Iconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,13 +41,13 @@
                 <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
               </div>
               <div>
-                <h1 class="axrc-hero__title">Tus Canciones Recientes</h1>
-                <p class="axrc-hero__sub">Revisa las canciones que has escuchado recientemente.</p>
+                <h1 class="axrc-hero__title">{{ __('recent.title') }}</h1>
+                <p class="axrc-hero__sub">{{ __('recent.subtitle') }}</p>
               </div>
             </div>
             <div class="axrc-hero__actions">
               <button class="axrc-btn axrc-btn-primary" id="axrcClearHistory">
-                <i class="fa-solid fa-trash"></i> <span>Limpiar Historial</span>
+                <i class="fa-solid fa-trash"></i> <span>{{ __('recent.clear_history') }}</span>
               </button>
             </div>
           </div>
@@ -56,22 +56,22 @@
             <div class="axrc-toolbar__left">
               <div class="axrc-search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <input id="axrcSearch" type="search" placeholder="Buscar canción..." aria-label="Buscar canción" autocomplete="off">
+                <input id="axrcSearch" type="search" placeholder="{{ __('recent.search_placeholder') }}" aria-label="{{ __('recent.search_placeholder') }}" autocomplete="off">
                 <button class="axrc-clear" id="axrcClearSearch" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div class="axrc-filters">
-                <button class="axrc-chip is-active" data-sort="recientes">Recientes</button>
-                <button class="axrc-chip" data-sort="hoy">Hoy</button>
-                <button class="axrc-chip" data-sort="semana">Esta semana</button>
-                <button class="axrc-chip" data-sort="mes">Este mes</button>
+                <button class="axrc-chip is-active" data-sort="recientes">{{ __('recent.filter_recent') }}</button>
+                <button class="axrc-chip" data-sort="hoy">{{ __('recent.filter_today') }}</button>
+                <button class="axrc-chip" data-sort="semana">{{ __('recent.filter_week') }}</button>
+                <button class="axrc-chip" data-sort="mes">{{ __('recent.filter_month') }}</button>
               </div>
             </div>
             <div class="axrc-toolbar__right">
               <button class="axrc-btn axrc-btn-ghost" id="axrcSelectMode" aria-pressed="false">
-                <i class="fa-regular fa-square"></i><span class="axrc-btn-text">Seleccionar</span>
+                <i class="fa-regular fa-square"></i><span class="axrc-btn-text">{{ __('recent.select_mode') }}</span>
               </button>
               <button class="axrc-btn axrc-btn-ghost axrc-is-danger" id="axrcDeleteSelected" disabled>
-                <i class="fa-regular fa-trash-can"></i><span class="axrc-btn-text">Eliminar</span>
+                <i class="fa-regular fa-trash-can"></i><span class="axrc-btn-text">{{ __('recent.delete_selected') }}</span>
               </button>
             </div>
           </div>
@@ -90,11 +90,11 @@
         <!-- GRID -->
         <section class="axrc-grid" id="axrcGrid">
           <!-- Empty state -->
-          <div class="axrc-tile axrc-empty-state" id="axrcEmptyState" style="grid-column:1/-1;">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <h3>Aún no se ha reproducido ninguna canción</h3>
-            <p>¡Empieza a escuchar música para ver tu historial! 🎵</p>
-          </div>
+            <div class="axrc-tile axrc-empty-state" id="axrcEmptyState" style="grid-column:1/-1;">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <h3>{{ __('recent.empty_title') }}</h3>
+              <p>{{ __('recent.empty_text') }}</p>
+            </div>
         </section>
 
       </div>
@@ -106,18 +106,18 @@
         <form id="axrcForm" action="#" method="POST" novalidate>
           @csrf
           <div class="axrc-modal-header">
-            <h3 id="axrcModalTitle" class="axrc-modal-title">Limpiar Historial</h3>
+          <h3 id="axrcModalTitle" class="axrc-modal-title">{{ __('recent.clear_history') }}</h3>
             <button class="axrc-modal-close" id="axrcCloseModal" type="button" aria-label="Cerrar">×</button>
           </div>
 
           <div class="axrc-modal-body">
-            <p>¿Estás seguro de que quieres limpiar todo el historial de canciones reproducidas? Esta acción no se puede deshacer.</p>
+            <p>{{ __('recent.confirm_clear_text') }}</p>
           </div>
 
           <div class="axrc-actions">
-            <button type="button" class="axrc-btn axrc-btn-secondary" id="axrcCancel">Cancelar</button>
+            <button type="button" class="axrc-btn axrc-btn-secondary" id="axrcCancel">{{ __('Cancel') }}</button>
             <button type="button" class="axrc-btn axrc-btn-danger" id="axrcConfirmClear">
-              <i class="fa-regular fa-trash-can"></i> Limpiar
+              <i class="fa-regular fa-trash-can"></i> {{ __('recent.confirm_clear_button') }}
             </button>
           </div>
         </form>
