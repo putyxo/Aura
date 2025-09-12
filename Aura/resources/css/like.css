@@ -1,9 +1,7 @@
 /* =========================
    AURA — ME GUSTA (LK)
-   Namespaced con lk- para evitar choques
    ========================= */
 :root{
-  /* Paleta */
   --lk-bg:#0b0b10;
   --lk-panel:#11111a;
   --lk-elev:#171725;
@@ -16,13 +14,16 @@
   --lk-vio-400:#a78bfa;
   --lk-vio-500:#8b5cf6;
   --lk-vio-600:#7c3aed;
-  --lk-vio-700:#6d28d9;
 
   --lk-ok:#22c55e;
   --lk-err:#ef4444;
 
   --lk-shadow-lg:0 30px 80px rgba(0,0,0,.55);
   --lk-radius:22px;
+
+  /* Alturas y paddings para uniformidad */
+  --lk-meta-h: 64px;
+  --lk-tile-pad: 12px;
 }
 
 *{box-sizing:border-box}
@@ -31,22 +32,20 @@ body{margin:0;background:var(--lk-bg);color:var(--lk-fg);font-family:'Inter',sys
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer}
-input,textarea{font:inherit;color:inherit}
 
+/* ===== PAGE ===== */
 .lk-page{position:relative;min-height:100dvh}
 .lk-shell{max-width:1300px;margin:0 auto;padding:18px 18px 90px}
 
-/* =========================
-   HERO
-   ========================= */
+/* ===== HERO ===== */
 .lk-hero{
   position:relative;border-radius:24px;padding:28px clamp(20px, 4vw, 40px);
   background: rgba(12,9,20,.55);backdrop-filter: blur(16px);overflow:hidden;
-  border:1px solid transparent;box-shadow:0 10px 40px rgba(124,58,237,.15);margin-bottom: 18px;
+  border:1px solid transparent;box-shadow:0 10px 40px rgba(124,58,237,.15);margin-bottom:18px;
 }
 .lk-hero::before{
   content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
-  background: linear-gradient(90deg, rgba(167,139,250,.90), rgba(124,58,237,.90), rgba(109,40,217,.90));
+  background: linear-gradient(90deg, rgba(167,139,250,.90), rgba(124,58,237,.90));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
 }
@@ -93,22 +92,24 @@ input,textarea{font:inherit;color:inherit}
 }
 .lk-search .lk-clear:hover{background:#1f1f34}
 
-/* =========================
-   GRID
-   ========================= */
+/* ===== GRID ===== */
 .lk-grid{
   --tile-min: 240px;
   display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--tile-min),1fr));
+  align-items:start;
   gap:14px;margin-top:12px
 }
 .lk-tile{
-  position:relative;display:flex;flex-direction:column;gap:8px;
+  position:relative;display:flex;flex-direction:column;
+  gap:8px;padding:var(--lk-tile-pad);
   background:rgba(0,0,0,.42);
   border:1px solid rgba(167,139,250,.25);
-  border-radius:16px;padding:12px;
+  border-radius:16px;
   box-shadow:0 10px 28px rgba(0,0,0,.28);
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s, background .18s;
   animation:lkFloatIn .35s ease both; overflow:hidden;
+  cursor:pointer;
+  height:100%;
 }
 .lk-tile::before{
   content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
@@ -117,6 +118,12 @@ input,textarea{font:inherit;color:inherit}
   -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
 }
 .lk-tile:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.38);border-color:rgba(167,139,250,.45)}
+.lk-tile:active{transform:translateY(0) scale(.99); box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.lk-tile[data-playing="true"]{
+  background:linear-gradient(180deg, rgba(124,58,237,.10), rgba(0,0,0,.42));
+  border-color:rgba(167,139,250,.70);
+  box-shadow:0 14px 40px rgba(124,58,237,.25);
+}
 .lk-tile__link{position:absolute;inset:0;z-index:1}
 
 /* Cover + acciones */
@@ -127,346 +134,132 @@ input,textarea{font:inherit;color:inherit}
 .lk-cover img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
 .lk-tile:hover .lk-cover img{transform:scale(1.04)}
 .lk-play{
-  position:absolute;right:10px;bottom:10px;z-index:2;width:44px;height:44px;border-radius:50%;
+  position:absolute;right:10px;bottom:10px;z-index:3;width:44px;height:44px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.18);
   background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));color:#fff;
   box-shadow:0 16px 32px rgba(124,58,237,.28);opacity:0;transform:translateY(6px);transition:.25s ease
 }
 .lk-tile:hover .lk-play{opacity:1;transform:none}
+
+/* Corazón */
 .lk-like{
-  position:absolute;left:10px;top:10px;z-index:2;width:38px;height:38px;border-radius:999px;
+  position:absolute;left:10px;top:10px;z-index:3;width:38px;height:38px;border-radius:999px;
   display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);
   background:rgba(255,255,255,.08);color:#ffd9e4;backdrop-filter:blur(6px);transition:.22s
 }
 .lk-like.is-liked{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.55)}
-.lk-like:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(124,58,237,.25)}
+.lk-like.is-danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#ffe1e6;}
+.lk-like:hover{transform:scale(1.05)}
 
-/* Meta */
-.lk-meta{padding:2px 2px 0}
-.lk-title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lk-artist{font-size:.95rem;color:var(--lk-fg-dim)}
+/* ====== Kebab (3 puntitos) + menú ====== */
+.lk-keb{
+  position:absolute;right:10px;top:10px;z-index:4;width:38px;height:38px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.08);color:#e9e1ff;backdrop-filter:blur(6px);
+  transition:transform .2s, background .2s, border-color .2s;
+}
+.lk-keb:hover{background:rgba(255,255,255,.12);transform:scale(1.04)}
+.lk-menu{
+  position:absolute;right:10px;top:54px;z-index:5;min-width:190px;
+  background:linear-gradient(180deg, #19182a, #141326);
+  border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.5);
+  padding:6px; opacity:0; transform:translateY(-6px) scale(.98);
+  pointer-events:none; transition:opacity .16s ease, transform .16s ease;
+}
+.lk-menu.show{opacity:1; transform:none; pointer-events:auto;}
+.lk-menu button{
+  width:100%; text-align:left; padding:10px 10px; border-radius:10px; border:0; background:transparent; color:#f2eaff;
+  display:flex; align-items:center; gap:10px; font-weight:800;
+}
+.lk-menu button:hover{background:rgba(255,255,255,.06)}
+.lk-menu .danger{color:#ffd3d3}
+.lk-menu .sep{height:1px;background:rgba(255,255,255,.10);margin:6px 4px;border-radius:1px}
 
-/* =========================
-   MINI PLAYER
-   ========================= */
-.lk-player{
-  display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;
-  background:linear-gradient(180deg, rgba(24,20,38,.80), rgba(14,12,24,.80));
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow: inset 0 10px 40px rgba(124,58,237,.08);
-  position:relative;z-index:2
+/* ===== Meta (título, duración y artista) ===== */
+.lk-meta{
+  padding:2px 2px 0;
+  min-height:var(--lk-meta-h);
+  display:flex; flex-direction:column; justify-content:space-between;
 }
-.lk-player__controls{display:flex;align-items:center;gap:8px}
-.lk-btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:8px 12px;border-radius:12px;border:1px solid transparent;font-weight:800;
-  transition:.18s ease;background:transparent;color:var(--lk-fg)
+.lk-title-row{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  align-items:center; gap:10px;
 }
-.lk-btn--sm{padding:8px 10px}
-.lk-btn--primary{background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));box-shadow:0 10px 22px rgba(124,58,237,.28)}
-.lk-btn--primary:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(124,58,237,.36)}
-.lk-btn--ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px) saturate(140%)}
-.lk-time{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--lk-fg-dim);font-weight:800}
-.lk-time__sep{opacity:.6}
-
-/* Barra de progreso */
-.lk-player__bar{position:relative}
-.lk-seek{
-  -webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;cursor:pointer;
-  background:linear-gradient(90deg, rgba(124,58,237,.75), rgba(167,139,250,.75));
-  outline:none;border:1px solid rgba(255,255,255,.14)
+.lk-title{
+  font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  line-height:1.2; min-height:1.2em;
 }
-.lk-seek::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
-  background:#fff;box-shadow:0 0 22px rgba(124,58,237,.65), 0 2px 8px rgba(0,0,0,.35);border:2px solid rgba(124,58,237,.55)
+.lk-duration{
+  font-weight:800; opacity:.95; color:#e9d5ff;
+  font-variant-numeric:tabular-nums;
+  min-width:3.6ch; text-align:right;
 }
-.lk-seek::-moz-range-thumb{
-  width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(124,58,237,.55)
+.lk-artist{
+  font-size:.95rem; color:var(--lk-fg-dim);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-/* Empty */
+/* ===== Vacío ===== */
 .lk-empty{
   text-align:center;padding:36px;border-radius:18px;background:rgba(255,255,255,.04);
   border:1px dashed rgba(167,139,250,.35);color:#e9d5ff
 }
 .lk-empty i{font-size:34px;margin-bottom:8px}
 
-/* Toast */
+/* ===== Toast ===== */
 .lk-toast{
   position:sticky;top:14px;z-index:50;margin-bottom:12px;display:inline-flex;align-items:center;gap:8px;
   padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);
 }
 .lk-toast--ok{background:rgba(34,197,94,.15);color:#d7ffea;border-color:rgba(34,197,94,.45)}
 
-/* Animaciones */
+/* ===== Animaciones ===== */
 @keyframes lkFloatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* =========================
-   RESPONSIVE
-   ========================= */
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .lk-grid{--tile-min: 220px}
+}
 @media (max-width:768px){
   .lk-grid{--tile-min: 200px}
-  .lk-time{display:none}
 }
 
-/* =========================================================
-   MEJORAS AL REPRODUCTOR DEL FOOTER (opcional y no invasivo)
-   Se aplican solo cuando estamos en la página lk-page para evitar choques globales.
-   Si tu wrapper del footer tiene otro selector, cambia #footerPlayer por el tuyo.
-   ========================================================= */
-.lk-page #footerPlayer,
-.lk-page .footer-player{
-  background:linear-gradient(180deg, rgba(20,16,34,.85), rgba(11,9,20,.85));
-  backdrop-filter:blur(12px) saturate(140%);
-  border-top:1px solid rgba(167,139,250,.25);
-  box-shadow:0 -18px 60px rgba(0,0,0,.45), inset 0 20px 60px rgba(124,58,237,.06);
-}
-.lk-page #footerPlayer .controls button,
-.lk-page .footer-player .controls button{
-  border-radius:12px;border:1px solid rgba(255,255,255,.16);
-  background:rgba(255,255,255,.06);color:#fff;font-weight:900;
-  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
-}
-.lk-page #footerPlayer .controls button:hover,
-.lk-page .footer-player .controls button:hover{
-  transform:translateY(-1px);
-  background:linear-gradient(135deg,var(--lk-vio-600),var(--lk-vio-500));
-  box-shadow:0 10px 22px rgba(124,58,237,.28);
-  border-color:transparent;
-}
-.lk-page #footerPlayer .progress input[type="range"],
-.lk-page .footer-player .progress input[type="range"]{
-  -webkit-appearance:none;appearance:none;height:8px;border-radius:999px;cursor:pointer;
-  background:linear-gradient(90deg, rgba(124,58,237,.8), rgba(167,139,250,.8));
-  border:1px solid rgba(255,255,255,.14);
-}
- HEAD
+/* ===== MODAL ===== */
+.lk-modal[hidden]{display:none}
+.lk-modal{position:fixed;inset:0;z-index:120}
+.lk-modal.is-open .lk-modal__backdrop{opacity:1}
+.lk-modal.is-open .lk-modal__card{transform:translateY(0);opacity:1}
 
-.favorite-user {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 20px;
+.lk-modal__backdrop{
+  position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);
+  opacity:0;transition:opacity .2s ease;
 }
+.lk-modal__card{
+  position:relative;z-index:1;width:min(520px,92vw);margin:10vh auto 0;
+  background:linear-gradient(180deg, rgba(24,20,38,.95), rgba(14,12,24,.95));
+  border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;
+  box-shadow:var(--lk-shadow-lg);
+  transform:translateY(12px);opacity:.75;transition:all .22s ease;
+}
+.lk-modal__header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.lk-modal__header h3{margin:0;display:flex;align-items:center;gap:8px}
+.lk-modal__x{background:transparent;border:1px solid rgba(255,255,255,.16);border-radius:10px;width:34px;height:34px;color:#fff}
+.lk-modal__x:hover{background:rgba(255,255,255,.06)}
 
-.favorite-actions {
-  display: flex;
-  gap: 16px;
-}
+.lk-modal__body{display:flex;gap:14px;align-items:center}
+.lk-modal__cover{width:84px;height:84px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.12)}
+.lk-modal__info{display:flex;flex-direction:column;gap:6px}
+.lk-modal__text{margin:0 0 4px;color:#e9e1ff}
+.lk-modal__song .lk-modal__title{font-weight:900}
+.lk-modal__song .lk-modal__artist{color:#c7b7ff;font-size:.95rem}
 
-.favorite-actions .btn {
-  background: var(--btn-bg);
-  border: none;
-  border-radius: var(--radius);
-  padding: 12px 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  transition: var(--transition);
+.lk-modal__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.lk-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 14px;border-radius:12px;border:1px solid transparent;font-weight:800;color:#fff
 }
-
-.favorite-actions .btn:hover {
-  background: var(--btn-hover);
-}
-
-/* ================== LISTA DE LIKES ================== */
-.likes-section {
-  max-width: 1250px;
-  width: 90%;
-  margin: 30px auto;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-}
-
-.likes-header {
-  margin-bottom: 16px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.likes-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.like-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.like-title {
-  font-weight: 600;
-}
-
-.like-artist {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-left: 10px;
-}
-
-.like-play {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-/* ================== EMPTY STATE ================== */
-.empty-msg {
-  font-size: 0.95rem;
-  color: var(--muted);
-  text-align: center;
-  padding: 20px;
-}
-
-/* ================== RESPONSIVE ================== */
-@media (max-width: 768px) {
-  .favorite-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .favorite-cover img {
-    width: 200px;
-    height: 200px;
-  }
-
-  .favorite-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-}
-/* ===== FAVORITOS ===== */
-
-.songs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Botón de reproducir en fila de canción */
-.play-song-btn {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 16px;
-  cursor: pointer;
-  margin-left: 40px;
-  margin-right: 10px;
-  transition: color 0.25s ease, transform 0.25s ease;
-}
-
-.play-song-btn:hover {
-  color: #fff;
-  transform: scale(1.1);
-}
-
-/* Fila de canción */
-.song-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  cursor: pointer;
-}
-.song-row:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-/* Lado izquierdo: portada + info */
-.song-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-  flex: 1;
-}
-
-.song-left img {
-  width: 54px;
-  height: 54px;
-  border-radius: 10px;
-  object-fit: cover;
-  box-shadow: 0 2px 6px rgba(0,0,0,.4);
-}
-
-.song-info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.song-info h4 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.song-info p {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: #aaa;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Duración */
-.song-duration {
-  font-size: 13px;
-  color: #b7b7b7;
-  margin-right: 10px;
-  white-space: nowrap;
-}
-
-/* Botón de borrar / unlike */
-.delete-btn {
-  background: none;
-  border: none;
-  color: #e25555;
-  cursor: pointer;
-  font-size: 16px;
-  transition: color .2s ease;
-}
-.delete-btn:hover {
-  color: #ff6b6b;
-}
-
-/* Mensaje vacío */
-.empty-msg {
-  text-align: center;
-  font-size: 14px;
-  color: #aaa;
-  padding: 20px 0;
-}
-.empty-msg i {
-  margin-right: 6px;
-  color: #ffb347;
-
-}  .lk-page #footerPlayer .progress input[type="range"]::-webkit-slider-thumb,
-.lk-page .footer-player .progress input[type="range"]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(124,58,237,.55);
-  box-shadow:0 0 22px rgba(124,58,237,.65), 0 2px 8px rgba(0,0,0,.35)
-}
+.lk-btn--ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18)}
+.lk-btn--ghost:hover{background:rgba(255,255,255,.10)}
+.lk-btn--danger{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 10px 22px rgba(239,68,68,.28)}
+.lk-btn--danger:hover{filter:brightness(1.06)}

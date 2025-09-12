@@ -8,13 +8,16 @@
   --aurp-accent:#7c3aed;
   --aurp-accent-2:#6d28d9;
   --aurp-shadow-lg:0 24px 60px rgba(0,0,0,.45);
-  --aurp-song-row-h:84px; /* altura fija para canciones */
+
+  /* NUEVO: alturas sincronizadas de canciones */
+  --aurp-songs-box-h:auto;
+  --aurp-song-row-h:84px;
 
   /* seteadas dinámicamente por JS */
-  --aurp-sb-w: 0px; /* sidebar width */
-  --aurp-rp-w: 0px; /* right player width */
+  --aurp-sb-w: 0px;
+  --aurp-rp-w: 0px;
 
-  /* banner scrim (ajustable via modal avanzado) */
+  /* banner scrim */
   --banner-tint-rgb: 29,185,84;
   --scrim-a:.56;
   --scrim-b:.78;
@@ -36,12 +39,10 @@ a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 button{font:inherit}
 body.modal-open{overflow:hidden}
-
-/* Utils */
 .hidden{display:none!important}
 .mt-8{margin-top:8px}
 
-/* ===== BOTONES (scoped) ===== */
+/* ===== BOTONES ===== */
 #page-profile .pf-btn{
   display:inline-flex;align-items:center;gap:10px;
   padding:10px 16px;border-radius:14px;border:1px solid transparent;
@@ -178,10 +179,13 @@ body.modal-open{overflow:hidden}
   border:1px solid rgba(255,255,255,.06);
   background:linear-gradient(180deg,#121219,#0e0e14)
 }
+/* NUEVO: iguala la altura al 2×2 */
+.songs-list.fixed-six{height:var(--aurp-songs-box-h)}
+
 .song-row{
   position:relative;display:grid;grid-template-columns:34px 56px 1fr 64px 110px;
   align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);
-  min-height:84px; /* fija */
+  min-height:var(--aurp-song-row-h);
   cursor:pointer
 }
 .song-row:last-child{border-bottom:none}
@@ -201,6 +205,12 @@ body.modal-open{overflow:hidden}
 }
 .icon-chip:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,58,237,.25);background:#1b1b2e}
 
+/* NUEVO: like activo */
+.icon-chip.is-liked,
+.icon-chip[aria-pressed="true"]{background:#1f1320;border-color:rgba(255,85,159,.35)}
+.icon-chip.is-liked i,
+.icon-chip[aria-pressed="true"] i{color:#ff79c6}
+
 /* Menú 3 puntos */
 .menu-wrap{position:relative}
 .kebab-menu{
@@ -218,7 +228,7 @@ body.modal-open{overflow:hidden}
 .kebab-menu .menu-item:hover{background:#17172a}
 .kebab-menu .menu-item.danger{background:#1f0f15;border-color:rgba(255,0,0,.12);color:#ffd7db}
 .kebab-menu .divider{height:6px}
-.kebab-menu a.menu-item{display:flex} /* estilos iguales para <a> y <button> */
+.kebab-menu a.menu-item{display:flex}
 
 /* Basurero flotante (owner) */
 .trash-float{
@@ -230,10 +240,11 @@ body.modal-open{overflow:hidden}
 .song-row:hover .trash-float,.album-card:hover .trash-float{opacity:1;transform:rotate(-8deg) scale(1)}
 
 /* ===== ÁLBUMES 2×2 ===== */
-.albums-wrap{position:relative;margin-top:6px;overflow:visible}
+.albums-wrap{position:relative;margin-top:6px}
+
+/* NUEVO: sin fondo ni borde en el viewport */
 .albums-viewport{
-  overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,.06);
-  background:linear-gradient(180deg,#111217,#0e0e14)
+  overflow:hidden;border:0;background:transparent
 }
 .albums-track{display:flex;transition:transform .35s ease}
 .albums-page{flex:0 0 100%;padding:12px}
@@ -269,7 +280,7 @@ body.modal-open{overflow:hidden}
 .albums-arrow:disabled{opacity:.35;pointer-events:none}
 
 /* ===== ÚLTIMOS LANZAMIENTOS ===== */
-.releases-section{max-width:1300px;margin:10px auto 80px;overflow:visible}
+.releases-section{max-width:1300px;margin:10px auto 80px}
 
 /* Cabecera centrada con “Ver todo” a la derecha */
 .releases-head{
@@ -286,10 +297,11 @@ body.modal-open{overflow:hidden}
 }
 
 /* Carrusel */
-.releases-wrap{position:relative;overflow:visible}
+.releases-wrap{position:relative}
+
+/* NUEVO: sin panel gris */
 .releases-viewport{
-  overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,.06);
-  background:linear-gradient(180deg,#111217,#0e0e14)
+  overflow:hidden;border:0;background:transparent
 }
 .releases-track{display:flex;transition:transform .35s ease}
 .releases-page{flex:0 0 100%;padding:12px}
@@ -297,7 +309,7 @@ body.modal-open{overflow:hidden}
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:10px;
-  justify-items:center; /* centra cards más estrechas */
+  justify-items:center;
 }
 @media (max-width:1100px){.releases-grid-4x2{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:768px){.releases-grid-4x2{grid-template-columns:repeat(2,1fr)}}
@@ -305,7 +317,7 @@ body.modal-open{overflow:hidden}
 /* Cards MÁS PEQUEÑAS */
 .card.release-card{
   position:relative;border-radius:12px;overflow:hidden;
-  width:min(100%, 180px); /* <— tamaño reducido */
+  width:min(100%, 180px);
   background:linear-gradient(180deg,#11111a,#0b0b10);
   box-shadow:0 0 0 1px rgba(255,255,255,.06) inset, 0 10px 28px rgba(0,0,0,.35);
   transition:transform .22s ease, box-shadow .22s ease
@@ -438,30 +450,120 @@ body.modal-open{overflow:hidden}
 .bio-text{white-space:pre-wrap;line-height:1.45;color:#efe9ff}
 
 /* ===== CONFIRM ELIMINAR ===== */
-.confirm-modal{
-  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-  background: radial-gradient(60% 60% at 50% 50%, rgba(10,10,20,.85) 0%, rgba(6,6,12,.85) 100%);
-  backdrop-filter: blur(10px); opacity:0; visibility:hidden; transition:.25s ease; z-index:2000
+/* ================== Confirmación de Eliminación ================== */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 2000;
 }
-.confirm-modal[aria-hidden="false"]{ opacity:1; visibility:visible }
-.confirm-dialog{
-  width:min(720px,92vw); display:grid; grid-template-columns:140px 1fr; gap:22px;
-  padding:22px; border-radius:22px;
-  background: linear-gradient(145deg, rgba(23,23,37,.9), rgba(12,10,20,.92));
-  border:1px solid rgba(255,255,255,.12); color:#fff;
-  box-shadow:0 30px 90px rgba(0,0,0,.6); transform: scale(.96); opacity:.0; animation: popIn .25s ease forwards
+
+.confirm-modal[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
 }
-@keyframes popIn{ to{ transform:scale(1); opacity:1; } }
-.confirm-media img{ width:140px; height:140px; object-fit:cover; border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,.45) }
-.confirm-copy h3{ margin:.25rem 0 .35rem; font-size:1.35rem; font-weight:800 }
-.confirm-sub{ margin:0 0 .5rem; color:#d7d9ef; font-weight:600 }
-.confirm-warning{
-  display:inline-flex; align-items:center; gap:.5rem;
-  padding:8px 12px; margin:.2rem 0 .9rem; border-radius:10px; font-weight:700;
-  background: rgba(185, 28, 28, .15); border:1px solid rgba(239, 68, 68, .25); color:#ffd7db
+
+.confirm-dialog {
+  width: min(720px, 92vw);
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 22px;
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(23, 23, 37, 0.9), rgba(12, 10, 20, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+  transform: scale(0.96);
+  opacity: 0;
+  animation: popIn 0.25s ease forwards;
 }
-.confirm-actions{ display:flex; gap:12px; flex-wrap:wrap }
-#confirmDeleteBtn, #cancelDelete{ padding:12px 18px }
+
+@keyframes popIn {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirm-media img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.confirm-copy h3 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.confirm-sub {
+  margin: 0 0 0.5rem;
+  color: #d7d9ef;
+  font-weight: 600;
+}
+
+.confirm-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 12px;
+  margin: 0.2rem 0 0.9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ffd7db;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#confirmDeleteBtn,
+#cancelDelete {
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#confirmDeleteBtn:hover,
+#cancelDelete:hover {
+  transform: translateY(-2px);
+}
+
+#cancelDelete {
+  background: #444;
+}
+
+#confirmDeleteBtn {
+  background: linear-gradient(135deg, #f56565, #ef4444);
+}
+
+#cancelDelete {
+  background: #333;
+}
+
+.confirm-actions button:focus {
+  outline: none;
+}
+
 
 /* Bloquea el scroll y hace blur del contenido detrás */
 body.blurred .main-content{ filter: blur(6px) }
@@ -476,6 +578,7 @@ body.blurred .main-content{ filter: blur(6px) }
   --aurp-accent: var(--aurp-accent, #7c3aed);
   --aurp-accent-2: var(--aurp-accent-2, #6d28d9);
   --aurp-shadow-lg: var(--aurp-shadow-lg, 0 24px 60px rgba(0,0,0,.45));
+  --aurp-songs-box-h: var(--aurp-songs-box-h, auto);
   --aurp-song-row-h: var(--aurp-song-row-h, 84px);
   --aurp-sb-w: var(--aurp-sb-w, 0px);
   --aurp-rp-w: var(--aurp-rp-w, 0px);
@@ -504,29 +607,19 @@ body.blurred .main-content{ filter: blur(6px) }
   .bio-grid{grid-template-columns:1fr}
 }
 
-/* ================== HOTFIX ÁLBUMES CONSISTENTES (dueño vs visitante) ================== */
-#page-profile .albums-wrap{
-  font-size:16px;
-  -webkit-text-size-adjust:100%;
-  text-size-adjust:100%;
-}
+/* ================== CONSISTENCIA CARDS ÁLBUMES ================== */
 #page-profile .albums-viewport{ padding:8px; }
 #page-profile .albums-page{ display:grid; place-items:center; }
 #page-profile .albums-grid-2x2{
   grid-template-columns:repeat(2, minmax(0,1fr));
-  align-items:start;
-  justify-items:center;
-  gap:12px;
+  align-items:start; justify-items:center; gap:12px;
 }
 #page-profile .card.album-card{
   width:min(100%, 280px);
   max-width:280px;
 }
 @media (min-width:1280px){
-  #page-profile .card.album-card{
-    width:min(100%, 300px);
-    max-width:300px;
-  }
+  #page-profile .card.album-card{ width:min(100%, 300px); max-width:300px; }
 }
 #page-profile .card.album-card .card-img{ aspect-ratio:1/1; }
 #page-profile .card.album-card .album-title{ font-size:14px; line-height:1.25; }
