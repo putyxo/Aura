@@ -155,9 +155,10 @@
 
               <!-- Fallback sin JS -->
               <form class="lk-like-form" method="POST" action="{{ url('likes/'.$song->id) }}">
-                @csrf
-                @method('DELETE')
-              </form>
+  @csrf
+  @method('DELETE')  <!-- Asegúrate de que esto se está enviando como un método DELETE -->
+</form>
+
             </article>
           @empty
             <div class="lk-empty" style="grid-column:1/-1;">

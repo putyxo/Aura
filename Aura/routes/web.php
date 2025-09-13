@@ -86,9 +86,9 @@ Route::middleware(['web','auth'])->group(function () {
 
     // (Antigua) Página "Me gusta" de canciones (si la usas)
     Route::get('/like', [CancionController::class, 'like'])->name('like');
-Route::get('/cancion/{cancion}', [CancionController::class, 'show'])
-    ->name('cancion.show');
-Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
+    Route::get('/cancion/{id}/like', [CancionController::class, 'like'])->name('cancion.like');
+    Route::get('/cancion/{id}', [CancionController::class, 'show'])->name('cancion.show');
+    Route::get('/canciones/{id}/lyrics', [LyricsController::class, 'show']);
 
     /*
     |---------------------------------------------------------------------------  
@@ -104,19 +104,16 @@ Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
     Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
     Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
     Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
-Route::post('/cuenta/password', [PasswordController::class, 'update'])
-    ->name('perfil.changePassword')
-    ->middleware('auth');
     Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
     Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
     Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn() => view('recientes'))->name('recientes');
     
-// Cambiar tipo de cuenta (usuario ↔ artista)
-Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
-    ->name('perfil.toggleRole');
+    // Cambiar tipo de cuenta (usuario ↔ artista)
+    Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
+        ->name('perfil.toggleRole');
 
-Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])->name('perfil.language');
+    Route::post('/perfil/language', [PerfilController::class, 'setLanguage'])->name('perfil.language');
 
     // ===== Admin =====
    function checkAdminAccess() {
@@ -206,6 +203,8 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     */
     Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
 
+
+
     /*
     |---------------------------------------------------------------------------  
     | Dashboard (verificación de email si usas Breeze/Jetstream)
@@ -252,7 +251,7 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
 
 });
 Route::delete('/cancion/{id}', [CancionController::class, 'destroy'])->name('cancion.destroy');
-
+Route::post('/eq/save', [YourController::class, 'save'])->name('eq.save');
 
 // ===== Google Drive OAuth / Upload =====
 Route::get('/google-drive/auth', [GoogleDriveController::class, 'redirectToGoogle']);
