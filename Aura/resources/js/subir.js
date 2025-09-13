@@ -49,14 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Funciones principales
   window.abrirModal = function(tipo) {
     if (tipo === 'cancion') {
-      modalBackdrop.hidden = false;
-      modalCancion.hidden = false;
+      modalBackdrop.classList.add('is-open');
+      modalCancion.classList.add('is-open');
       // Limpiar formulario
       formCancionModal.reset();
       clearFieldMessagesModal();
     } else if (tipo === 'album') {
-      modalBackdrop.hidden = false;
-      modalAlbum.hidden = false;
+      modalBackdrop.classList.add('is-open');
+      modalAlbum.classList.add('is-open');
       // Limpiar formulario
       formAlbumModal.reset();
       tracksListModal.hidden = true;
@@ -102,11 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.cerrarModal = function(tipo) {
     if (tipo === 'cancion') {
-      modalCancion.hidden = true;
-      modalBackdrop.hidden = true;
+      modalCancion.classList.remove('is-open');
+      modalBackdrop.classList.remove('is-open');
     } else if (tipo === 'album') {
-      modalAlbum.hidden = true;
-      modalBackdrop.hidden = true;
+      modalAlbum.classList.remove('is-open');
+      modalBackdrop.classList.remove('is-open');
     }
   };
 
@@ -135,9 +135,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close modal when clicking on backdrop
   if (modalBackdrop) {
     modalBackdrop.addEventListener('click', () => {
-      if (!modalCancion.hidden) {
+      if (modalCancion.classList.contains('is-open')) {
         cerrarModal('cancion');
-      } else if (!modalAlbum.hidden) {
+      } else if (modalAlbum.classList.contains('is-open')) {
         cerrarModal('album');
       }
     });
@@ -420,13 +420,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Cerrar modal al hacer clic fuera
   modalCancion?.addEventListener('click', function(e) {
-    if (e.target === modalCancion) {
+    if (e.target === modalCancion && modalCancion.classList.contains('is-open')) {
       cerrarModal('cancion');
     }
   });
 
   modalAlbum?.addEventListener('click', function(e) {
-    if (e.target === modalAlbum) {
+    if (e.target === modalAlbum && modalAlbum.classList.contains('is-open')) {
       cerrarModal('album');
     }
   });
@@ -434,9 +434,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Keyboard navigation
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      if (!modalCancion.hidden) {
+      if (modalCancion.classList.contains('is-open')) {
         cerrarModal('cancion');
-      } else if (!modalAlbum.hidden) {
+      } else if (modalAlbum.classList.contains('is-open')) {
         cerrarModal('album');
       }
     }

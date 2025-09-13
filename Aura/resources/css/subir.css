@@ -515,7 +515,7 @@ body {
   padding: 20px;
 }
 
-.axup-modal-backdrop:not([hidden]) {
+.axup-modal-backdrop.is-open {
   opacity: 1;
   visibility: visible;
 }
@@ -531,7 +531,7 @@ body {
   transform: scale(0.95) translateY(20px);
 }
 
-.axup-modal-backdrop:not([hidden]) .axup-modal {
+.axup-modal.is-open {
   opacity: 1;
   visibility: visible;
   transform: scale(1) translateY(0);
@@ -647,7 +647,7 @@ body {
   padding: 20px;
 }
 
-.axup-modal-backdrop:not([hidden]) {
+.axup-modal-backdrop.is-open {
   opacity: 1;
   visibility: visible;
 }
@@ -663,7 +663,7 @@ body {
   transform: scale(0.95) translateY(20px);
 }
 
-.axup-modal-backdrop:not([hidden]) .axup-modal {
+.axup-modal-backdrop.is-open .axup-modal.is-open {
   opacity: 1;
   visibility: visible;
   transform: scale(1) translateY(0);
@@ -976,6 +976,10 @@ body {
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .axup-modal-backdrop {
+    padding: 16px;
+  }
+
+  .axup-modal-backdrop.is-open {
     padding: 16px;
   }
 
