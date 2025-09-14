@@ -103,24 +103,6 @@ class User extends Authenticatable
             : asset('img/default-cover.png');
     }
 
-<<<<<<< HEAD
-    /* ==============================
-       ME GUSTA (LIKES)
-       ============================== */
-
-    public function likedSongs()
-    {
-        // Tabla pivot: likes (user_id, song_id, timestamps)
-        return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
-                    ->withTimestamps();
-    }
-
-    // Alias opcional
-    public function likes()
-    {
-        return $this->likedSongs();
-    }
-=======
 public function likes()
 {
     return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
@@ -131,5 +113,4 @@ public function equalizer()
 {
     return $this->hasOne(UserEqualizer::class);
 }
->>>>>>> main
 }
