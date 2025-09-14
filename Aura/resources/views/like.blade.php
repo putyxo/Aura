@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>AURA — Me gusta</title>
+  <title>AURA — {{ __('likes.title') }}</title>
 
   <!-- Fuente + Iconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,9 +41,9 @@
             <div class="lk-hero__content">
               <div class="lk-hero__icon"><i class="fa-solid fa-heart"></i></div>
               <div>
-                <h1 class="lk-hero__title">Tus Me gusta</h1>
+                <h1 class="lk-hero__title">{{ __('likes.title') }}</h1>
                 <p class="lk-hero__sub">
-                  <span id="lkCount">{{ number_format($likedSongs->count()) }}</span> canciones guardadas para volver siempre.
+                  <span id="lkCount">{{ number_format($likedSongs->count()) }}</span> {{ __('likes.subtitle') }}
                 </p>
               </div>
             </div>
@@ -51,7 +51,7 @@
             <div class="lk-hero__actions">
               <div class="lk-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="lkSearch" type="search" placeholder="Buscar canción o artista..." aria-label="Buscar en Me gusta" autocomplete="off">
+                <input id="lkSearch" type="search" placeholder="{{ __('likes.search_placeholder') }}" aria-label="{{ __('likes.search_placeholder') }}" autocomplete="off">
                 <button class="lk-clear" id="lkClear" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
               </div>
             </div>
@@ -138,10 +138,10 @@
                   <i class="fa-solid fa-ellipsis-vertical"></i>
                 </button>
                 <div class="lk-menu" role="menu">
-                  <button type="button" data-act="queue"><i class="fa-solid fa-list"></i> Añadir a cola</button>
-                  <button type="button" data-act="playlist"><i class="fa-solid fa-plus"></i> Agregar a playlist</button>
+                  <button type="button" data-act="queue"><i class="fa-solid fa-list"></i> {{ __('likes.add_to_queue') }}</button>
+                  <button type="button" data-act="playlist"><i class="fa-solid fa-plus"></i> {{ __('likes.add_to_playlist') }}</button>
                   <div class="sep" aria-hidden="true"></div>
-                  <button type="button" data-act="unlike" class="danger"><i class="fa-solid fa-heart-crack"></i> Quitar de favoritos</button>
+                  <button type="button" data-act="unlike" class="danger"><i class="fa-solid fa-heart-crack"></i> {{ __('likes.remove_from_favorites') }}</button>
                 </div>
               </div>
 
@@ -160,11 +160,11 @@
               </form>
             </article>
           @empty
-            <div class="lk-empty" style="grid-column:1/-1;">
-              <i class="fa-solid fa-heart-crack"></i>
-              <h3>Aún no tienes canciones en Me gusta</h3>
-              <p>Descubre música y pulsa <i class="fa-solid fa-heart"></i> para guardarlas aquí.</p>
-            </div>
+              <div class="lk-empty" style="grid-column:1/-1;">
+                <i class="fa-solid fa-heart-crack"></i>
+                <h3>{{ __('likes.empty_title') }}</h3>
+                <p>{{ __('likes.empty_text') }} <i class="fa-solid fa-heart"></i> {{ __('likes.empty_text') }}</p>
+              </div>
           @endforelse
         </section>
 
@@ -180,13 +180,13 @@
   <div class="lk-modal__backdrop" data-close="1"></div>
   <div class="lk-modal__card">
     <div class="lk-modal__header">
-      <h3 id="lkConfirmTitle"><i class="fa-solid fa-heart-crack"></i> Quitar de favoritos</h3>
+      <h3 id="lkConfirmTitle"><i class="fa-solid fa-heart-crack"></i> {{ __('likes.confirm_remove_title') }}</h3>
       <button class="lk-modal__x" data-close="1" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="lk-modal__body">
       <img id="lkConfirmCover" src="{{ asset('img/default-cover.jpg') }}" alt="Portada" class="lk-modal__cover">
       <div class="lk-modal__info">
-        <p class="lk-modal__text">¿Quieres quitar de favoritos esta canción?</p>
+        <p class="lk-modal__text">{{ __('likes.confirm_remove_title') }}</p>
         <div class="lk-modal__song">
           <div class="lk-modal__title">—</div>
           <div class="lk-modal__artist">—</div>
@@ -195,7 +195,7 @@
     </div>
     <div class="lk-modal__actions">
       <button class="lk-btn lk-btn--ghost" data-close="1">Cancelar</button>
-      <button class="lk-btn lk-btn--danger" id="lkConfirmOk">Aceptar</button>
+      <button class="lk-btn lk-btn--danger" id="lkConfirmOk">{{ __('likes.confirm_remove_button') }}</button>
     </div>
   </div>
 </div>

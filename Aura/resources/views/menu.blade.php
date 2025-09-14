@@ -35,14 +35,14 @@
   <main class="main-content">
 
       <section class="playlist-section">
-        <h2>Lista de reproducción para ti</h2>
+        <h2>{{ __('menu.playlist_for_you') }}</h2>
         <div class="playlist-grid">
           <div class="playlist-card green element-glow">
             <p class="subtitle"></p>
-            <p class="desc">Mario Rivera, Dakzze, Grupo Algodon y mas...</p>
-            <p class="info">Hecho para los salvadoreños y el resto del mundo, + 20 canciones.</p>
+            <p class="desc">{{ __('menu.salvadoran_mix_desc') }}</p>
+            <p class="info">{{ __('menu.salvadoran_mix_info') }}</p>
             <br>
-            <h3 class="title">Mezcla Salvadoreña</h3>
+            <h3 class="title">{{ __('menu.salvadoran_mix') }}</h3>
             <img src="../img/Marito-Rivera.jpg" alt="Chica" />
             <br>
             <p class="likes">+ 53K Me gusta</p>
@@ -51,8 +51,8 @@
           <div class="playlist-card pink">
             <img src="../img/weeknd 2.jpeg" alt="Chica" />
             <div class="overlay-text">
-              <h3>Internacionales</h3>
-              <p>Conoce lo nuevo</p>
+              <h3>{{ __('menu.international') }}</h3>
+              <p>{{ __('menu.international_desc') }}</p>
               <span class="emoji"></span>
             </div>
           </div>
@@ -60,17 +60,17 @@
           <div class="playlist-card teal">
             <img src="../img/images.jpg" alt="Hombre con micrófono" />
             <div class="overlay-text">
-              <h3>Mezcla relajada</h3>
-              <p>Solo relájate y escucha</p>
-              <span class="emoji">/span>
+              <h3>{{ __('menu.relax_mix') }}</h3>
+              <p>{{ __('menu.relax_mix_desc') }}</p>
+              <span class="emoji"></span>
             </div>
           </div>
 
           <div class="playlist-card purple">
             <img src="../img/alejo-dii.jpg" alt="Chica" />
             <div class="overlay-text">
-              <h3>Exitos de El Salvador</h3>
-              <p>Conoce lo mejor del país</p>
+              <h3>{{ __('menu.el_salvador_hits') }}</h3>
+              <p>{{ __('menu.el_salvador_hits_desc') }}</p>
               <span class="emoji"></span>
             </div>
           </div>
@@ -79,26 +79,26 @@
 
       <section class="music-sections">
         <div class="selected-album">
-          <h2><span class="emoji">💿</span> Álbum seleccionado</h2>
+          <h2><span class="emoji">💿</span> {{ __('menu.album_selected') }}</h2>
           <div class="album-info">
             <img src="../img/111xpantia.jpg" alt="Portada del álbum">
-            <div>
-              <h3>ÁLBUM DE LA SEMANA</h3>
-              <p>Nuestro ganador semanal para el 01/09/2025 es:</p>
-              <span>111 X PANTIA</span>
+              <div>
+                <h3>{{ __('menu.album_of_week') }}</h3>
+                <p>{{ __('menu.winner_text') }}</p>
+                <span>111 X PANTIA</span>
+              </div>
+            </div>
+            <br>
+            <br>
+            <div class="album-info">
+              <img src="../img/AM.jpg" alt="Portada del álbum">
+              <div>
+                <h3>{{ __('menu.album_of_month') }}</h3>
+                <p>{{ __('menu.winner_text') }}</p>
+                <span>AM DE ARCTICS MONKEYS</span>
+              </div>
             </div>
           </div>
-          <br>
-          <br>
-          <div class="album-info">
-            <img src="../img/AM.jpg" alt="Portada del álbum">
-            <div>
-              <h3>ÁLBUM DE EL MES</h3>
-              <p>Nuestro ganador semanal para el 01/09/2025 es:</p>
-              <span>AM DE ARCTICS MONKEYS</span>
-            </div>
-          </div>
-        </div>
 
         <div class="tracks">
           <h2><span class="emoji">🎵</span> Canciones de la semana</h2>

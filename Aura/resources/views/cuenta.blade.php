@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang="{{ app()->getLocale() }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cuenta — Aura</title>
+<title>{{ __('account.title') }} — Aura</title>
+
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -83,7 +84,19 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
   .btn-secondary{color:#120733;background:linear-gradient(135deg,var(--violet-200),var(--violet-400));border:1px solid rgba(167,139,250,.45)}
   .btn-ghost{color:#1a0b44;background:linear-gradient(135deg,rgba(231,229,255,.9),rgba(212,197,255,.72));border:1px solid rgba(167,139,250,.55)}
   .btn-danger{color:#2b0a15;background:linear-gradient(135deg,#fecaca,#fda4af);border:1px solid rgba(244,63,94,.35)}
-
+.toggle-pass {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #a78bfa;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+.toggle-pass:hover { opacity: 1; }
   /* Layout */
   .main-content{padding:32px clamp(16px,3vw,38px) 160px}
   .account-grid{
@@ -306,10 +319,98 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
   }
   #auraToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   body.modal-open{overflow:hidden}
+
+/* ===== Notificaciones bonitas ===== */
+.notify {
+  position: fixed;
+  top: 120px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 9999;
+
+  min-width: 320px;
+  max-width: 600px;
+  padding: 14px 18px 14px 48px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  background: #fff;
+  color: #222;
+
+  opacity: 0;
+  transition: opacity .5s ease, transform .5s ease;
+}
+
+/* Mostrar con animación */
+.notify.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Icono dentro de la notificación */
+.notify::before {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+}
+
+/* Éxito */
+.notify.success {
+  border-left: 6px solid #22c55e;
+  background: linear-gradient(135deg,#ecfdf5,#d1fae5);
+  color: #065f46;
+}
+.notify.success::before {
+  content: "\f00c"; /* fa-check */
+  color: #22c55e;
+}
+
+/* Error */
+.notify.error {
+  border-left: 6px solid #ef4444;
+  background: linear-gradient(135deg,#fef2f2,#fee2e2);
+  color: #7f1d1d;
+}
+.notify.error::before {
+  content: "\f057"; /* fa-circle-xmark */
+  color: #ef4444;
+}
+
+/* Info */
+.notify.info {
+  border-left: 6px solid #3b82f6;
+  background: linear-gradient(135deg,#eff6ff,#dbeafe);
+  color: #1e3a8a;
+}
+.notify.info::before {
+  content: "\f05a"; /* fa-circle-info */
+  color: #3b82f6;
+}
+
 </style>
 </head>
 <body>
 <div id="page-account">
+
+  {{-- 🔔 Notificación --}}
+  @if(session('status') === 'support-sent')
+  <div class="notify success">✅ Tu mensaje fue enviado al equipo de soporte.</div>
+@endif
+
+  @if(session('status') === 'password-updated')
+    <div class="notify success">{{ __('account.success_pass') }}</div>
+  @endif
+
+  @if($errors->any())
+    <div class="notify error">{{ __('account.error_pass') }}</div>
+  @endif
+
   @include('components.sidebar')
   @include('components.traductor')
   @include('components.header')
@@ -318,110 +419,91 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
   <main class="main-content">
     <section class="account-grid">
 
-      <!-- ===== HERO ===== -->
+      <!-- HERO -->
       <div class="account-hero pref-hero a-reveal">
         <div class="hero-wrap">
           <div class="hero-banner" data-hires="{{ $bannerHigh }}" style="background-image:url('{{ $bannerLow }}')"></div>
           <div class="hero-scrim"></div><div class="hero-border"></div>
 
           <div class="hero-head">
-            <div class="text-shield"><h1 class="hero-title">Tu cuenta</h1></div>
-            <div class="text-shield" style="padding:8px 14px"><p class="hero-sub">Gestiona tu perfil, seguridad y preferencias</p></div>
+            <div class="text-shield"><h1 class="hero-title">{{ __('account.title') }}</h1></div>
+            <div class="text-shield" style="padding:8px 14px"><p class="hero-sub">{{ __('account.subtitle') }}</p></div>
           </div>
 
           <div class="hero-meta">
             <span class="meta-chip"><i class="fa-solid fa-user"></i> {{ $nombre }}</span>
             <span class="meta-chip"><i class="fa-solid fa-envelope"></i> {{ $correo }}</span>
-            @if($miembroDesde)<span class="meta-chip"><i class="fa-solid fa-calendar-check"></i> Miembro desde {{ $miembroDesde }}</span>@endif
+            @if($miembroDesde)<span class="meta-chip"><i class="fa-solid fa-calendar-check"></i> {{ __('account.member_since') }} {{ $miembroDesde }}</span>@endif
           </div>
         </div>
 
         <div class="avatar-wrap">
           @if($u && $u->avatar)
-            <img id="avatarPreviewLive" class="avatar-img" src="{{ drive_img_url($u->avatar, 500) }}&v={{ time() }}" alt="{{ $nombre }}" loading="lazy" decoding="async">
+            <img id="avatarPreviewLive" class="avatar-img" src="{{ drive_img_url($u->avatar, 500) }}&v={{ time() }}" alt="{{ $nombre }}">
           @else
             <div class="avatar-fallback">{{ strtoupper(substr($nombre,0,1)) }}</div>
           @endif
         </div>
       </div>
 
-      <!-- ===== ACCIONES RÁPIDAS ===== -->
+      <!-- ACCIONES -->
       <section class="quick-actions a-reveal">
         <div class="actions-grid">
           <article class="card">
-            <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
-            <p class="muted">Actualiza tu nombre, correo, avatar y banner.</p>
+            <h3><i class="fa-solid fa-user-pen"></i> {{ __('account.edit') }}</h3>
+            <p class="muted">{{ __('account.edit_desc') }}</p>
             <div class="card-actions">
-              @auth
-                <button class="btn btn-primary" data-open="#modalEditProfile"><i class="fa-solid fa-pen-to-square"></i> Abrir editor</button>
-              @else
-                <a class="btn btn-primary" href="{{ url('/login') }}"><i class="fa-solid fa-right-to-bracket"></i> Inicia sesión</a>
-              @endauth
+              <button class="btn btn-primary" data-open="#modalEditProfile"><i class="fa-solid fa-pen-to-square"></i> {{ __('account.open_editor') }}</button>
             </div>
           </article>
 
           <article class="card">
-            <h3><i class="fa-solid fa-user-gear"></i> Cambiar a artista/usuario</h3>
-            <p class="muted">Alterna el modo de tu cuenta.</p>
+            <h3><i class="fa-solid fa-user-gear"></i> {{ __('account.switch') }}</h3>
+            <p class="muted">{{ __('account.switch_desc') }}</p>
             <div class="card-actions">
-              <button class="btn btn-secondary" data-open="#modalSwitchRole"><i class="fa-solid fa-person-rays"></i> Cambiar</button>
+              <button class="btn btn-secondary" data-open="#modalSwitchRole"><i class="fa-solid fa-person-rays"></i> {{ __('account.switch') }}</button>
             </div>
           </article>
 
           <article class="card">
-            <h3><i class="fa-solid fa-lock"></i> Contraseña & seguridad</h3>
-            <p class="muted">Cambia tu contraseña y revisa opciones básicas.</p>
+            <h3><i class="fa-solid fa-lock"></i> {{ __('account.password') }}</h3>
+            <p class="muted">{{ __('account.password_desc') }}</p>
             <div class="card-actions">
-              <button class="btn btn-secondary" data-open="#modalPassword"><i class="fa-solid fa-shield-halved"></i> Gestionar</button>
+              <button class="btn btn-secondary" data-open="#modalPassword"><i class="fa-solid fa-shield-halved"></i> {{ __('account.manage') }}</button>
             </div>
           </article>
         </div>
       </section>
 
-      <!-- ===== HERRAMIENTAS ===== -->
-      <section class="tools a-reveal">
-        <article class="card">
-          <h3><i class="fa-solid fa-star"></i> Verificación</h3>
-          <p class="muted">Solicita la verificación para mayor visibilidad.</p>
-          <div class="tool-icons" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
-            <button class="btn btn-ghost" data-open="#modalVerify"><i class="fa-solid fa-badge-check"></i> Verificar</button>
-            <button class="btn btn-ghost" data-open="#modalCertificates"><i class="fa-solid fa-certificate"></i> Certificados</button>
-          </div>
-          <div class="card-actions">
-            <button class="btn btn-primary" data-open="#modalVerify"><i class="fa-solid fa-check-double"></i> Solicitar</button>
-          </div>
-        </article>
-      </section>
-
-      <!-- ===== SEGURIDAD ===== -->
+      <!-- SEGURIDAD -->
       <section class="security a-reveal">
         <article class="card">
-          <h3><i class="fa-solid fa-shield-halved"></i> Seguridad</h3>
-          <p class="muted">Gestiona inicio de sesión, dispositivos y sesiones activas.</p>
+          <h3><i class="fa-solid fa-shield-halved"></i> {{ __('account.security') }}</h3>
+          <p class="muted">{{ __('account.security_desc') }}</p>
           <div class="card-actions">
-            <button class="btn btn-secondary" data-open="#modalSecurityInfo"><i class="fa-solid fa-lock-keyhole"></i> Abrir seguridad</button>
+            <button class="btn btn-secondary" data-open="#modalSecurityInfo"><i class="fa-solid fa-lock-keyhole"></i> {{ __('account.manage') }}</button>
           </div>
         </article>
       </section>
 
-      <!-- ===== IDIOMA ===== -->
+      <!-- IDIOMA -->
       <section class="language a-reveal">
         <article class="card">
-          <h3><i class="fa-solid fa-language"></i> Idioma</h3>
-          <p class="muted">Selecciona tu idioma preferido en Aura.</p>
+          <h3><i class="fa-solid fa-language"></i> {{ __('account.language') }}</h3>
+          <p class="muted">{{ __('account.language_desc') }}</p>
           <div class="card-actions">
-            <button class="btn btn-ghost" data-open="#modalLanguage"><i class="fa-solid fa-globe"></i> Elegir idioma</button>
+            <button class="btn btn-ghost" data-open="#modalLanguage"><i class="fa-solid fa-globe"></i> {{ __('account.choose_lang') }}</button>
           </div>
         </article>
       </section>
 
-      <!-- ===== SOPORTE ===== -->
+      <!-- SOPORTE -->
       <section class="support a-reveal">
         <article class="card">
-          <h3><i class="fa-solid fa-headset"></i> Soporte</h3>
-          <p class="muted">¿Necesitas ayuda? Escríbenos, estamos para ayudarte.</p>
+          <h3><i class="fa-solid fa-headset"></i> {{ __('account.support') }}</h3>
+          <p class="muted">{{ __('account.support_desc') }}</p>
           <div class="card-actions">
-            <button class="btn btn-primary" data-open="#modalSupport"><i class="fa-solid fa-envelope-open-text"></i> Contactar</button>
+            <button class="btn btn-primary" data-open="#modalSupport"><i class="fa-solid fa-envelope-open-text"></i> {{ __('account.contact') }}</button>
           </div>
         </article>
       </section>
@@ -433,322 +515,436 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
 
   @if(Auth::check())
 
-  <!-- ===== MODALES (todos) ===== -->
+  <!-- MODALES -->
   <!-- Editar perfil -->
-  <div class="modal" id="modalEditProfile" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <form action="{{ $actionUpdate }}" method="POST" enctype="multipart/form-data" id="formEditProfile" data-demo="{{ $actionUpdate==='#' ? '1' : '0' }}">
-        @csrf
-
-        <div class="fieldset">
-          <span class="legend"><i class="fa-solid fa-user"></i> Identidad</span>
-          <div class="modal-grid">
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-id-badge"></i> Nombre artístico actual</label>
-              <input class="form-ctrl" type="text" value="{{ $nombre }}" readonly>
-            </div>
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-pen"></i> Nuevo nombre artístico</label>
-              <div class="input-wrap">
-                <i class="fa-solid fa-user left-ico"></i>
-                <input class="form-ctrl with-ico" name="nuevo_nombre_artistico" type="text" placeholder="Escribe el nuevo nombre artístico">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="fieldset" style="margin-top:14px">
-          <span class="legend"><i class="fa-solid fa-at"></i> Correo electrónico</span>
-          <div class="modal-grid">
-            <div class="modal-field col-2">
-              <label class="label"><i class="fa-solid fa-lock lock"></i> Correo actual <span class="badge locked"><i class="fa-solid fa-lock"></i> Bloqueado</span></label>
-              <div class="input-wrap">
-                <i class="fa-solid fa-envelope left-ico"></i>
-                <input class="form-ctrl with-ico" type="email" value="{{ $u->email ?? '' }}" disabled>
-              </div>
-            </div>
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-envelope-open-text"></i> Nuevo correo</label>
-              <div class="input-wrap">
-                <i class="fa-solid fa-envelope left-ico"></i>
-                <input class="form-ctrl with-ico" name="email" id="newEmail" type="email" placeholder="tu-nuevo@email.com" autocomplete="email">
-              </div>
-            </div>
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-check-double"></i> Confirmar nuevo correo</label>
-              <div class="input-wrap">
-                <i class="fa-solid fa-envelope left-ico"></i>
-                <input class="form-ctrl with-ico" id="newEmailConfirm" type="email" placeholder="Repite el nuevo correo" autocomplete="email">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="fieldset" style="margin-top:14px">
-          <span class="legend"><i class="fa-solid fa-image"></i> Imágenes y bio</span>
-          <div class="modal-grid">
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-camera"></i> Foto de perfil</label>
-              <label class="file-preview avatar">
-                <img id="avatarPreview" src="{{ $u && $u->avatar ? drive_img_url($u->avatar, 500).'&v='.time() : '' }}" alt="">
-                <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
-                <div class="overlay"><i class="fa-solid fa-camera"></i></div>
-              </label>
-            </div>
-            <div class="modal-field">
-              <label class="label"><i class="fa-solid fa-image"></i> Banner</label>
-              <label class="file-preview banner">
-                <img id="bannerPreview" src="{{ $u && $u->banner ? drive_img_url($u->banner, 1200).'&v='.time() : '' }}" alt="">
-                <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
-                <div class="overlay"><i class="fa-solid fa-camera"></i></div>
-              </label>
-            </div>
-            <div class="modal-field col-2">
-              <label class="label"><i class="fa-solid fa-comment"></i> Descripción</label>
-              <textarea class="form-ctrl" name="bio" rows="4" placeholder="Escribe una breve biografía...">{{ $u->biografia ?? '' }}</textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Guardar</button>
-          <button type="button" class="btn btn-secondary" data-close><i class="fa-solid fa-xmark"></i> Cancelar</button>
-        </div>
-      </form>
+<div class="modal" id="modalEditProfile" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-user-pen"></i> {{ __('account.edit') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
     </div>
-  </div>
 
-  <!-- Cambiar rol -->
-  <div class="modal" id="modalSwitchRole" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-user-gear"></i> Cambiar tipo de cuenta</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form action="{{ $actionToggleRole }}" method="POST" data-demo="{{ $actionToggleRole==='#' ? '1' : '0' }}">
-        @csrf
-        <div class="fieldset">
-          <span class="legend"><i class="fa-solid fa-arrows-rotate"></i> Selecciona modo</span>
-          <div class="modal-grid">
-            <label class="modal-field field" style="cursor:pointer">
-              <span class="label"><i class="fa-solid fa-microphone"></i> Artista</span>
-              <input type="radio" name="modo" value="artista"> <small class="muted">Sube música y gestiona lanzamientos.</small>
-            </label>
-            <label class="modal-field field" style="cursor:pointer">
-              <span class="label"><i class="fa-solid fa-user"></i> Usuario</span>
-              <input type="radio" name="modo" value="usuario"> <small class="muted">Escucha y crea playlists.</small>
-            </label>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-rotate"></i> Cambiar</button>
-          <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+    <form action="{{ $actionUpdate }}" method="POST" enctype="multipart/form-data" id="formEditProfile" data-demo="{{ $actionUpdate==='#' ? '1' : '0' }}">
+      @csrf
 
-  <!-- Contraseña -->
-  <div class="modal" id="modalPassword" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-lock"></i> Cambiar contraseña</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form action="{{ $actionChangePass }}" method="POST" id="formPassword" data-demo="{{ $actionChangePass==='#' ? '1' : '0' }}">
-        @csrf
-        <div class="modal-grid">
-          <div class="modal-field col-2">
-            <label class="label"><i class="fa-solid fa-key"></i> Contraseña actual</label>
-            <div class="input-wrap"><i class="fa-solid fa-lock left-ico"></i>
-              <input class="form-ctrl with-ico" type="password" name="current_password" placeholder="••••••••" autocomplete="current-password" required>
-            </div>
-          </div>
-          <div class="modal-field">
-            <label class="label"><i class="fa-solid fa-shield-keyhole"></i> Nueva contraseña</label>
-            <div class="input-wrap"><i class="fa-solid fa-shield-halved left-ico"></i>
-              <input class="form-ctrl with-ico" type="password" id="newPass" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" required>
-            </div>
-          </div>
-          <div class="modal-field">
-            <label class="label"><i class="fa-solid fa-check-double"></i> Confirmar nueva</label>
-            <div class="input-wrap"><i class="fa-solid fa-shield-halved left-ico"></i>
-              <input class="form-ctrl with-ico" type="password" id="newPass2" placeholder="Repite la contraseña" autocomplete="new-password" required>
-            </div>
-          </div>
-          <div class="modal-field col-2"><small class="muted" id="pwMsg"></small></div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
-          <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Idioma -->
-  <div class="modal" id="modalLanguage" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-language"></i> Idioma</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form action="{{ $actionLanguage }}" method="POST" data-demo="{{ $actionLanguage==='#' ? '1' : '0' }}">
-        @csrf
-        <div class="modal-grid">
-          <button type="submit" name="lang" value="es" class="btn btn-primary"><i class="fa-solid fa-flag"></i> Español</button>
-          <button type="submit" name="lang" value="en" class="btn btn-secondary"><i class="fa-solid fa-flag-usa"></i> English</button>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" type="button" data-close>Cerrar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Soporte -->
-  <div class="modal" id="modalSupport" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-headset"></i> Contactar soporte</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form action="{{ $actionSupport }}" method="POST" id="formSupport" data-demo="{{ $actionSupport==='#' ? '1' : '0' }}">
-        @csrf
-        <div class="modal-grid">
-          <div class="modal-field col-2">
-            <label class="label"><i class="fa-solid fa-heading"></i> Asunto</label>
-            <input class="form-ctrl" type="text" name="subject" placeholder="Escribe un asunto claro" required>
-          </div>
-          <div class="modal-field col-2">
-            <label class="label"><i class="fa-solid fa-message"></i> Mensaje</label>
-            <textarea class="form-ctrl" name="message" rows="5" placeholder="Describe tu problema o consulta..." required></textarea>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar</button>
-          <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Verificación -->
-  <div class="modal" id="modalVerify" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-badge-check"></i> Solicitar verificación</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form action="{{ $actionVerify }}" method="POST" data-demo="{{ $actionVerify==='#' ? '1' : '0' }}">
-        @csrf
-        <div class="modal-grid">
-          <div class="modal-field col-2">
-            <label class="label"><i class="fa-solid fa-user"></i> Nombre público</label>
-            <input class="form-ctrl" type="text" name="public_name" value="{{ $nombre }}">
-          </div>
-          <div class="modal-field col-2">
-            <label class="label"><i class="fa-solid fa-link"></i> Enlaces (web/redes)</label>
-            <textarea class="form-ctrl" name="links" rows="4" placeholder="Agrega enlaces que confirmen tu identidad"></textarea>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar solicitud</button>
-          <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Certificados -->
-  <div class="modal" id="modalCertificates" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-certificate"></i> Certificados</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
       <div class="fieldset">
-        <span class="legend"><i class="fa-solid fa-list"></i> Tus certificados</span>
-        <p class="muted">Aquí aparecerán tus certificados emitidos por Aura. (Vista demo)</p>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" type="button" data-close>Cerrar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Seguridad (doc) -->
-  <div class="modal" id="modalSecurityInfo" aria-hidden="true">
-    <div class="modal-content xl">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-shield-alt"></i> Seguridad y Privacidad</h3>
-        <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="secdoc">
-        <div class="particles" id="secParticles"></div>
-        <div class="container">
-          <div class="security-header">
-            <h1><i class="fas fa-shield-alt"></i> Seguridad y Privacidad</h1>
-            <p>Tu seguridad y privacidad son nuestra prioridad. Conoce cómo protegemos tu información y qué medidas puedes tomar para mantener tu cuenta segura.</p>
+        <span class="legend"><i class="fa-solid fa-user"></i> {{ __('account.identity') }}</span>
+        <div class="modal-grid">
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-id-badge"></i> {{ __('account.current_artist_name') }}</label>
+            <input class="form-ctrl" type="text" value="{{ $nombre }}" readonly>
           </div>
-
-          <div class="privacy-policy">
-            <h2><i class="fas fa-file-contract"></i> Política de Privacidad</h2>
-
-            <div class="privacy-section">
-              <h3>Recopilación de Información</h3>
-              <p>Recopilamos únicamente la información necesaria para brindarte nuestros servicios. Esto incluye información de perfil, preferencias de usuario y datos de uso de la plataforma de manera transparente y con tu consentimiento.</p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>Uso de la Información</h3>
-              <p>Tu información se utiliza exclusivamente para mejorar tu experiencia en AURA, personalizar contenido y mantener la seguridad de la plataforma. Nunca utilizamos tus datos para fines comerciales sin tu autorización.</p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>Compartir Información</h3>
-              <p>No vendemos, alquilamos ni compartimos tu información personal con terceros sin tu consentimiento explícito, excepto cuando sea requerido por ley o para proteger la seguridad de nuestra comunidad.</p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>Retención de Datos</h3>
-              <p>Conservamos tu información solo durante el tiempo necesario para cumplir con los propósitos descritos en esta política o según lo requiera la ley. Tienes el derecho de solicitar la eliminación de tus datos en cualquier momento.</p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>Tus Derechos</h3>
-              <p>Tienes derecho a acceder, corregir, eliminar o transferir tu información personal. También puedes oponerte al procesamiento de tus datos en cualquier momento. Facilitamos herramientas intuitivas para ejercer estos derechos.</p>
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-pen"></i> {{ __('account.new_artist_name') }}</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-user left-ico"></i>
+              <input class="form-ctrl with-ico" name="nuevo_nombre_artistico" type="text" placeholder="{{ __('account.new_artist_name_ph') }}">
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="contact-security">
-            <h3><i class="fas fa-headset"></i> Contacto de Seguridad</h3>
-            <p>Si tienes preguntas sobre seguridad o privacidad, o necesitas reportar un incidente de seguridad:</p>
-            <p>Email: <a href="mailto:aura@gmail.com" class="security-email">aura@gmail.com</a></p>
-            <p><strong>Respuesta garantizada en 24 horas</strong></p>
-            <p>Nuestro equipo está disponible 24/7.</p>
+      <div class="fieldset" style="margin-top:14px">
+        <span class="legend"><i class="fa-solid fa-at"></i> {{ __('account.email') }}</span>
+        <div class="modal-grid">
+          <div class="modal-field col-2">
+            <label class="label"><i class="fa-solid fa-lock lock"></i> {{ __('account.current_email') }} <span class="badge locked"><i class="fa-solid fa-lock"></i> {{ __('account.locked') }}</span></label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-envelope left-ico"></i>
+              <input class="form-ctrl with-ico" type="email" value="{{ $u->email ?? '' }}" disabled>
+            </div>
+          </div>
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-envelope-open-text"></i> {{ __('account.new_email') }}</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-envelope left-ico"></i>
+              <input class="form-ctrl with-ico" name="email" id="newEmail" type="email" placeholder="tu-nuevo@email.com" autocomplete="email">
+            </div>
+          </div>
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-check-double"></i> {{ __('account.confirm_new_email') }}</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-envelope left-ico"></i>
+              <input class="form-ctrl with-ico" id="newEmailConfirm" type="email" placeholder="{{ __('account.confirm_new_email_ph') }}" autocomplete="email">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fieldset" style="margin-top:14px">
+        <span class="legend"><i class="fa-solid fa-image"></i> {{ __('account.images_bio') }}</span>
+        <div class="modal-grid">
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-camera"></i> {{ __('account.avatar') }}</label>
+            <label class="file-preview avatar">
+              <img id="avatarPreview" src="{{ $u && $u->avatar ? drive_img_url($u->avatar, 500).'&v='.time() : '' }}" alt="">
+              <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
+              <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+            </label>
+          </div>
+          <div class="modal-field">
+            <label class="label"><i class="fa-solid fa-image"></i> {{ __('account.banner') }}</label>
+            <label class="file-preview banner">
+              <img id="bannerPreview" src="{{ $u && $u->banner ? drive_img_url($u->banner, 1200).'&v='.time() : '' }}" alt="">
+              <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
+              <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+            </label>
+          </div>
+          <div class="modal-field col-2">
+            <label class="label"><i class="fa-solid fa-comment"></i> {{ __('account.bio') }}</label>
+            <textarea class="form-ctrl" name="bio" rows="4" placeholder="{{ __('account.bio_ph') }}">{{ $u->biografia ?? '' }}</textarea>
           </div>
         </div>
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-secondary" type="button" data-close>Cerrar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> {{ __('account.save') }}</button>
+        <button type="button" class="btn btn-secondary" data-close><i class="fa-solid fa-xmark"></i> {{ __('account.cancel') }}</button>
       </div>
+    </form>
+  </div>
+</div>
+
+<!-- Cambiar rol -->
+<div class="modal" id="modalSwitchRole" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-user-gear"></i> {{ __('account.switch_role') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form id="formSwitchRole" action="{{ route('perfil.toggleRole') }}" method="POST">
+      @csrf
+      <div class="fieldset">
+        <span class="legend"><i class="fa-solid fa-arrows-rotate"></i> {{ __('account.choose_mode') }}</span>
+        <div class="modal-grid">
+          <label class="modal-field field" style="cursor:pointer">
+            <span class="label"><i class="fa-solid fa-microphone"></i> {{ __('account.artist') }}</span>
+            <input type="radio" name="modo" value="artista" {{ auth()->user()->es_artista ? 'checked' : '' }}>
+            <small class="muted">{{ __('account.artist_desc') }}</small>
+          </label>
+          <label class="modal-field field" style="cursor:pointer">
+            <span class="label"><i class="fa-solid fa-user"></i> {{ __('account.user') }}</span>
+            <input type="radio" name="modo" value="usuario" {{ !auth()->user()->es_artista ? 'checked' : '' }}>
+            <small class="muted">{{ __('account.user_desc') }}</small>
+          </label>
+        </div>
+      </div>
+
+      @if(auth()->user()->es_artista)
+        <div class="fieldset" style="margin-top:14px;">
+          <span class="legend"><i class="fa-solid fa-triangle-exclamation"></i> {{ __('account.warning') }}</span>
+          <p style="color:#f87171;font-weight:700;margin:0;">
+            ⚠ {{ __('account.warning_artist_to_user') }}
+          </p>
+          <input type="hidden" name="confirmar" value="1">
+        </div>
+      @endif
+
+      <div class="modal-actions">
+        <button id="btnConfirmRole" class="btn btn-primary" type="button"><i class="fa-solid fa-rotate"></i> {{ __('account.change') }}</button>
+        <button class="btn btn-secondary" type="button" data-close>{{ __('account.cancel') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Modal ingresar nombre artístico -->
+<div class="modal" id="modalArtistName" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-microphone"></i> {{ __('account.artist_name') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form action="{{ route('perfil.toggleRole') }}" method="POST">
+      @csrf
+      <input type="hidden" name="modo" value="artista">
+      <div class="fieldset">
+        <span class="legend"><i class="fa-solid fa-pen"></i> {{ __('account.enter_artist_name') }}</span>
+        <div class="modal-grid">
+          <div class="modal-field col-2">
+            <input class="form-ctrl" name="nombre_artistico" type="text" placeholder="{{ __('account.artist_name_ph') }}" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-check"></i> {{ __('account.confirm') }}</button>
+        <button class="btn btn-secondary" type="button" data-close>{{ __('account.cancel') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+  <!-- Contraseña -->
+<div class="modal" id="modalPassword" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-lock"></i> {{ __('account.change_password') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form action="{{ route('perfil.changePassword') }}" method="POST" id="formPassword">
+      @csrf
+      <div class="modal-grid">
+        
+        <!-- Contraseña actual -->
+        <div class="modal-field col-2">
+          <label class="label"><i class="fa-solid fa-key"></i> {{ __('account.current_password') }}</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock left-ico"></i>
+            <input class="form-ctrl with-ico" type="password" name="current_password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pass"><i class="fa-solid fa-eye"></i></button>
+          </div>
+          @error('current_password')
+            <small style="color:#f87171; font-weight:700;">{{ $message }}</small>
+          @enderror
+        </div>
+
+        <!-- Nueva contraseña -->
+        <div class="modal-field">
+          <label class="label"><i class="fa-solid fa-shield-keyhole"></i> {{ __('account.new_password') }}</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-shield-halved left-ico"></i>
+            <input class="form-ctrl with-ico" type="password" id="newPass" name="password" placeholder="{{ __('account.new_password_ph') }}" autocomplete="new-password" required>
+            <button type="button" class="toggle-pass"><i class="fa-solid fa-eye"></i></button>
+          </div>
+          @error('password')
+            <small style="color:#f87171; font-weight:700;">{{ $message }}</small>
+          @enderror
+        </div>
+
+        <!-- Confirmar nueva -->
+        <div class="modal-field">
+          <label class="label"><i class="fa-solid fa-check-double"></i> {{ __('account.confirm_new_password') }}</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-shield-halved left-ico"></i>
+            <input class="form-ctrl with-ico" type="password" name="password_confirmation" id="newPass2" placeholder="{{ __('account.confirm_new_password_ph') }}" autocomplete="new-password" required>
+            <button type="button" class="toggle-pass"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+
+        <div class="modal-field col-2">
+          <small class="muted" id="pwMsg"></small>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-save"></i> {{ __('account.save') }}</button>
+        <button class="btn btn-secondary" type="button" data-close>{{ __('account.cancel') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Idioma -->
+<div class="modal" id="modalLanguage" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-language"></i> {{ __('account.language') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-grid">
+      {{-- Botón Español --}}
+      <form action="{{ route('languages', 'es') }}" method="POST">
+        @csrf
+        <button type="submit"
+          class="btn {{ app()->getLocale() === 'es' ? 'btn-primary' : 'btn-secondary' }}">
+          <i class="fa-solid fa-flag"></i> {{ __('account.spanish') }}
+          @if(app()->getLocale() === 'es')
+            <i class="fa-solid fa-check" style="margin-left:6px"></i>
+          @endif
+        </button>
+      </form>
+
+      {{-- Botón Inglés --}}
+      <form action="{{ route('languages', 'en') }}" method="POST">
+        @csrf
+        <button type="submit"
+          class="btn {{ app()->getLocale() === 'en' ? 'btn-primary' : 'btn-secondary' }}">
+          <i class="fa-solid fa-flag-usa"></i> {{ __('account.english') }}
+          @if(app()->getLocale() === 'en')
+            <i class="fa-solid fa-check" style="margin-left:6px"></i>
+          @endif
+        </button>
+      </form>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" data-close>
+        {{ __('account.close') }}
+      </button>
     </div>
   </div>
+</div>
+
+
+<!-- Modal Soporte -->
+<div class="modal" id="modalSupport" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    
+    <!-- Encabezado -->
+    <div class="modal-header">
+      <h3>
+        <i class="fa-solid fa-headset"></i>
+        {{ __('account.contact_support') }}
+      </h3>
+      <button type="button" class="btn btn-ghost" data-close aria-label="{{ __('account.close') }}">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form 
+      action="{{ $actionSupport }}" 
+      method="POST" 
+      id="formSupport" 
+      data-demo="{{ $actionSupport==='#' ? '1' : '0' }}"
+    >
+      @csrf
+
+      <div class="fieldset">
+        <span class="legend">
+          <i class="fa-solid fa-envelope"></i>
+          {{ __('account.support_request') }}
+        </span>
+
+        <div class="modal-grid">
+          <!-- Asunto -->
+          <div class="modal-field col-2">
+            <label class="label" for="supportSubject">
+              <i class="fa-solid fa-heading"></i>
+              {{ __('account.subject') }}
+            </label>
+            <input 
+              id="supportSubject"
+              class="form-ctrl"
+              type="text"
+              name="subject"
+              placeholder="{{ __('account.subject_ph') }}"
+              maxlength="255"
+              required
+            >
+          </div>
+
+          <!-- Mensaje -->
+          <div class="modal-field col-2">
+            <label class="label" for="supportMessage">
+              <i class="fa-solid fa-message"></i>
+              {{ __('account.message') }}
+            </label>
+            <textarea 
+              id="supportMessage"
+              class="form-ctrl"
+              name="message"
+              rows="6"
+              maxlength="2000"
+              placeholder="{{ __('account.message_ph') }}"
+              required
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-paper-plane"></i>
+          {{ __('account.send') }}
+        </button>
+        <button class="btn btn-secondary" type="button" data-close>
+          <i class="fa-solid fa-xmark"></i>
+          {{ __('account.cancel') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Seguridad (doc) -->
+<div class="modal" id="modalSecurityInfo" aria-hidden="true">
+  <div class="modal-content xl">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-shield-alt"></i> {{ __('account.security_privacy') }}</h3>
+      <button type="button" class="btn btn-ghost" data-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="secdoc">
+      <div class="particles" id="secParticles"></div>
+      <div class="container">
+        <div class="security-header">
+          <h1><i class="fas fa-shield-alt"></i> {{ __('account.security_privacy') }}</h1>
+          <p>{{ __('account.security_intro') }}</p>
+        </div>
+
+        <div class="privacy-policy">
+          <h2><i class="fas fa-file-contract"></i> {{ __('account.privacy_policy') }}</h2>
+
+          <div class="privacy-section">
+            <h3>{{ __('account.info_collection_title') }}</h3>
+            <p>{{ __('account.info_collection_text') }}</p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>{{ __('account.info_use_title') }}</h3>
+            <p>{{ __('account.info_use_text') }}</p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>{{ __('account.info_share_title') }}</h3>
+            <p>{{ __('account.info_share_text') }}</p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>{{ __('account.data_retention_title') }}</h3>
+            <p>{{ __('account.data_retention_text') }}</p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>{{ __('account.your_rights_title') }}</h3>
+            <p>{{ __('account.your_rights_text') }}</p>
+          </div>
+        </div>
+
+        <div class="contact-security">
+          <h3><i class="fas fa-headset"></i> {{ __('account.security_contact') }}</h3>
+          <p>{{ __('account.security_contact_text') }}</p>
+          <p>Email: <a href="mailto:aura@gmail.com" class="security-email">aura@gmail.com</a></p>
+          <p><strong>{{ __('account.security_response') }}</strong></p>
+          <p>{{ __('account.security_available') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" data-close>{{ __('account.close') }}</button>
+    </div>
+  </div>
+</div>
 
   @endif
 </div>
 
-<!-- Toast -->
-<div id="auraToast" role="status" aria-live="polite">Modo demo: acción visual.</div>
+{{-- Éxito --}}
+@if(session('status') === 'password-updated')
+  <script>auraToast("✅ Tu contraseña se actualizó correctamente.");</script>
+@endif
 
+{{-- ❌ Errores --}}
+@if($errors->has('current_password'))
+  <script>auraToast("❌ {{ $errors->first('current_password') }}");</script>
+@endif
+
+@if($errors->has('password'))
+  <script>auraToast("❌ {{ $errors->first('password') }}");</script>
+@endif
+
+@if($errors->any() && !$errors->has('current_password') && !$errors->has('password'))
+  <script>auraToast("❌ No se pudo actualizar la contraseña, revisa los datos.");</script>
+@endif
 <script>
 (function(){
   const root = document.querySelector('#page-account');
@@ -790,7 +986,18 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
     m.addEventListener('click',(e)=>{ if(e.target===m) closeModal(m); });
     m.querySelectorAll('[data-close]').forEach(c=> c.addEventListener('click', ()=> closeModal(m)));
   });
-
+document.querySelectorAll('.toggle-pass').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const input = btn.previousElementSibling; // input justo antes del botón
+    if(input.type === 'password'){
+      input.type = 'text';
+      btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+    }
+  });
+});
   // Previews imagenes
   const avatarInput = document.getElementById('avatarInput');
   const avatarPrev  = document.getElementById('avatarPreview');
@@ -855,6 +1062,31 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
   }
   document.querySelector('[data-open="#modalSecurityInfo"]')?.addEventListener('click', createSecParticles);
 })();
+
+// Animación automática
+document.querySelectorAll('.notify').forEach(el => {
+  requestAnimationFrame(() => el.classList.add('show')); // fade-in
+
+  setTimeout(() => {
+    el.classList.remove('show'); // fade-out
+    setTimeout(() => el.remove(), 600); // espera animación
+  }, 3000);
+});
+
+document.getElementById('btnConfirmRole')?.addEventListener('click', ()=>{
+  const isArtist = {{ auth()->user()->es_artista ? 'true' : 'false' }};
+  const artistRadio = document.querySelector('input[name="modo"][value="artista"]');
+  const userRadio   = document.querySelector('input[name="modo"][value="usuario"]');
+
+  if(!isArtist && artistRadio?.checked){
+    // Usuario → Artista → pedir nombre artístico
+    document.querySelector('#modalSwitchRole')?.setAttribute('aria-hidden','true');
+    document.querySelector('#modalArtistName')?.setAttribute('aria-hidden','false');
+  } else {
+    // Enviar el form original (usuario → usuario o artista → usuario)
+    document.querySelector('#modalSwitchRole form')?.submit();
+  }
+});
 </script>
 </body>
 </html>

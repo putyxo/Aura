@@ -37,6 +37,7 @@ class User extends Authenticatable
         'imagen_portada',
         'banner',
         'verificado',
+        'idioma',
     ];
 
     protected $hidden = [

@@ -3,15 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Álbumes — {{ ($user->nombre_artistico ?? $user->nombre ?? 'Artista') ?? 'Artista' }}</title>
+<title>{{ __('albums.title') }} — {{ ($user->nombre_artistico ?? $user->nombre ?? __('albums.artist')) ?? __('albums.artist') }}</title>
 
   <!-- Fuentes y estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   @vite('resources/css/menu_album.css')
 
-<<<<<<< HEAD
-=======
+
   @php
     // ====== FALLBACKS PARA EVITAR "Undefined variable $user" ======
     use Illuminate\Support\Str;
@@ -43,7 +42,6 @@
     });
     $albumPages = $albumsNormalized->chunk(4); // 4 álbumes por página
   @endphp
->>>>>>> Parte-ubitzo
 </head>
 <body>
   @includeIf('components.sidebar')
@@ -60,15 +58,15 @@
       <div class="banner-overlay"></div>
 
       <div class="user-info">
-        <h2 class="user-name">{{ $user->nombre_artistico ?? $user->nombre ?? 'Invitado' }}</h2>
-        <p class="user-followers">{{ $followersCount }} seguidores</p>
+        <h2 class="user-name">{{ $user->nombre_artistico ?? $user->nombre ?? __('Guest') }}</h2>
+        <p class="user-followers">{{ $followersCount }} {{ __('followers') }}</p>
       </div>
     </div>
 
     <!-- Título flotante debajo del banner -->
     <div class="albums-head" style="margin-top: 20px;">
       <div class="section-title">
-        <h2><i class="fa-solid fa-compact-disc"></i> Álbumes</h2>
+        <h2><i class="fa-solid fa-compact-disc"></i> {{ __('albums.title') }}</h2>
       </div>
       <div class="page-label" id="albumsPageLabel"></div>
     </div>
@@ -91,7 +89,6 @@
                       ? drive_img_url($album->portada, 360) . '&v=' . time()
                       : asset('img/default-album.png');
 
-<<<<<<< HEAD
                     $tracksData = $album->songs->map(function($song) {
                       return [
                         'title' => $song->titulo,
@@ -105,24 +102,22 @@
                        data-title="{{ $album->titulo }}"
                        data-tracks='{{ $tracksJson }}'>
                     <div class="card-link">
-=======
                     $isOwner = $user && Auth::check() && Auth::id() === ($user->id ?? null);
                   @endphp
 
                   <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
                     <a href="{{ route('album.show', $album->id) }}" class="card-link">
->>>>>>> Parte-ubitzo
                       <div class="card-img">
                         <img src="{{ $albumCover }}" alt="Portada" loading="lazy" decoding="async">
                         <span class="album-play"><i class="fa-solid fa-play"></i></span>
                       </div>
                       <h4 class="album-title" style="cursor: pointer;">{{ $album->titulo }}</h4>
-                      <p class="album-sub">Por {{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}</p>
+                      <p class="album-sub">{{ __('albums.by') }} {{ $user->nombre_artistico ?? $user->nombre ?? __('Artist') }}</p>
                     </div>
 
                     @if($isOwner)
                       <button class="trash-float open-delete"
-                              title="Eliminar álbum"
+                              title="{{ __('albums.delete') }}"
                               data-type="album"
                               data-action="{{ route('album.destroy', $album->id) }}"
                               data-title="{{ $album->titulo }}"
@@ -138,7 +133,7 @@
             <div class="albums-page">
               <div class="empty-state">
                 <i class="fa-regular fa-folder-open"></i>
-                <p>No hay álbumes todavía.</p>
+                <p>{{ __('albums.empty') }}</p>
               </div>
             </div>
           @endforelse
@@ -158,8 +153,8 @@
   <div id="albumModal" class="modal-overlay">
     <div class="modal-content">
       <button class="modal-close">&times;</button>
-      <h2 id="modal-album-title"><i class="fa-solid fa-compact-disc"></i> Álbum</h2>
-      <ul id="modal-album-tracks"></ul>
+          <h2 id="modal-album-title"><i class="fa-solid fa-compact-disc"></i> {{ __('albums.title') }}</h2>
+          <ul id="modal-album-tracks"></ul>
     </div>
   </div>
 
@@ -171,7 +166,6 @@
       const prev = document.getElementById('albumsPrev');
       const next = document.getElementById('albumsNext');
       const label = document.getElementById('albumsPageLabel');
-<<<<<<< HEAD
       if (track) {
         let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
         function update() {
@@ -197,7 +191,7 @@
         if (albumsTitle) {
         albumsTitle.addEventListener('click', (e) => {
           e.preventDefault();
-          modalTitle.innerHTML = `<i class="fa-solid fa-compact-disc"></i> Canciones de Álbumes que te gustaron`;
+          modalTitle.innerHTML = `<i class="fa-solid fa-compact-disc"></i> ${'@json(__('albums.liked_songs'))'}`;
           modalTracks.innerHTML = "";
 
           // Obtener todas las canciones de álbumes que el usuario ha marcado con "like"
@@ -209,8 +203,8 @@
 
           if (likedSongsData.length > 0) {
             likedSongsData.forEach((song, index) => {
-              const title = song.title || song.titulo || 'Canción';
-              const albumTitle = song.album ? song.album.titulo : 'Álbum desconocido';
+              const title = song.title || song.titulo || '@json(__('Song'))';
+              const albumTitle = song.album ? song.album.titulo : '@json(__('Unknown Album'))';
               const li = document.createElement('li');
               const audioUrl = song.audio_path || song.audio_url || '';
               li.innerHTML = `<span>${index + 1}. ${title} - <em>${albumTitle}</em></span> <i class="fa-solid fa-play play-icon" data-title="${title} - ${albumTitle}" data-audio="${audioUrl}"></i>`;
@@ -218,7 +212,7 @@
             });
           } else {
             const li = document.createElement('li');
-            li.innerHTML = `<span>No tienes canciones de álbumes que te gustaron</span>`;
+            li.innerHTML = `<span>${'@json(__('albums.no_liked_songs'))'}</span>`;
             modalTracks.appendChild(li);
           }
 
@@ -362,7 +356,7 @@
         });
       }
     });
-=======
+
       if (!track) return;
 
       let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
@@ -387,7 +381,6 @@
       ensureWidths();
       update();
     })();
->>>>>>> Parte-ubitzo
   </script>
 </body>
 </html>

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Cancion;
 use App\Models\Album;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use App\Services\GoogleDriveOAuthService;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -20,18 +21,13 @@ class PerfilController extends Controller
         $this->drive = $drive;
     }
 
-    /**
-     * Muestra el perfil de un usuario.
-     */
     public function show($id)
     {
         $user = User::findOrFail($id);
 
-        // Obtener TODO (puedes limitar/paginar en DB si hace falta)
         $canciones = Cancion::where('user_id', $user->id)->latest()->get();
         $albumes   = Album::where('user_id', $user->id)->latest()->get();
 
-        // Combinar álbumes y canciones para lanzamientos (normalizados)
         $lanzamientos = collect();
 
         foreach ($albumes as $album) {
@@ -54,7 +50,6 @@ class PerfilController extends Controller
             ]);
         }
 
-        // Ordena por fecha y evita elementos totalmente vacíos
         $lanzamientos = $lanzamientos
             ->filter(fn($x) => !empty($x['titulo']))
             ->sortByDesc('created_at')
@@ -63,9 +58,6 @@ class PerfilController extends Controller
         return view('ed_perfil', compact('user', 'canciones', 'albumes', 'lanzamientos'));
     }
 
-    /**
-     * Página "Ver todo" de lanzamientos con paginación.
-     */
     public function releasesAll(Request $request, $userId)
     {
         $user = User::findOrFail($userId);
@@ -92,13 +84,11 @@ class PerfilController extends Controller
             ];
         });
 
-        /** @var Collection $all */
         $all = $albums->merge($songs)
             ->filter(fn($x) => !empty($x['titulo']))
             ->sortByDesc('created_at')
             ->values();
 
-        // Paginación manual de una Collection
         $perPage   = 24;
         $page      = LengthAwarePaginator::resolveCurrentPage() ?: 1;
         $items     = $all->slice(($page - 1) * $perPage, $perPage)->values();
@@ -159,53 +149,50 @@ class PerfilController extends Controller
             $user->biografia = $request->bio;
         }
 
-        // Carpeta en Drive
         $folderId = env('GOOGLE_DRIVE_UPLOAD_FOLDER_ID');
 
-        // Avatar
         if ($request->hasFile('avatar')) {
             $file  = $request->file('avatar');
             $local = $file->getPathname();
             $name  = uniqid('avatar_') . '.' . $file->getClientOriginalExtension();
             $mime  = $file->getMimeType();
             $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-            $user->avatar = $uploaded['id']; // ID del archivo
+            $user->avatar = $uploaded['id'];
         }
 
-        // Banner
         if ($request->hasFile('banner')) {
             $file  = $request->file('banner');
             $local = $file->getPathname();
             $name  = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
             $mime  = $file->getMimeType();
             $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-            $user->banner = $uploaded['id']; // ID del archivo
+            $user->banner = $uploaded['id'];
         }
 
         $user->save();
 
         return redirect()->route('perfil.show', $user->id)
-            ->with('success', 'Perfil actualizado correctamente ✅');
+            ->with('success', __('account.profile_updated'));
     }
 
     public function follow($userId)
     {
         $user = Auth::user();
         if ($user->isFollowing($userId)) {
-            return redirect()->back()->with('error', 'Ya sigues a este usuario.');
+            return redirect()->back()->with('error', __('account.already_following'));
         }
         $user->followings()->attach($userId);
-        return redirect()->back()->with('success', 'Ahora sigues a este artista.');
+        return redirect()->back()->with('success', __('account.now_following'));
     }
 
     public function unfollow($userId)
     {
         $user = Auth::user();
         if (!$user->isFollowing($userId)) {
-            return redirect()->back()->with('error', 'No sigues a este usuario.');
+            return redirect()->back()->with('error', __('account.not_following'));
         }
         $user->followings()->detach($userId);
-        return redirect()->back()->with('success', 'Has dejado de seguir a este artista.');
+        return redirect()->back()->with('success', __('account.unfollowed'));
     }
 
     public function followArtistList()
@@ -214,4 +201,63 @@ class PerfilController extends Controller
         $artistasSeguidos = $user->followings;
         return view('follow_artist', compact('artistasSeguidos'));
     }
+
+    public function toggleRole(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($request->modo === 'artista' && !$user->es_artista) {
+            $request->validate([
+                'nombre_artistico' => 'required|string|max:255'
+            ]);
+
+            $user->es_artista = 1;
+            $user->nombre_artistico = $request->nombre_artistico;
+            $user->save();
+
+            return back()->with('status', __('account.role_artist'));
+        }
+
+        if ($request->modo === 'usuario' && $user->es_artista) {
+            if (!$request->has('confirmar')) {
+                return back()->with('warning', __('account.role_user_confirm'));
+            }
+
+            \App\Models\Cancion::where('user_id', $user->id)->delete();
+            \App\Models\Album::where('user_id', $user->id)->delete();
+
+            $user->es_artista = 0;
+            $user->nombre_artistico = null;
+            $user->save();
+
+            return back()->with('status', __('account.role_user_done'));
+        }
+
+        return back()->with('info', __('account.no_changes'));
+    }
+
+public function setLanguage(Request $request)
+{
+    // Asegurarnos que venga algo válido (solo 'es' o 'en')
+    $lang = $request->input('lang');
+
+    if (!in_array($lang, ['es', 'en'])) {
+        $lang = 'en'; // por defecto inglés
+    }
+
+    // Si está logueado, guardamos en la BD
+    if (auth()->check()) {
+        $user = auth()->user();
+        $user->idioma = $lang;
+        $user->save();
+    } else {
+        // Si no, lo guardamos en la sesión
+        session(['locale' => $lang]);
+    }
+
+    // Aplicar inmediatamente al request actual
+    App::setLocale($lang);
+
+    return back()->with('status', __('account.language_changed'));
+}
 }
