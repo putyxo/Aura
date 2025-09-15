@@ -2,161 +2,150 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Jobs\GenerateLyricsJob;
 use App\Models\Cancion;
-use App\Services\GoogleDriveOAuthService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CancionController extends Controller
 {
     /**
-     * Eliminar una canción (local + Google Drive)
+     * Eliminar una canción (archivos locales + relaciones).
      */
-    public function destroy($id, Request $request, GoogleDriveOAuthService $drive)
+    public function destroy(Cancion $cancion, Request $request)
     {
-        $cancion = Cancion::findOrFail($id);
-
-        // Asegura que la canción pertenece al usuario logueado
-        if ((int)$cancion->user_id !== (int)Auth::id()) {
+        // Verifica que la canción pertenezca al usuario actual
+        if ((int) $cancion->user_id !== (int) Auth::id()) {
             abort(403, 'Acción no autorizada.');
         }
 
-        // ---- Portada ----
-        // Soporta: cover_id, cover_url, portada, cover_path (URL o ruta local)
-        $this->deleteLocalIfExists($cancion->cover_path ?? null);
-        $this->deleteLocalIfExists($cancion->cover_url ?? null);
-        $this->deleteLocalIfExists($cancion->portada    ?? null);
-        $this->deleteDriveIfPossible($drive, $cancion->cover_id ?? $cancion->cover_url ?? $cancion->portada ?? $cancion->cover_path ?? null);
+        // --- Eliminar archivos locales (si las rutas son relativas) ---
+        $songCoverPath = $cancion->cover_path ?? $cancion->portada ?? null;
+        $songAudioPath = $cancion->audio_path ?? $cancion->audio ?? null;
 
-        // ---- Audio ----
-        // Soporta: audio_id, audio_url, audio, audio_path
-        $this->deleteLocalIfExists($cancion->audio_path ?? null);
-        $this->deleteLocalIfExists($cancion->audio      ?? null);
-        $this->deleteLocalIfExists($cancion->audio_url  ?? null);
-        $this->deleteDriveIfPossible($drive, $cancion->audio_id ?? $cancion->audio_url ?? $cancion->audio ?? null);
+        $this->deleteLocalIfRelative($songAudioPath);
+        $this->deleteLocalIfRelative($songCoverPath);
 
-        // Desvincular relaciones si no tienes cascadas
-        if (method_exists($cancion, 'likedBy'))   { $cancion->likedBy()->detach(); }
-        if (method_exists($cancion, 'playlists')) { $cancion->playlists()->detach(); }
+        // --- Quitar relaciones (si no usas ON DELETE CASCADE) ---
+        $cancion->likedBy()->detach();
+        $cancion->playlists()->detach();
 
+        // --- Eliminar la canción ---
         $cancion->delete();
 
         if ($request->wantsJson()) {
             return response()->json(['ok' => true, 'message' => 'Canción eliminada correctamente ✅']);
         }
+
         return redirect()->back()->with('success', 'Canción eliminada correctamente ✅');
     }
 
     /**
-     * ❤️ Alternar like/unlike a una canción
+     * ❤️ Alternar like/unlike a una canción.
+     * Ruta: POST /canciones/{cancion}/like
      */
     public function toggleLike(Cancion $cancion)
     {
         $user = Auth::user();
 
-        if ($user->likes()->where('song_id', $cancion->id)->exists()) {
-            $user->likes()->detach($cancion->id);
+        // Usamos la relación de la canción (no dependemos de $user->likes())
+        $yaLeDioLike = $cancion->likedBy()->where('users.id', $user->id)->exists();
+
+        if ($yaLeDioLike) {
+            $cancion->likedBy()->detach($user->id);
             return response()->json(['liked' => false, 'message' => 'Like eliminado']);
         } else {
-            $user->likes()->attach($cancion->id);
+            $cancion->likedBy()->attach($user->id);
             return response()->json(['liked' => true, 'message' => 'Like agregado']);
         }
     }
 
     /**
-     * ❤️ Saber si el usuario ya dio like
+     * ✅ Saber si el usuario ya dio like a una canción.
+     * Ruta: GET /canciones/{cancion}/liked
      */
     public function liked(Cancion $cancion)
     {
-        $liked = Auth::user()->likes()->where('song_id', $cancion->id)->exists();
+        $user = Auth::user();
+        $liked = $cancion->likedBy()->where('users.id', $user->id)->exists();
+
         return response()->json(['liked' => $liked]);
     }
 
     /**
-     * 🎵 Vista de canciones que el usuario ha marcado con like
+     * 🎵 Vista de canciones que el usuario ha marcado con like.
+     * Ruta: GET /like
      */
     public function like()
     {
         $user = Auth::user();
-        $likedSongs = $user->likes()->with('user')->get();
+
+        // Traemos las canciones donde el pivot likes tiene al user actual
+        $likedSongs = Cancion::with('user')
+            ->whereHas('likedBy', fn ($q) => $q->where('users.id', $user->id))
+            ->get();
+
         return view('like', compact('likedSongs'));
+    }
+
+    /**
+     * 📝 Disparar (o reintentar) la generación de letras para una canción.
+     * Ruta: POST /canciones/{cancion}/lyrics
+     */
+    public function generateLyrics(Cancion $cancion)
+    {
+        // Solo el dueño puede solicitar
+        if ((int) $cancion->user_id !== (int) Auth::id()) {
+            abort(403, 'Acción no autorizada.');
+        }
+
+        // Limpia estado y relanza
+        $cancion->update([
+            'lyrics'        => null,
+            'lyrics_status' => 'pending',
+            'lyrics_error'  => null,
+        ]);
+
+        GenerateLyricsJob::dispatch($cancion->id)->onQueue('default');
+
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Generación de letras iniciada.',
+        ]);
     }
 
     /* ================== Helpers privados ================== */
 
     /**
-     * Borra un archivo local si $path es una ruta válida en Storage.
-     * Ignora URLs (http/https).
+     * Elimina un archivo del disco 'public' si la ruta es RELATIVA (no URL absoluta).
      */
-    private function deleteLocalIfExists(?string $path): void
+    private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
 
-        // Si es URL, no es local
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        // Si es URL http(s), no borrar aquí
+        if (preg_match('~^https?://~i', $path)) {
             return;
         }
 
-        // Intentar en 'public' y luego en el disco por defecto
+        // Elimina en el disco 'public' (storage/app/public)
         try {
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
                 return;
             }
-        } catch (\Throwable $e) { /* noop */ }
+        } catch (\Throwable $e) {
+            // noop
+        }
 
+        // Como fallback, intenta en el disco por defecto
         try {
             if (Storage::exists($path)) {
                 Storage::delete($path);
             }
-        } catch (\Throwable $e) { /* noop */ }
-    }
-
-    /**
-     * Si $value es un ID/URL de Drive (o una URL interna con ?id=),
-     * intenta borrar en Google Drive.
-     */
-    private function deleteDriveIfPossible(GoogleDriveOAuthService $drive, $value): void
-    {
-        $id = $this->extractDriveId($value);
-        if (!$id) return;
-
-        if (method_exists($drive, 'delete')) {
-            try { $drive->delete($id); } catch (\Throwable $e) { /* noop */ }
+        } catch (\Throwable $e) {
+            // noop
         }
-    }
-
-    /**
-     * Extrae fileId desde:
-     *  - un id crudo
-     *  - URL Drive: /d/{id} o ?id=...
-     *  - URL interna tuya con ?id=...
-     */
-    private function extractDriveId($value): ?string
-    {
-        if (!$value) return null;
-        $v = trim((string)$value);
-
-        // Id crudo (sin http)
-        if (!str_starts_with($v, 'http://') && !str_starts_with($v, 'https://')) {
-            return preg_match('/^[A-Za-z0-9_\-]{10,}$/', $v) ? $v : null;
-        }
-
-        // ?id=...
-        $q = parse_url($v, PHP_URL_QUERY);
-        if ($q) {
-            parse_str($q, $params);
-            if (!empty($params['id']) && preg_match('/^[A-Za-z0-9_\-]{10,}$/', $params['id'])) {
-                return $params['id'];
-            }
-        }
-
-        // /d/{id} o /folders/{id}
-        if (preg_match('~/(?:d|folders)/([^/?#]+)~', $v, $m)) {
-            return $m[1];
-        }
-
-        return null;
     }
 }

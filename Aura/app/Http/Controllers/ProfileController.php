@@ -13,7 +13,7 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Mostrar el formulario de perfil del usuario.
      */
     public function edit(Request $request): View
     {
@@ -23,40 +23,50 @@ class ProfileController extends Controller
     }
 
     /**
-     * Mostrar los álbumes del usuario.
+     * Mostrar los álbumes del usuario (grid 2x2 paginado en memoria).
      */
     public function menuAlbum(Request $request): View
     {
-        // Obtener el usuario autenticado
         $user = $request->user();
 
-        // Obtener los álbumes asociados al usuario con sus canciones
-        $albumes = Album::where('user_id', $user->id)->with(['songs' => function($query) {
-            $query->select('id', 'album_id', 'titulo', 'audio_path');
-        }])->get();
+        // Álbumes del usuario con canciones.
+        // Usamos COALESCE para que "titulo" funcione aunque el campo sea title/titulo/nombre.
+        $albumes = Album::where('user_id', $user->id)
+            ->with(['songs' => function ($query) {
+                $query
+                    ->select('id', 'album_id', 'audio_path')
+                    ->selectRaw('COALESCE(title, titulo, nombre) AS titulo');
+            }])
+            ->get();
 
-        // Agrupar álbumes en páginas de 4 (para grid 2x2)
+        // Agrupar en páginas de 4 (2x2)
         $albumPages = $albumes->chunk(4);
 
-        // Obtener las canciones que el usuario ha dado like, con información del álbum
-        $likedSongs = $user->likes()->with(['album' => function($query) {
-            $query->select('id', 'titulo');
-        }])->select('id', 'titulo', 'audio_path', 'album_id')->get();
+        // Canciones que el usuario ha dado like, con datos del álbum.
+        $likedSongs = $user->likes()
+            ->with(['album' => function ($q) {
+                $q->select('id')
+                  ->selectRaw('COALESCE(title, titulo) AS titulo');
+            }])
+            ->select('id', 'album_id', 'audio_path')
+            ->selectRaw('COALESCE(title, titulo, nombre) AS titulo')
+            ->get();
 
-        // Calcular el número de seguidores
-        $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
+        // Número de seguidores (usa relación followers() si existe)
+        $followersCount = method_exists($user, 'followers')
+            ? $user->followers()->count()
+            : (int) ($user->seguidores ?? 0);
 
-        // Pasar datos a la vista
         return view('menu_album', [
-            'user' => $user,
-            'albumPages' => $albumPages,
-            'likedSongs' => $likedSongs,
+            'user'           => $user,
+            'albumPages'     => $albumPages,
+            'likedSongs'     => $likedSongs,
             'followersCount' => $followersCount,
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Actualizar la información del perfil del usuario.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -72,7 +82,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Eliminar la cuenta del usuario.
      */
     public function destroy(Request $request): RedirectResponse
     {

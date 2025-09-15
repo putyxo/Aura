@@ -46,10 +46,10 @@
               </div>
             </div>
             <div class="axup-hero__actions">
-              <button class="axup-btn axup-btn-primary" id="axupOpenModalSong">
+              <button class="axup-btn axup-btn-primary" id="axupOpenModalSong" type="button">
                 <i class="fa-solid fa-music"></i> <span>{{ __('upload.upload_song') }}</span>
               </button>
-              <button class="axup-btn axup-btn-secondary" id="axupOpenModalAlbum">
+              <button class="axup-btn axup-btn-secondary" id="axupOpenModalAlbum" type="button">
                 <i class="fa-solid fa-compact-disc"></i> <span>{{ __('upload.create_album') }}</span>
               </button>
             </div>
@@ -60,20 +60,20 @@
               <div class="axup-search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 <input id="axupSearch" type="search" placeholder="{{ __('upload.search_placeholder') }}" aria-label="{{ __('upload.search_placeholder') }}" autocomplete="off">
-                <button class="axup-clear" id="axupClearSearch" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+                <button class="axup-clear" id="axupClearSearch" aria-label="Limpiar búsqueda" type="button"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div class="axup-filters">
-                <button class="axup-chip is-active" data-filter="all">{{ __('upload.filter_all') }}</button>
-                <button class="axup-chip" data-filter="songs">{{ __('upload.filter_songs') }}</button>
-                <button class="axup-chip" data-filter="albums">{{ __('upload.filter_albums') }}</button>
-                <button class="axup-chip" data-filter="recent">{{ __('upload.filter_recent') }}</button>
+                <button class="axup-chip is-active" data-filter="all" type="button">{{ __('upload.filter_all') }}</button>
+                <button class="axup-chip" data-filter="songs" type="button">{{ __('upload.filter_songs') }}</button>
+                <button class="axup-chip" data-filter="albums" type="button">{{ __('upload.filter_albums') }}</button>
+                <button class="axup-chip" data-filter="recent" type="button">{{ __('upload.filter_recent') }}</button>
               </div>
             </div>
             <div class="axup-toolbar__right">
-              <button class="axup-btn axup-btn-ghost" id="axupSelectMode" aria-pressed="false">
+              <button class="axup-btn axup-btn-ghost" id="axupSelectMode" aria-pressed="false" type="button">
                 <i class="fa-regular fa-square"></i><span class="axup-btn-text">{{ __('upload.select_mode') }}</span>
               </button>
-              <button class="axup-btn axup-btn-ghost axup-is-danger" id="axupDeleteSelected" disabled>
+              <button class="axup-btn axup-btn-ghost axup-is-danger" id="axupDeleteSelected" type="button" disabled>
                 <i class="fa-regular fa-trash-can"></i><span class="axup-btn-text">{{ __('upload.delete_selected') }}</span>
               </button>
             </div>
@@ -107,7 +107,7 @@
             </div>
             <div class="axup-tile-name">{{ __('upload.song_option_title') }}</div>
             <div class="axup-tile-desc">{{ __('upload.song_option_desc') }}</div>
-            <button class="axup-btn axup-btn-primary axup-tile-action">
+            <button class="axup-btn axup-btn-primary axup-tile-action" type="button">
               <i class="fa-solid fa-plus"></i> {{ __('upload.song_option_button') }}
             </button>
           </div>
@@ -121,7 +121,7 @@
             </div>
             <div class="axup-tile-name">{{ __('upload.album_option_title') }}</div>
             <div class="axup-tile-desc">{{ __('upload.album_option_desc') }}</div>
-            <button class="axup-btn axup-btn-secondary axup-tile-action">
+            <button class="axup-btn axup-btn-secondary axup-tile-action" type="button">
               <i class="fa-solid fa-plus"></i> {{ __('upload.album_option_button') }}
             </button>
           </div>
@@ -130,9 +130,9 @@
       </div>
 
       <!-- Backdrop + Modals -->
-      <div id="axupModalBackdrop" class="axup-modal-backdrop">
+      <div id="axupModalBackdrop" class="axup-modal-backdrop" aria-hidden="true">
         <!-- Modal (subir canción) -->
-        <div id="axupModalSong" class="axup-modal" role="dialog" aria-modal="true" aria-labelledby="axupModalSongTitle">
+        <div id="axupModalSong" class="axup-modal" role="dialog" aria-modal="true" aria-labelledby="axupModalSongTitle" aria-hidden="true">
           <form id="axupFormSong" class="axup-modal-form" action="{{ route('songs.store') }}" method="POST" enctype="multipart/form-data" novalidate>
             @csrf
             <div class="axup-modal-header">
@@ -188,7 +188,7 @@
         </div>
 
         <!-- Modal (crear álbum) -->
-        <div id="axupModalAlbum" class="axup-modal" role="dialog" aria-modal="true" aria-labelledby="axupModalAlbumTitle">
+        <div id="axupModalAlbum" class="axup-modal" role="dialog" aria-modal="true" aria-labelledby="axupModalAlbumTitle" aria-hidden="true">
           <form id="axupFormAlbum" class="axup-modal-form" action="{{ route('albums.store') }}" method="POST" enctype="multipart/form-data" novalidate>
             @csrf
             <div class="axup-modal-header">
@@ -254,7 +254,7 @@
   window.userId = @json(Auth::id());
 </script>
 
-<!-- Guard-rails de layout: calcula márgenes seguros según sidebar/header/footer/player -->
+<!-- Guard-rails de layout -->
 <script>
 (() => {
   const root = document.querySelector('#axupRoot.axup');
@@ -265,36 +265,16 @@
     root?.style.setProperty(name, v);
   }
 
-  function widthIfDockedLeft(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(r.left) < 2 ? r.width : 0;
-  }
-
-  function widthIfDockedRight(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
-  }
-
-  function heightIfDockedTop(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return r.top <= 0 ? r.height : 0;
-  }
-
-  function heightIfDockedBottom(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(window.innerHeight - r.bottom) < 2 ? r.height : 0;
-  }
+  function widthIfDockedLeft(el){ if(!el) return 0; const r = el.getBoundingClientRect(); return Math.abs(r.left) < 2 ? r.width : 0; }
+  function widthIfDockedRight(el){ if(!el) return 0; const r = el.getBoundingClientRect(); return Math.abs(innerWidth - r.right) < 2 ? r.width : 0; }
+  function heightIfDockedTop(el){ if(!el) return 0; const r = el.getBoundingClientRect(); return r.top <= 0 ? r.height : 0; }
+  function heightIfDockedBottom(el){ if(!el) return 0; const r = el.getBoundingClientRect(); return Math.abs(innerHeight - r.bottom) < 2 ? r.height : 0; }
 
   function measure(){
     const sidebar = document.querySelector('.sidebar') || document.querySelector('[class*="side"]');
     const player  = document.querySelector('.player, .right-player') || document.querySelector('[class*="player"]');
     const header  = document.querySelector('.header') || document.querySelector('header');
     const footer  = document.querySelector('.footer') || document.querySelector('footer');
-
     setVar('--safe-left',   widthIfDockedLeft(sidebar));
     setVar('--safe-right',  widthIfDockedRight(player));
     setVar('--safe-top',    heightIfDockedTop(header));
@@ -305,10 +285,166 @@
   ['.sidebar','[class*="side"]','.player','.right-player','[class*="player"]','.header','header','.footer','footer']
     .forEach(sel => document.querySelectorAll(sel).forEach(el => ro.observe(el)));
 
-  window.addEventListener('resize', measure);
-  window.addEventListener('orientationchange', measure);
+  addEventListener('resize', measure);
+  addEventListener('orientationchange', measure);
   document.addEventListener('DOMContentLoaded', measure);
   measure();
+})();
+</script>
+
+<!-- ==== PATCH: NO más doble selección de archivos ==== -->
+<script>
+(() => {
+  if (window.__AXUP_PATCH_BOUND__) return;
+  window.__AXUP_PATCH_BOUND__ = true;
+
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  const backdrop   = $('#axupModalBackdrop');
+  const modalSong  = $('#axupModalSong');
+  const modalAlbum = $('#axupModalAlbum');
+
+  const btnOpenSong   = $('#axupOpenModalSong');
+  const btnOpenAlbum  = $('#axupOpenModalAlbum');
+  const btnCloseSong  = $('#axupCloseModalSong');
+  const btnCancelSong = $('#axupCancelSong');
+  const btnCloseAlbum = $('#axupCloseModalAlbum');
+  const btnCancelAlbum= $('#axupCancelAlbum');
+
+  const zones = [
+    $('#axupSongFileUploader'),
+    $('#axupSongCoverUploader'),
+    $('#axupAlbumCoverUploader'),
+    $('#axupAlbumTracksUploader'),
+  ].filter(Boolean);
+
+  const inputs = [
+    $('#axupSongFile'),
+    $('#axupSongCover'),
+    $('#axupAlbumCover'),
+    $('#axupAlbumTracks'),
+  ].filter(Boolean);
+
+  // ---------- Helpers Modal ----------
+  function openModal(which){
+    if (!backdrop) return;
+    backdrop.classList.add('is-open');
+    backdrop.setAttribute('aria-hidden','false');
+    const m = which === 'song' ? modalSong : modalAlbum;
+    if (m){ m.classList.add('is-active'); m.setAttribute('aria-hidden','false'); }
+  }
+  function closeAll(){
+    if (!backdrop) return;
+    [modalSong, modalAlbum].forEach(m => { if (!m) return; m.classList.remove('is-active'); m.setAttribute('aria-hidden','true'); });
+    backdrop.classList.remove('is-open');
+    backdrop.setAttribute('aria-hidden','true');
+  }
+
+  btnOpenSong?.addEventListener('click', () => openModal('song'));
+  btnOpenAlbum?.addEventListener('click', () => openModal('album'));
+  btnCloseSong?.addEventListener('click', closeAll);
+  btnCancelSong?.addEventListener('click', closeAll);
+  btnCloseAlbum?.addEventListener('click', closeAll);
+  btnCancelAlbum?.addEventListener('click', closeAll);
+
+  // Cerrar solo si el gesto empieza y termina en el backdrop (evita cierres fantasma)
+  let downOnBackdrop = false;
+  backdrop?.addEventListener('pointerdown', (e) => {
+    if (backdrop.dataset.blockClose === '1') return;
+    downOnBackdrop = (e.target === backdrop);
+  });
+  backdrop?.addEventListener('pointerup', (e) => {
+    if (backdrop.dataset.blockClose === '1') return;
+    if (downOnBackdrop && e.target === backdrop) closeAll();
+    downOnBackdrop = false;
+  });
+  [modalSong, modalAlbum].forEach(m => {
+    m?.addEventListener('pointerdown', e => e.stopPropagation());
+    m?.addEventListener('click', e => e.stopPropagation());
+  });
+
+  // ---------- Reentrancia / dedupe al abrir el file picker ----------
+  function blockClose(){ if (backdrop) backdrop.dataset.blockClose = '1'; }
+  function unblockClose(){ if (backdrop) delete backdrop.dataset.blockClose; }
+
+  function openPicker(input){
+    if (!input) return;
+
+    // Si ya hay una apertura en curso, no repetir
+    if (input.dataset.open === '1') return;
+    input.dataset.open = '1';
+
+    // Garantizar que 'change' se dispare aunque elijas el mismo archivo
+    try { input.value = ''; } catch(_) {}
+
+    blockClose();
+
+    // showPicker si existe, sino click()
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    } else {
+      input.click();
+    }
+
+    const cleanup = () => {
+      delete input.dataset.open;
+      unblockClose();
+    };
+
+    // Al seleccionar o cancelar, liberar bloqueos
+    input.addEventListener('change', cleanup, { once:true });
+    // Algunos navegadores disparan 'cancel', otros no; no pasa nada si no existe
+    input.addEventListener('cancel', cleanup, { once:true });
+
+    // Failsafe por si algo dejó bloqueado
+    setTimeout(() => { if (input.dataset.open === '1') cleanup(); }, 15000);
+  }
+
+  // Evitar doble-binding si otra parte del código también abre el file picker:
+  // usamos captura + stopImmediatePropagation para que SOLO se ejecute una vez.
+  zones.forEach(z => {
+    if (z.dataset.wired === '1') return;
+    z.dataset.wired = '1';
+
+    // Captura: tomamos prioridad sobre otros listeners
+    z.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      const input = z.parentElement?.querySelector('input[type="file"]');
+      openPicker(input);
+    }, { capture:true });
+
+    // También prevenir que pointerdown genere side-effects
+    z.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      // No cerramos el modal si el usuario empieza gesto aquí
+      blockClose();
+      setTimeout(unblockClose, 0);
+    }, { capture:true });
+  });
+
+  // Por si el usuario hace click directo (no en la zona), también blindamos los inputs
+  inputs.forEach(inp => {
+    if (inp.dataset.wired === '1') return;
+    inp.dataset.wired = '1';
+
+    inp.addEventListener('click', (e) => {
+      // Si alguien más llamó click(), cancelamos duplicados
+      e.stopPropagation();
+      if (inp.dataset.open === '1') { e.preventDefault(); return; }
+      // Convertimos el click “directo” en openPicker para unificar lógica
+      e.preventDefault();
+      openPicker(inp);
+    }, { capture:true });
+  });
+
+  // Ignorar clicks globales mientras el picker esté abierto (evita cierre al soltar)
+  document.addEventListener('click', (e) => {
+    if (backdrop?.dataset.blockClose === '1') e.stopPropagation();
+  }, true);
 })();
 </script>
 </body>

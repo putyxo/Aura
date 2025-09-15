@@ -6,23 +6,34 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ __('ed_perfil.title', ['name' => $user->nombre_artistico ?? 'Invitado']) }}</title>
 
-  <!-- Hints de red -->
+  <!-- Hints de red (reduce latencia de fuentes/CDN) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 
+  <!-- Fonts (swap evita FOIT) -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer">
 
-  {{-- CSS --}}
+  <!-- Font Awesome: carga no-bloqueante -->
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+
+  {{-- CSS + JS principal (evita @vite() vacío) --}}
   @vite(['resources/css/ed_perfil.css', 'resources/js/ed-perfil.js'])
 
   @php
     use Illuminate\Support\Str;
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Route as RouteFacade;
 
-    $bannerLow  = $user->banner ? drive_img_url($user->banner, 640)  . '&v=' . time() : asset('img/default-banner.jpg');
-    $bannerHigh = $user->banner ? drive_img_url($user->banner, 1920) . '&v=' . time() : asset('img/default-banner.jpg');
+    // Versionado estable por updated_at (sin time() para no romper caché)
+    $verUser     = optional($user->updated_at)->timestamp ?? 0;
+
+    // Banners/avatares
+    $bannerSrc   = $user->banner_url ?? asset('img/default-banner.jpg');
+    $bannerLow   = $bannerSrc.'?v='.$verUser;
+    $bannerHigh  = $bannerSrc.'?v='.$verUser;
 
     $followersCount = method_exists($user,'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
     $listenersCount = (int)($user->oyentes_mensuales ?? 0);
@@ -33,7 +44,7 @@
 
     $bio = trim($user->biografia ?? '') ?: 'Sin biografía por ahora.';
 
-    // URLs auxiliares
+    // URLs auxiliares (con fallback)
     $cuentaUrl =
       (RouteFacade::has('cuenta.index')     ? route('cuenta.index')     :
       (RouteFacade::has('cuenta')           ? route('cuenta')           :
@@ -45,9 +56,25 @@
 
     $isAuth  = Auth::check();
     $isOwner = $isAuth && Auth::id() === $user->id;
-  @endphp
+  @endphp>
 
+  <!-- Preload banner above-the-fold -->
   <link rel="preload" as="image" href="{{ $bannerLow }}">
+
+  <!-- CSS de performance puntual sin tocar tus hojas -->
+  <style>
+    /* Evita trabajo de render fuera de pantalla */
+    .no-clip, .music-layout, .releases-section, .albums-wrap, .songs-list { content-visibility: auto; contain-intrinsic-size: 800px 600px; }
+    /* Minimiza CLS en imágenes conocidas */
+    .avatar-img{ width:160px; height:160px; object-fit:cover; }
+    .song-thumb img{ width:64px; height:64px; object-fit:cover; }
+    .album-card .card-img img{ width:300px; height:300px; object-fit:cover; }
+    .release-card .card-img img{ width:240px; height:240px; object-fit:cover; }
+    /* Oculta scroll-jank en transiciones si el usuario lo prefiere */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; }
+    }
+  </style>
 </head>
 <body>
 <div id="page-profile" data-auth="{{ $isAuth ? 1 : 0 }}" data-owner="{{ $isOwner ? 1 : 0 }}">
@@ -62,20 +89,21 @@
     <!-- ===== HERO PERFIL ===== -->
     <section class="profile-hero a-reveal">
       <div class="hero-wrap">
+        <!-- Banner con LQIP + swap a alta -->
         <div class="profile-banner" data-hires="{{ $bannerHigh }}" style="background-image:url('{{ $bannerLow }}')"></div>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="hero-border" aria-hidden="true"></div>
 
         <!-- Info -->
         <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm info-btn" id="openBio" title="Ver biografía">
-          <i class="fa-solid fa-circle-info"></i>
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i><span class="sr-only">Ver biografía</span>
         </button>
 
         <!-- Editar (solo dueño) -->
         @if($isOwner)
         <div class="edit-btn">
           <button class="pf-btn pf-btn--primary pf-btn--sm" id="editBtn">
-            <i class="fa-solid fa-pen"></i><span>Editar</span>
+            <i class="fa-solid fa-pen" aria-hidden="true"></i><span>Editar</span>
           </button>
         </div>
         @endif
@@ -91,8 +119,10 @@
               {{-- nada --}}
             @elseif($isAuth)
               @php
-                $hasToggle = \Illuminate\Support\Facades\Route::has('follow.toggle');
-                $isFollowing = Auth::user()->isFollowing($user->id);
+                $hasToggle    = RouteFacade::has('follow.toggle');
+                $hasFollow    = RouteFacade::has('perfil.follow');
+                $hasUnfollow  = RouteFacade::has('perfil.unfollow');
+                $isFollowing  = method_exists(Auth::user(), 'isFollowing') ? Auth::user()->isFollowing($user->id) : false;
               @endphp
               @if($hasToggle)
                 <form action="{{ route('follow.toggle', $user->id) }}" method="POST">@csrf
@@ -101,16 +131,15 @@
                     {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
                   </button>
                 </form>
+              @elseif(($isFollowing && $hasUnfollow) || (!$isFollowing && $hasFollow))
+                <form action="{{ $isFollowing ? route('perfil.unfollow', $user->id) : route('perfil.follow', $user->id) }}" method="POST">@csrf
+                  <button type="submit" class="pf-btn follow-pill">
+                    <i class="fa-solid {{ $isFollowing ? 'fa-user-minus' : 'fa-user-plus' }}"></i>
+                    {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
+                  </button>
+                </form>
               @else
-                @if($isFollowing)
-                  <form action="{{ route('perfil.unfollow', $user->id) }}" method="POST">@csrf
-                    <button type="submit" class="pf-btn follow-pill"><i class="fa-solid fa-user-minus"></i> Dejar de seguir</button>
-                  </form>
-                @else
-                  <form action="{{ route('perfil.follow', $user->id) }}" method="POST">@csrf
-                    <button type="submit" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</button>
-                  </form>
-                @endif
+                <a href="{{ $loginUrl }}" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</a>
               @endif
             @else
               <a href="{{ $loginUrl }}" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</a>
@@ -120,16 +149,18 @@
 
         <!-- Metas -->
         <div class="profile-footer">
-          <span class="meta"><i class="fa-solid fa-headphones"></i> {{ num_format_sp($listenersCount) }} oyentes mensuales</span>
-          <span class="meta"><i class="fa-solid fa-user-group"></i> {{ num_format_sp($followersCount) }} seguidores</span>
+          <span class="meta"><i class="fa-solid fa-headphones" aria-hidden="true"></i> {{ num_format_sp($listenersCount) }} oyentes mensuales</span>
+          <span class="meta"><i class="fa-solid fa-user-group" aria-hidden="true"></i> {{ num_format_sp($followersCount) }} seguidores</span>
         </div>
 
         <!-- Avatar -->
         <div class="avatar-wrap xl">
           @if($user && $user->avatar)
             <img id="avatarPreviewLive" class="avatar-img"
-                 src="{{ drive_img_url($user->avatar, 500) }}&v={{ time() }}"
-                 alt="{{ $user->nombre_artistico ?? $user->nombre }}" loading="lazy" decoding="async" fetchpriority="low">
+                 src="{{ $user->avatar_url }}?v={{ $verUser }}"
+                 alt="{{ $user->nombre_artistico ?? $user->nombre }}"
+                 width="160" height="160"
+                 loading="eager" fetchpriority="high" decoding="async">
           @else
             <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
           @endif
@@ -139,34 +170,44 @@
 
     <!-- ===== CONTENIDO MÚSICA ===== -->
     <section class="music-layout no-clip">
-      <!-- CANCIONES (mantener fondo) -->
+      <!-- CANCIONES -->
       <div class="music-column left-col no-clip">
-        <div class="section-title"><h2><i class="fa-solid fa-music"></i> Canciones</h2></div>
+        <div class="section-title"><h2><i class="fa-solid fa-music" aria-hidden="true"></i> Canciones</h2></div>
 
         <div class="songs-list fixed-six" id="songsList">
           @foreach($canciones->take(6) as $song)
             @php
-              $songTitle = $song->title ?? $song->nombre ?? 'Sin título';
-              $songCover = $song->cover_url ?? $song->portada ?? $song->cover_path ?? null;
-              $coverUrl  = $songCover ? drive_img_url($songCover, 240) . '&v=' . time() : asset('img/default-cancion.png');
+              $songTitle    = $song->title ?? $song->nombre ?? 'Sin título';
+              $songVer      = optional($song->updated_at)->timestamp ?? 0;
+              $coverUrlBase = $song->cover_url ?? asset('img/default-cancion.png');
+              $coverUrl     = $coverUrlBase.'?v='.$songVer;
+              $audioUrl     = $song->audio_url ?? null;
+              $dur          = $song->duration ?? $song->duracion ?? '0:00';
 
-              $rawAudio  = $song->audio_url ?? $song->audio ?? null;
-              $audioUrl  = null;
-              if ($rawAudio) {
-                if (Str::contains($rawAudio, 'drive.google')) {
-                  if (preg_match('~/d/([^/]+)~', $rawAudio, $m))      $id = $m[1];
-                  elseif (preg_match('~[?&]id=([^&]+)~', $rawAudio, $m)) $id = $m[1];
-                  else $id = null;
-                  $audioUrl = $id ? route('media.drive', ['id'=>$id]) : $rawAudio;
-                } else { $audioUrl = $rawAudio; }
-              }
-              $dur   = $song->duration ?? $song->duracion ?? '0:00';
+              // Rutas seguras (evita "Route not defined")
+              $likeAction = RouteFacade::has('canciones.like')
+                  ? route('canciones.like', $song->id)
+                  : (RouteFacade::has('cancion.like')
+                      ? route('cancion.like', $song->id)
+                      : null);
+
+              $albumShow = RouteFacade::has('album.show')
+                  ? route('album.show', $song->album_id ?? 0)
+                  : null;
+
+              $songDelete = RouteFacade::has('cancion.destroy')
+                  ? route('cancion.destroy', $song->id)
+                  : '#';
             @endphp
 
             <div class="song-row" data-song-id="{{ $song->id }}">
               <div class="song-index">{{ $loop->iteration }}</div>
 
-              <div class="song-thumb"><img src="{{ $coverUrl }}" alt="Portada" loading="lazy" decoding="async"></div>
+              <div class="song-thumb">
+                <img src="{{ $coverUrl }}" alt="Portada"
+                     width="64" height="64"
+                     loading="lazy" decoding="async">
+              </div>
 
               <div class="song-info">
                 <h4 class="song-title" title="{{ $songTitle }}">{{ $songTitle }}</h4>
@@ -177,12 +218,18 @@
 
               <div class="song-actions">
                 @auth
-                  <form action="{{ route('canciones.like', $song->id) }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">@csrf
-                  <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
-                    <i class="fa-regular fa-heart"></i>
-                  </button>
-                </form>
-                  <button class="icon-chip add-playlist-btn" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
+                  @if($likeAction)
+                    <form action="{{ $likeAction }}" method="POST" class="inline-like" data-song-id="{{ $song->id }}">@csrf
+                      <button type="submit" class="icon-chip like-btn" aria-pressed="false" title="Me gusta">
+                        <i class="fa-regular fa-heart" aria-hidden="true"></i><span class="sr-only">Me gusta</span>
+                      </button>
+                    </form>
+                  @else
+                    <button type="button" class="icon-chip like-btn" title="Me gusta no disponible" disabled>
+                      <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                    </button>
+                  @endif
+                  <button class="icon-chip add-playlist-btn" title="Agregar a playlist"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
                 @else
                   <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
                   <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
@@ -200,7 +247,7 @@
                         <li>
                           <button class="menu-item danger open-delete"
                                   data-type="song"
-                                  data-action="{{ route('cancion.destroy', $song->id) }}"
+                                  data-action="{{ $songDelete }}"
                                   data-title="{{ $songTitle }}"
                                   data-cover="{{ $coverUrl }}">
                             <i class="fa-solid fa-trash"></i> Eliminar
@@ -226,7 +273,7 @@
                 <button class="trash-float open-delete"
                         title="Eliminar"
                         data-type="song"
-                        data-action="{{ route('cancion.destroy', $song->id) }}"
+                        data-action="{{ $songDelete }}"
                         data-title="{{ $songTitle }}"
                         data-cover="{{ $coverUrl }}">
                   <i class="fa-solid fa-trash"></i>
@@ -240,16 +287,17 @@
       <!-- ÁLBUMES 2×2 -->
       <div class="music-column right-col no-clip">
         <div class="albums-head">
-          <div class="section-title"><h2><i class="fa-solid fa-compact-disc"></i> Álbumes</h2></div>
+          <div class="section-title"><h2><i class="fa-solid fa-compact-disc" aria-hidden="true"></i> Álbumes</h2></div>
           <div class="page-label" id="albumsPageLabel"></div>
         </div>
 
         @php
           $albumsNormalized = $albumes->map(function($a){
             return (object)[
-              'id'      => $a->id,
-              'titulo'  => $a->titulo ?: ($a->title ?? 'Sin título'),
-              'portada' => $a->portada ?? $a->cover_path ?? null,
+              'id'        => $a->id,
+              'titulo'    => $a->titulo ?: ($a->title ?? 'Sin título'),
+              'cover_url' => $a->cover_url ?? null,
+              'ver'       => optional($a->updated_at)->timestamp ?? 0,
             ];
           });
           $albumPages = $albumsNormalized->chunk(4);
@@ -267,15 +315,24 @@
                   <div class="albums-grid-2x2">
                     @foreach($page as $album)
                       @php
-                        $albumCover = $album->portada
-                          ? drive_img_url($album->portada, 360) . '&v=' . time()
-                          : asset('img/default-album.png');
+                        $albumCoverBase = $album->cover_url ?: asset('img/default-album.png');
+                        $albumCover     = $albumCoverBase.'?v='.$album->ver;
+
+                        $albumHref = RouteFacade::has('album.show')
+                          ? route('album.show', $album->id)
+                          : url('/album/'.$album->id);
+
+                        $albumDelete = RouteFacade::has('album.destroy')
+                          ? route('album.destroy', $album->id)
+                          : '#';
                       @endphp
 
                       <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
-                        <a href="{{ route('album.show', $album->id) }}" class="card-link">
+                        <a href="{{ $albumHref }}" class="card-link">
                           <div class="card-img">
-                            <img src="{{ $albumCover }}" alt="Portada" loading="lazy" decoding="async">
+                            <img src="{{ $albumCover }}" alt="Portada"
+                                 width="300" height="300"
+                                 loading="lazy" decoding="async">
                             <span class="album-play"><i class="fa-solid fa-play"></i></span>
                           </div>
                           <h4 class="album-title">{{ $album->titulo }}</h4>
@@ -286,7 +343,7 @@
                           <button class="trash-float open-delete"
                                   title="Eliminar álbum"
                                   data-type="album"
-                                  data-action="{{ route('album.destroy', $album->id) }}"
+                                  data-action="{{ $albumDelete }}"
                                   data-title="{{ $album->titulo }}"
                                   data-cover="{{ $albumCover }}">
                             <i class="fa-solid fa-trash"></i>
@@ -309,7 +366,7 @@
 
     <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
     @php
-      $releasesAllUrl = \Illuminate\Support\Facades\Route::has('perfil.releasesAll')
+      $releasesAllUrl = RouteFacade::has('perfil.releasesAll')
           ? route('perfil.releasesAll', $user->id)
           : url('/perfil/'.$user->id.'/lanzamientos');
 
@@ -317,9 +374,11 @@
         $tipo   = $it['tipo']   ?? $it->tipo   ?? 'album';
         $titulo = $it['titulo'] ?? $it->titulo ?? $it->title ?? null;
         $cover  = $it['cover']  ?? $it->cover  ?? $it->portada ?? $it->cover_path ?? null;
+        $coverUrl = $it['cover_url'] ?? ($it->cover_url ?? null);
         $anio   = $it['anio']   ?? $it->anio   ?? (isset($it->created_at) ? optional($it->created_at)->format('Y') : '');
+        $ver    = optional($it['updated_at'] ?? ($it->updated_at ?? null))->timestamp ?? 0;
         $titulo = $titulo ?: 'Sin título';
-        return ['tipo'=>$tipo,'titulo'=>$titulo,'cover'=>$cover,'anio'=>$anio];
+        return ['tipo'=>$tipo,'titulo'=>$titulo,'cover'=>$cover,'cover_url'=>$coverUrl,'anio'=>$anio,'ver'=>$ver,'href'=>$it['href'] ?? ($it->href ?? null), 'delete'=>$it['delete'] ?? ($it->delete ?? null)];
       })
       ->filter(fn($x) => !empty($x['titulo']))
       ->values();
@@ -329,7 +388,7 @@
 
     <section class="releases-section no-clip" id="releasesSection">
       <div class="releases-head">
-        <h2><i class="fa-solid fa-bolt"></i> Últimos lanzamientos</h2>
+        <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Últimos lanzamientos</h2>
         <a href="{{ $releasesAllUrl }}" class="pf-link">Ver todo</a>
       </div>
 
@@ -342,13 +401,25 @@
                 <div class="releases-grid-4x2">
                   @foreach($rPage as $item)
                     @php
-                      $rCover = $item['cover_url'] ?? ($item['cover'] ? (function_exists('drive_img_url') ? drive_img_url($item['cover'], 240) : $item['cover']) . '&v=' . time() : asset('img/default-album.png'));
+                      if (!empty($item['cover_url'])) {
+                        $rCoverBase = $item['cover_url'];
+                      } elseif (!empty($item['cover'])) {
+                        $rCoverBase = Str::startsWith($item['cover'], ['http://','https://'])
+                          ? $item['cover']
+                          : asset('storage/' . ltrim($item['cover'], '/'));
+                      } else {
+                        $rCoverBase = asset('img/default-album.png');
+                      }
+                      $rCover = $rCoverBase.'?v='.$item['ver'];
                       $cls = 'card release-card' . ($isOwner ? ' has-trash' : '');
+                      $relDelete = $item['delete'] ?? '#';
                     @endphp
 
                     <div class="{{ $cls }}">
                       <div class="card-img">
-                        <img src="{{ $rCover }}" alt="Portada" loading="lazy" decoding="async">
+                        <img src="{{ $rCover }}" alt="Portada"
+                             width="240" height="240"
+                             loading="lazy" decoding="async">
                         <span class="type-badge">{{ $item['tipo'] === 'album' ? 'Álbum' : 'Canción' }}</span>
                       </div>
                       <h4 title="{{ $item['titulo'] }}">{{ $item['titulo'] }}</h4>
@@ -358,7 +429,7 @@
                         <button class="trash-float open-delete"
                                 title="Eliminar"
                                 data-type="{{ $item['tipo'] === 'album' ? 'album' : 'song' }}"
-                                data-action="{{ $item['delete'] ?? '#' }}"
+                                data-action="{{ $relDelete }}"
                                 data-title="{{ $item['titulo'] }}"
                                 data-cover="{{ $rCover }}">
                           <i class="fa-solid fa-trash"></i>
@@ -386,7 +457,7 @@
     <!-- ===== MODAL CONFIRMAR ELIMINAR ===== -->
     <div class="confirm-modal" id="confirmModal" aria-hidden="true">
       <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-        <div class="confirm-media"><img id="confirmCover" alt=""></div>
+        <div class="confirm-media"><img id="confirmCover" alt="" width="240" height="240" loading="lazy" decoding="async"></div>
         <div class="confirm-copy">
           <h3 id="confirmTitle">¿Eliminar?</h3>
           <p id="confirmSubtitle" class="confirm-sub"></p>
@@ -410,7 +481,7 @@
 
     <!-- ===== MODAL EDITAR PERFIL ===== -->
     @if($isOwner)
-    <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
       <div class="modal-content glass wide">
         <div class="modal-header sticky">
           <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
@@ -427,7 +498,10 @@
           <button type="button" class="tab-btn" data-tab="advanced"><i class="fa-solid fa-sliders"></i> Configuración avanzada</button>
         </div>
 
-        <form action="{{ route('perfil.update') }}" method="POST" enctype="multipart/form-data">
+        @php
+          $perfilUpdate = RouteFacade::has('perfil.update') ? route('perfil.update') : url('/perfil/update');
+        @endphp
+        <form action="{{ $perfilUpdate }}" method="POST" enctype="multipart/form-data">
           @csrf
           <div class="tab-pane" data-pane="basic">
             <div class="modal-grid">
@@ -445,7 +519,7 @@
               <div class="modal-field col">
                 <label>Foto de perfil</label>
                 <label class="file-preview avatar-edit">
-                  <img id="avatarPreview" src="{{ $user->avatar ? route('media.drive',['id'=>$user->avatar]).'?v='.time() : '' }}" alt="">
+                  <img id="avatarPreview" src="{{ $user->avatar ? ($user->avatar_url.'?v='.$verUser) : '' }}" alt="" width="160" height="160" loading="lazy">
                   <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
                   <div class="overlay"><i class="fa-solid fa-camera"></i></div>
                 </label>
@@ -453,7 +527,7 @@
               <div class="modal-field col">
                 <label>Banner</label>
                 <label class="file-preview banner-edit">
-                  <img id="bannerPreview" src="{{ $user->banner ? route('media.drive',['id'=>$user->banner]).'?v='.time() : '' }}" alt="">
+                  <img id="bannerPreview" src="{{ $user->banner ? ($user->banner_url.'?v='.$verUser) : '' }}" alt="" width="600" height="200" loading="lazy">
                   <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
                   <div class="overlay"><i class="fa-solid fa-camera"></i></div>
                 </label>
@@ -512,7 +586,7 @@
     @endif
 
     <!-- ===== MODAL BIOGRAFÍA ===== -->
-    <div class="modal" id="bioModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" id="bioModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
       <div class="modal-content bio">
         <div class="modal-header">
           <h3><i class="fa-solid fa-circle-info"></i> Sobre {{ $user->nombre_artistico ?? $user->nombre ?? 'el artista' }}</h3>
@@ -521,7 +595,7 @@
         <div class="bio-grid">
           <div class="bio-media">
             @if($user && $user->avatar)
-              <img src="{{ drive_img_url($user->avatar, 600) }}&v={{ time() }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre }}" loading="lazy" decoding="async">
+              <img src="{{ $user->avatar_url }}?v={{ $verUser }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre }}" width="160" height="160" loading="lazy" decoding="async">
             @else
               <div class="bio-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
             @endif
@@ -542,35 +616,28 @@
 
 </div><!-- /#page-profile -->
 
-{{-- JS principal por Vite (NO quité nada) --}}
-@vite('resources/js/ed_perfil.js')
+<!-- NO dupliques @vite de JS aquí: ya cargó arriba -->
 
-<!-- ===== Medición dinámica de sidebar y reproductor derecho (igual que tenías) ===== -->
+<!-- ===== Medición dinámica de sidebar y reproductor (throttle + idle) ===== -->
 <script>
 (function () {
   const rootEl = document.getElementById('page-profile') || document.documentElement;
   const sidebar = document.querySelector('#sidebar, .sidebar, [data-sidebar]');
   const rightPlayer = document.getElementById('rightPlayer');
 
-  function setVar(name, px){
-    rootEl.style.setProperty(name, Math.max(0, Math.round(px)) + 'px');
+  const setVar = (n, px) => rootEl.style.setProperty(n, Math.max(0, Math.round(px)) + 'px');
+
+  let rafId = null;
+  function measureNow(){
+    if (sidebar) { setVar('--aurp-sb-w', sidebar.getBoundingClientRect().width || 90); } else { setVar('--aurp-sb-w', 0); }
+    if (rightPlayer) { setVar('--aurp-rp-w', rightPlayer.getBoundingClientRect().width || 360); } else { setVar('--aurp-rp-w', 0); }
+    rafId = null;
   }
-  function measure(){
-    if (sidebar) {
-      const w = sidebar.getBoundingClientRect().width;
-      setVar('--aurp-sb-w', w > 0 ? w : 90);
-    } else {
-      setVar('--aurp-sb-w', 0);
-    }
-    if (rightPlayer) {
-      const w = rightPlayer.getBoundingClientRect().width;
-      setVar('--aurp-rp-w', w > 0 ? w : 360);
-    } else {
-      setVar('--aurp-rp-w', 0);
-    }
-  }
+  function measure(){ if (!rafId) rafId = requestAnimationFrame(measureNow); }
+
   window.addEventListener('load', measure, { once:true });
   window.addEventListener('resize', measure, { passive:true });
+
   if (window.ResizeObserver){
     const ro = new ResizeObserver(measure);
     sidebar && ro.observe(sidebar);
@@ -583,34 +650,52 @@
 })();
 </script>
 
-<!-- (tu snippet extra para abrir/cerrar el modal — lo mantengo para que no se pierda nada) -->
+<!-- ===== Lazy-hydration ligera (banner swap + modales) ===== -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.__extraEditModalWired) return; // evita doble wiring
-  window.__extraEditModalWired = true;
+(function () {
+  const run = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 1500}) : setTimeout(fn, 0));
 
-  const editBtn = document.getElementById("editBtn");
-  const cancelBtn = document.getElementById("cancelEdit");
-  const modal = document.getElementById("editModal");
-
-  if (!editBtn || !modal) return;
-
-  editBtn.addEventListener("click", () => {
-    modal.setAttribute("aria-hidden", "false");
+  // Swap a banner en alta una vez decodificada (evita salto)
+  run(() => {
+    const b = document.querySelector('.profile-banner');
+    if (!b) return;
+    const hires = b.getAttribute('data-hires');
+    if (!hires) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = hires;
+    img.onload = () => { b.style.backgroundImage = `url('${hires}')`; };
   });
 
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => {
-      modal.setAttribute("aria-hidden", "true");
-    });
-  }
+  // Modales: quita inert solo al abrir (menos trabajo inicial)
+  run(() => {
+    const editBtn = document.getElementById('editBtn');
+    const editModal = document.getElementById('editModal');
+    const closeEdit = document.getElementById('closeEdit');
+    const closeEditTop = document.getElementById('closeEditTop');
 
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.setAttribute("aria-hidden", "true");
+    function openModal(m){ m?.removeAttribute('inert'); m?.setAttribute('aria-hidden','false'); }
+    function closeModal(m){ m?.setAttribute('aria-hidden','true'); m?.setAttribute('inert',''); }
+
+    if (editBtn && editModal){
+      editBtn.addEventListener('click', () => openModal(editModal), {passive:true});
+      closeEdit && closeEdit.addEventListener('click', () => closeModal(editModal), {passive:true});
+      closeEditTop && closeEditTop.addEventListener('click', () => closeModal(editModal), {passive:true});
+      editModal.addEventListener('click', (e) => { if (e.target === editModal) closeModal(editModal); }, {passive:true});
+    }
+
+    const bioBtn = document.getElementById('openBio');
+    const bioModal = document.getElementById('bioModal');
+    const closeBio = document.getElementById('closeBio');
+    const closeBioTop = document.getElementById('closeBioTop');
+    if (bioBtn && bioModal){
+      bioBtn.addEventListener('click', () => openModal(bioModal), {passive:true});
+      closeBio && closeBio.addEventListener('click', () => closeModal(bioModal), {passive:true});
+      closeBioTop && closeBioTop.addEventListener('click', () => closeModal(bioModal), {passive:true});
+      bioModal.addEventListener('click', (e) => { if (e.target === bioModal) closeModal(bioModal); }, {passive:true});
     }
   });
-});
+})();
 </script>
 </body>
 </html>

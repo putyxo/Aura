@@ -393,7 +393,7 @@
 .ah-logout-btn{ color:#ff7b7b !important }
 .ah-logout-btn i{ color:#ff7b7b !important }
 
-/* Toggle idioma */
+• Toggle idioma */
 .ah-lang-item{ gap:12px }
 .ah-toggle{ margin-left:auto; background:none; border:none; padding:0; cursor:pointer }
 .ah-toggle-track{

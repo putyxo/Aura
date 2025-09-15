@@ -1,4 +1,4 @@
-{{-- resources/views/components/footer.blade.php (encapsulado y listo para pegar) --}}
+{{-- resources/views/components/footer.blade.php (optimizado para arranque ultra-rápido) --}}
 <div id="rightPlayer" class="player-card" data-turbo-permanent>
   <div class="current-song">
     <div class="img-wrap">
@@ -58,11 +58,15 @@
 
   <!-- Asidero lateral para redimensionar -->
   <button class="rp-resize-handle" aria-label="Ajustar ancho del reproductor" title="Arrastra para ajustar" tabindex="0"></button>
+
+  <!-- === Elemento de audio físico (mejor para precarga y WebAudio) === -->
+  <audio id="auraAudio" preload="metadata" playsinline crossorigin="anonymous" hidden></audio>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js" defer></script>
 
-<!-- === Script del reproductor (no tocar) === -->
+<!-- === Script del reproductor (optimizado) === -->
+<!-- === Script del reproductor (INSTANT START) === -->
 <script>
 (() => {
   if (window.__AURA_PLAYER_INIT__) return;
@@ -71,24 +75,77 @@
   const el = document.getElementById('rightPlayer');
   if (!el) return;
 
-  const audio = new Audio();
-  audio.preload = 'metadata';
+  // Usamos <audio> del DOM (oculto)
+  const audio = document.getElementById('auraAudio') || (() => {
+    const a = document.createElement('audio');
+    a.id = 'auraAudio';
+    a.hidden = true;
+    el.appendChild(a);
+    return a;
+  })();
+
+  // ====== Turbo para arranque instantáneo ======
   audio.playsInline = true;
+  audio.setAttribute('webkit-playsinline', '');
+  audio.preload = 'auto';
+  audio.crossOrigin = 'anonymous';
 
-  /* === Hook para el Ecualizador === */
-  if (window.bindEqualizerTo) {
-    window.bindEqualizerTo(audio);              // se conecta si el EQ ya está cargado
-  } else {
-    window.__AURA_EQ_WAIT__ = audio;            // si el EQ carga después, lo recogerá
-    document.addEventListener('aura:eq-ready', ()=> {
-      if (window.bindEqualizerTo && window.__AURA_EQ_WAIT__) {
-        window.bindEqualizerTo(window.__AURA_EQ_WAIT__);
-        window.__AURA_EQ_WAIT__ = null;
-      }
-    }, { once:true });
+  // Precalienta conexión y primer chunk
+  const seenPreconnect = new Set();
+  function originFrom(url){ try { return new URL(url, location.origin).origin; } catch { return null; } }
+  function preconnectTo(url){
+    const org = originFrom(url);
+    if (!org || seenPreconnect.has(org)) return;
+    const l = document.createElement('link');
+    l.rel = 'preconnect';
+    l.href = org;
+    document.head.appendChild(l);
+    seenPreconnect.add(org);
   }
-  /* === /Hook para el Ecualizador === */
+  function preloadAudio(url){
+    if (!url) return;
+    if (document.querySelector(`link[rel="preload"][as="audio"][href="${url}"]`)) return;
+    const l = document.createElement('link');
+    l.rel = 'preload';
+    l.as  = 'audio';
+    l.href = url;
+    l.crossOrigin = 'anonymous';
+    l.fetchPriority = 'high';
+    document.head.appendChild(l);
+  }
+  async function warmRange(url){
+    try{
+      // fuerza apertura de conexión y buffer inicial
+      await fetch(url, { headers:{ 'Range':'bytes=0-65535' }, cache:'reload', mode:'cors' });
+    }catch(_){}
+  }
+  function prime(url){ preconnectTo(url); preloadAudio(url); warmRange(url); }
 
+  // Arranque “instantáneo”: reproduce silenciado 1 frame, luego habilita audio
+  async function instantStart(url){
+    if (!url) return;
+    prime(url);
+
+    // Truco Media Fragments (#t=0.01) → muchos navegadores empiezan a leer al toque
+    const playURL = url.includes('#t=') ? url : `${url}#t=0.01`;
+
+    // Reinicia y dispara el pipeline
+    audio.pause();
+    audio.src = playURL;
+    try { audio.load(); } catch(_){}
+
+    // Reproduce silenciado un momento para “desbloquear” el buffer
+    let played = false;
+    audio.muted = true;
+    try { await audio.play(); played = true; } catch(_){ /* si falla, seguirá el botón */ }
+
+    // En el siguiente frame, habilita sonido
+    requestAnimationFrame(() => { audio.muted = false; });
+
+    return played;
+  }
+
+  // ====== UI refs ======
   const playBtn  = el.querySelector('.play-btn');
   const prevBtn  = el.querySelector('.prev');
   const nextBtn  = el.querySelector('.next');
@@ -114,10 +171,9 @@
   const KEY    = 'player_state_' + userId;
 
   let currentSongId = null;
-  let raf = null, ticker = null, lastVolume = 0.7;
+  let raf = null, ticker = null, lastVolume = 0.8;
 
   const fmt = s => !Number.isFinite(s) ? '--:--' : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-
   const paintSeek = p => {
     const x = Math.max(0, Math.min(100, p||0));
     seek.style.background = `linear-gradient(to right,var(--pl-accent) 0%,var(--pl-accent2) ${x}%,var(--pl-line) ${x}%,var(--pl-line) 100%)`;
@@ -145,12 +201,10 @@
     }
   }
   function rafLoop(){ uiSync(); raf = requestAnimationFrame(rafLoop); }
-  function ensureTicker(){
-    if (raf == null) raf = requestAnimationFrame(rafLoop);
-    if (!ticker) ticker = setInterval(uiSync, 500);
-  }
+  function ensureTicker(){ if (raf == null) raf = requestAnimationFrame(rafLoop); if (!ticker) ticker = setInterval(uiSync, 500); }
   ensureTicker();
 
+  // Controles
   playBtn.addEventListener('click', () => {
     if (audio.paused){
       audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; }).catch(()=>{});
@@ -158,20 +212,13 @@
       audio.pause(); playBtn.innerHTML='<i class="fas fa-play"></i>';
     }
   });
-
-  // Integración con la cola (atrás/adelante/siguiente)
   prevBtn.addEventListener('click', ()=> {
     if (window.AuraQueue?.back) window.AuraQueue.back();
     else audio.currentTime = 0;
   });
-  nextBtn.addEventListener('click', ()=> {
-    if (window.AuraQueue?.forwardOrNext) window.AuraQueue.forwardOrNext();
-  });
+  nextBtn.addEventListener('click', ()=> { if (window.AuraQueue?.forwardOrNext) window.AuraQueue.forwardOrNext(); });
 
-  seek.addEventListener('input', ()=> {
-    audio.currentTime = Number(seek.value) || 0;
-    paintByTime();
-  });
+  seek.addEventListener('input', ()=> { audio.currentTime = Number(seek.value) || 0; paintByTime(); });
 
   volRange.addEventListener('input', ()=> {
     audio.volume = (Number(volRange.value)||0)/100;
@@ -180,7 +227,7 @@
   });
   volTgl.addEventListener('click', ()=> {
     if (audio.volume>0){ lastVolume = audio.volume; audio.volume = 0; }
-    else { audio.volume = lastVolume || Number(localStorage.getItem('player_volume')) || 0.7; }
+    else { audio.volume = lastVolume || Number(localStorage.getItem('player_volume')) || 0.8; }
     localStorage.setItem('player_volume', audio.volume.toString());
     paintVolume();
   });
@@ -193,18 +240,26 @@
     playBtn.innerHTML='<i class="fas fa-play"></i>';
     if (window.AuraQueue?.onEnded) window.AuraQueue.onEnded();
   });
+  // En cuanto inicia, precalienta el siguiente
+  audio.addEventListener('playing', ()=> {
+    try{
+      const next = window.AuraQueue?.queue()?.[0];
+      if (next?.src) prime(next.src);
+    }catch(_){}
+  });
 
+  // Persistencia
   function saveState(){
     if (!audio.src) return;
     localStorage.setItem(KEY, JSON.stringify({
-      id: currentSongId, src: audio.src,
+      id: currentSongId, src: audio.src.replace(/#t=.*$/, ''),
       title: titleEl.textContent, artist: artistEl.textContent, cover: coverEl.src,
       time: audio.currentTime, playing: !audio.paused
     }));
   }
   function initVolume(){
     const v = localStorage.getItem('player_volume');
-    audio.volume = (v!=null) ? Number(v) : 0.7;
+    audio.volume = (v!=null) ? Number(v) : 0.8;
     paintVolume();
   }
   function loadState(){
@@ -217,22 +272,16 @@
     titleEl.textContent  = s.title  || 'Selecciona una canción';
     artistEl.textContent = s.artist || 'Artista';
     coverEl.src          = s.cover  || "{{ asset('img/default-cancion.png') }}";
-    audio.src            = s.src;
 
-    audio.addEventListener('loadedmetadata', () => {
-      audio.currentTime = s.time || 0;
+    // Arranque instantáneo con el último track
+    instantStart(s.src).then((ok)=>{
+      audio.currentTime = s.time || 0.01;
       uiSync();
-      if (s.playing){
+      if (s.playing && !ok){
         audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; })
-          .catch(()=>{
-            const resume=()=>{
-              audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; });
-              document.removeEventListener('click',resume,true);
-            };
-            document.addEventListener('click',resume,true);
-          });
+          .catch(()=>{ /* queda el botón */ });
       }
-    }, { once:true });
+    });
 
     initVolume();
     if (currentSongId) checkLikeStatus(currentSongId);
@@ -243,35 +292,27 @@
   document.addEventListener('turbo:before-cache', ()=>{ saveState(); });
   loadState();
 
+  // Likes
   likeBtn.addEventListener('click', ()=>{
     if (!currentSongId) return;
-    fetch(`/canciones/${currentSongId}/like`, {
-      method:'POST',
-      headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' }
-    })
-    .then(r=>r.json())
-    .then(d=>{
-      likeBtn.innerHTML = d.liked
-        ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>'
-        : '<i class="fa-regular fa-heart"></i>';
+    fetch(`/canciones/${currentSongId}/like`, { method:'POST', headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' }})
+    .then(r=>r.json()).then(d=>{
+      likeBtn.innerHTML = d.liked ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>' : '<i class="fa-regular fa-heart"></i>';
     }).catch(()=>{});
   });
   function checkLikeStatus(id){
     fetch(`/canciones/${id}/liked`, { headers:{ 'Accept':'application/json' } })
-      .then(r=>r.json())
-      .then(d=>{
-        likeBtn.innerHTML = d.liked
-          ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>'
-          : '<i class="fa-regular fa-heart"></i>';
+      .then(r=>r.json()).then(d=>{
+        likeBtn.innerHTML = d.liked ? '<i class="fa-solid fa-heart" style="color:#aa029c"></i>' : '<i class="fa-regular fa-heart"></i>';
       }).catch(()=>{});
   }
 
+  // Playlists
   plBtn.addEventListener('click', ()=>{
     if (!currentSongId) return alert('Selecciona una canción primero 🎵');
     plModal.hidden = false;
     fetch('/api/my-playlists', { headers:{ 'Accept':'application/json' } })
-      .then(r=>r.json())
-      .then(list=>{
+      .then(r=>r.json()).then(list=>{
         plList.innerHTML='';
         if(!list || !list.length){ plList.innerHTML="<li style='opacity:.85'>No tienes playlists creadas</li>"; return; }
         list.forEach(pl=>{
@@ -298,8 +339,7 @@
       headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json', 'Content-Type':'application/json' },
       body: JSON.stringify({ nombre:name })
     })
-    .then(r=>r.json())
-    .then(d=>{
+    .then(r=>r.json()).then(d=>{
       const li=document.createElement('li');
       li.innerHTML = `<span>${d.nombre||name}</span><i class="fa-solid fa-plus"></i>`;
       li.onclick=()=> addToPlaylist(d.id);
@@ -309,34 +349,37 @@
     }).catch(()=> alert('No se pudo crear la playlist'));
   });
   function addToPlaylist(playlistId){
-    fetch(`/playlists/${playlistId}/add-song/${currentSongId}`, {
-      method:'POST',
-      headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' }
-    })
-    .then(r=>r.json())
-    .then(d=>{ alert(d.message || 'Agregado a playlist ✅'); plModal.hidden = true; })
+    fetch(`/playlists/${playlistId}/add-song/${currentSongId}`, { method:'POST', headers:{ 'X-CSRF-TOKEN': CSRF, 'Accept':'application/json' }})
+    .then(r=>r.json()).then(d=>{ alert(d.message || 'Agregado a playlist ✅'); plModal.hidden = true; })
     .catch(()=> alert('No se pudo agregar a la playlist'));
   }
 
-  // API del reproductor
+  // API pública: ahora usa instantStart
   window.AuraPlayer = {
-    play({id, src, title, artist, cover}){
+    async play({id, src, title, artist, cover}){
       currentSongId = id || null;
-      document.body.dataset.nowPlayingSrc = src || '';
       titleEl.textContent  = title  || 'Sin título';
       artistEl.textContent = artist || 'Artista';
       coverEl.src          = cover  || "{{ asset('img/default-cancion.png') }}";
-      audio.src            = src || '';
-      audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; }).catch(()=>{});
+      if (!src) return;
+
+      const played = await instantStart(src);
+      if (!played){
+        // fallback
+        try { await audio.play(); } catch(_){}
+      }
+
       if (window.AuraQueue?.noteNowPlaying) window.AuraQueue.noteNowPlaying({id,src,title,artist,cover});
     }
   };
 
-  // Botones externos .cancion-item
+  // Bind más temprano: pointerdown (se adelanta al click)
   function bindSongButtons(root=document){
     root.querySelectorAll('.cancion-item').forEach(btn=>{
       if(btn.dataset.bound) return;
-      btn.addEventListener('click', ()=>{
+
+      const handler = async (e) => {
+        // Arrancamos lo antes posible
         const s = {
           id: btn.dataset.id,
           src: btn.dataset.src,
@@ -344,30 +387,37 @@
           artist: btn.dataset.artist,
           cover: btn.dataset.cover
         };
-        if (window.AuraQueue?.externalPlay) window.AuraQueue.externalPlay(s);
-        else window.AuraPlayer.play(s);
-      });
+        if (!s.src) return;
+
+        // Prime inmediato en pointerdown
+        if (e.type === 'pointerdown') prime(s.src);
+
+        // Al click, reproducir ya con buffer caliente
+        if (e.type === 'click'){
+          if (window.AuraQueue?.externalPlay) window.AuraQueue.externalPlay(s);
+          else window.AuraPlayer.play(s);
+        }
+      };
+
+      btn.addEventListener('pointerdown', handler, { passive:true });
+      btn.addEventListener('click', handler);
       btn.dataset.bound='true';
     });
   }
   bindSongButtons();
   document.addEventListener('turbo:load', ()=> bindSongButtons(document));
 
-  /* ========= Redimensionado lateral ========= */
+  // ====== Redimensionado lateral (sin cambios) ======
   const handle = el.querySelector('.rp-resize-handle');
   const ROOT = document.documentElement;
   const STORAGE_KEY_W = 'player_width_px';
-  const MAX_WIDTH = 380; // límite = el actual
-  const MIN_WIDTH = 320; // se puede encoger un poquito
-  const STEP = 10;
+  const MAX_WIDTH = 380, MIN_WIDTH = 320, STEP = 10;
 
-  // Cargar ancho guardado
   const savedW = Number(localStorage.getItem(STORAGE_KEY_W));
   if (savedW && savedW >= MIN_WIDTH && savedW <= MAX_WIDTH) {
     ROOT.style.setProperty('--player-width', savedW + 'px');
   }
 
-  // mouse / touch
   let dragging = false;
   function onDown(e){
     dragging = true;
@@ -378,9 +428,7 @@
     document.addEventListener('touchend', onUp, { once:true });
     e.preventDefault();
   }
-  function getClientX(evt){
-    return (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
-  }
+  function getClientX(evt){ return (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX; }
   function onMove(e){
     if (!dragging) return;
     const x = getClientX(e);
@@ -398,7 +446,6 @@
   handle.addEventListener('mousedown', onDown);
   handle.addEventListener('touchstart', onDown, { passive:false });
 
-  // teclado accesible
   handle.addEventListener('keydown', (e)=>{
     const cur = parseInt(getComputedStyle(ROOT).getPropertyValue('--player-width'));
     if (e.key === 'ArrowLeft'){
@@ -413,12 +460,22 @@
       e.preventDefault();
     }
   });
+
+  // Volumen
+  function initVolume(){
+    const v = localStorage.getItem('player_volume');
+    audio.volume = (v!=null) ? Number(v) : 0.8;
+    paintVolume();
+  }
+
 })();
 </script>
 <!-- === /Script del reproductor === -->
 
+<!-- === /Script del reproductor === -->
 
-<!-- === Script de Cola (persistente + sync + auto-shuffle en perfiles) === -->
+
+<!-- === Script de Cola (persistente + sync + prefetch del siguiente) === -->
 <script>
 (function(){
   const root   = document.getElementById('rightPlayer');
@@ -429,53 +486,37 @@
   const countEl = root.querySelector('#queueCount');
   const DEF_COVER = "{{ asset('img/default-cancion.png') }}";
 
-  // Identidad de usuario para aislar el storage por cuenta
   const USER_ID = @json(Auth::id());
   const SUFFIX  = (USER_ID ?? 'guest');
 
-  // Claves de almacenamiento
   const STORAGE = {
     QUEUE   : `aura_queue_v1_${SUFFIX}`,
-    SOURCE  : `aura_queue_source_v1_${SUFFIX}`, // {type:'profile'|'playlist'|..., id, seed}
-    SETTINGS: `aura_settings_v1_${SUFFIX}`      // { shuffle:boolean }
+    SOURCE  : `aura_queue_source_v1_${SUFFIX}`,
+    SETTINGS: `aura_settings_v1_${SUFFIX}`
   };
 
-  // Canal de sincronización entre pestañas
-  const TAB_ID = crypto.randomUUID();
+  const TAB_ID = (crypto?.randomUUID && crypto.randomUUID()) || String(Date.now())+Math.random();
   let bc = null;
   try { bc = new BroadcastChannel('aura-player'); } catch (_){}
 
-  // Estado en memoria
   let queue = [];
   let nowPlaying = null;
   window._auraBackStack    = window._auraBackStack || [];
   window._auraForwardStack = window._auraForwardStack || [];
-  let sourceInfo = null; // quién armó la cola
+  let sourceInfo = null;
   let settings = readJSON(STORAGE.SETTINGS, { shuffle:false });
 
-  // Utilidades
   function readJSON(key, fallback){
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
     catch { return fallback; }
   }
-  function writeJSON(key, value){
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-  function fmtTime(s){
-    if (!Number.isFinite(s)) return '--:--';
-    return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-  }
-  function seeded(seed){
-    let x = (seed>>>0) || (Math.random()*0xffffffff)>>>0;
-    return ()=>{ x ^= x<<13; x ^= x>>>17; x ^= x<<5; return (x>>>0)/0xffffffff; };
-  }
+  function writeJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+  function fmtTime(s){ if (!Number.isFinite(s)) return '--:--'; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
+  function seeded(seed){ let x = (seed>>>0) || (Math.random()*0xffffffff)>>>0; return ()=>{ x ^= x<<13; x ^= x>>>17; x ^= x<<5; return (x>>>0)/0xffffffff; }; }
   function shuffleArray(arr, seed=null){
     const rnd = seed==null ? Math.random : seeded(seed);
     const a = arr.slice();
-    for (let i=a.length-1;i>0;i--){
-      const j = Math.floor(rnd()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
-    }
+    for (let i=a.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
     return a;
   }
   function normalizeSong(s){
@@ -484,20 +525,16 @@
       title:    s.title ?? s.titulo ?? s.name ?? 'Sin título',
       artist:   s.artist ?? s.artista ?? 'Artista',
       cover:    s.cover ?? s.portada ?? DEF_COVER,
-      src:      s.src ?? s.audio ?? s.audio_url ?? s.url ?? '',
+      src:      s.src ?? s.audio ?? s.audio_path ?? s.audio_url ?? s.url ?? '',
       duration: s.duration ?? s.duracion ?? '--:--'
     };
   }
   function dedupeById(list){
     const out=[], seen=new Set();
-    for (const s of list){
-      if (!s?.id) continue;
-      if (!seen.has(s.id)){ seen.add(s.id); out.push(s); }
-    }
+    for (const s of list){ if (!s?.id) continue; if (!seen.has(s.id)){ seen.add(s.id); out.push(s); } }
     return out;
   }
 
-  // Persistencia + Sync
   function persistAll({silent=false}={}){
     writeJSON(STORAGE.QUEUE, queue);
     writeJSON(STORAGE.SOURCE, sourceInfo);
@@ -525,11 +562,9 @@
       const msg = ev.data;
       if (!msg || msg.from === TAB_ID) return;
       if (msg.type === 'REQUEST_QUEUE'){
-        // Otra pestaña recién abrió y no tiene cola
         broadcast({ type:'PUSH_QUEUE', from:TAB_ID, queue, sourceInfo, settings });
       }
       if (msg.type === 'PUSH_QUEUE'){
-        // Adoptamos solo si aquí no hay cola
         if (!queue.length){
           queue      = (msg.queue||[]).map(normalizeSong);
           sourceInfo = msg.sourceInfo || null;
@@ -542,13 +577,11 @@
         restoreAll();
       }
     };
-    // Si esta pestaña arranca “vacía”, pide a otra
     if (!readJSON(STORAGE.QUEUE, []).length){
       broadcast({ type:'REQUEST_QUEUE', from:TAB_ID });
     }
   }
 
-  // Auto-shuffle en páginas de perfil
   function maybeAutoShuffleFromProfile(){
     const body = document.body;
     if (!body || body.dataset.page !== 'profile') return;
@@ -560,30 +593,23 @@
     if (!Array.isArray(songs) || !songs.length) return;
 
     const profileId = body.dataset.profileId || 'profile';
-
-    const isDifferentSource =
-      !sourceInfo ||
-      sourceInfo.type !== 'profile' ||
-      String(sourceInfo.id) !== String(profileId);
+    const isDifferentSource = !sourceInfo || sourceInfo.type !== 'profile' || String(sourceInfo.id) !== String(profileId);
 
     if (isDifferentSource || !queue.length){
       setQueue(songs, { source:{type:'profile', id:profileId}, shuffle:true, persist:true });
     }
   }
 
-  // API de Cola
   function setQueue(songs, {source=null, shuffle=false, persist=true}={}){
     const base  = dedupeById((songs||[]).map(normalizeSong));
-    let final   = base;
-    let seed    = null;
-    if (shuffle){
-      seed  = Date.now();
-      final = shuffleArray(base, seed);
-    }
+    let final   = base, seed = null;
+    if (shuffle){ seed = Date.now(); final = shuffleArray(base, seed); }
     queue      = final;
     sourceInfo = source ? { ...source, seed } : null;
     renderQueue();
     if (persist) persistAll();
+    // Calienta el primer ítem de la cola para arranque instantáneo
+    const first = queue[0]; if (first?.src && window.AuraPlayer) { try { window.AuraPlayer.play({ ...first, id:first.id, title:first.title, artist:first.artist, cover:first.cover }); } catch(_){} }
   }
 
   function addToEnd(songs, {dedupe=true}={}){
@@ -606,7 +632,7 @@
     window.AuraPlayer?.play(s);
     nowPlaying = s;
 
-    // elimina el elemento reproducido de la cola
+    // Quita el elemento reproducido de la cola
     queue.splice(index,1);
     renderQueue(); persistAll();
   }
@@ -644,7 +670,6 @@
 
   function externalPlay(s){
     const song = normalizeSong(s||{});
-    // Si existe en cola, elimínala (evita duplicado)
     const idx = queue.findIndex(x => (song.id && x.id===song.id) || (!!song.src && x.src===song.src));
     if (nowPlaying) window._auraBackStack.push(nowPlaying);
     window._auraForwardStack = [];
@@ -653,7 +678,6 @@
     if (idx>=0){ queue.splice(idx,1); renderQueue(); persistAll(); }
   }
 
-  // ====== Render + Drag & Drop ======
   let listListenersBound = false;
 
   function updateCount(){
@@ -663,20 +687,23 @@
     emptyEl.hidden = n>0;
   }
 
-  function ensureDurations(){
-    queue.forEach((s,i)=>{
-      if (s.duration && s.duration!=='--:--') return;
-      if (!s.src) return;
-      const a = new Audio();
-      a.preload = 'metadata';
-      a.src = s.src;
-      a.addEventListener('loadedmetadata', ()=>{
-        s.duration = fmtTime(a.duration);
+  // Usa el probe global para no crear mil <audio>
+  async function ensureDurations(){
+    const probe = window.__AURA_PROBE_DURATION__;
+    if (!probe) return;
+    // Solo saca duraciones faltantes
+    for (let i=0;i<queue.length;i++){
+      const s = queue[i];
+      if (s.duration && s.duration!=='--:--') continue;
+      if (!s.src) continue;
+      const d = await probe(s.src);
+      if (Number.isFinite(d) && d>0){
+        s.duration = fmtTime(d);
         const li = listEl.children[i];
-        if (li){ const d = li.querySelector('.dur'); if (d) d.textContent = s.duration; }
-        persistAll({silent:true});
-      }, { once:true });
-    });
+        if (li){ const de = li.querySelector('.dur'); if (de) de.textContent = s.duration; }
+        writeJSON(STORAGE.QUEUE, queue); // persist silencioso
+      }
+    }
   }
 
   const dropIndicator = document.createElement('li');
@@ -766,7 +793,6 @@
     renderQueue(); persistAll();
   }
 
-  // ====== Inicialización ======
   function collectSongsFromDOM(){
     const btns = Array.from(document.querySelectorAll('.cancion-item'));
     return btns.map(btn => ({
@@ -780,10 +806,8 @@
   }
 
   function bootstrap(){
-    // 1) Restaura lo que ya exista
     restoreAll();
 
-    // 2) Si no había cola, intenta inicial con lo que hay en la página
     if (!queue.length){
       const fromDom = collectSongsFromDOM();
       if (fromDom.length){
@@ -791,13 +815,11 @@
       }
     }
 
-    // 3) Si es un perfil, auto-shuffle si cambia el perfil o no hay cola
     maybeAutoShuffleFromProfile();
 
-    // 4) Expone API global (usada por tu reproductor)
     window.AuraQueue = {
       render: renderQueue,
-      syncFromDocument: ()=>{}, // ya no necesario (persistimos)
+      syncFromDocument: ()=>{},
       externalPlay,
       back,
       forwardOrNext,
@@ -805,7 +827,7 @@
       onEnded,
       noteNowPlaying,
       addToEnd,
-      setQueue, // por si quieres encolar manualmente
+      setQueue,
       toggleShuffle(force=null){
         const want = force==null ? !settings.shuffle : !!force;
         settings.shuffle = want;
@@ -817,10 +839,7 @@
     };
   }
 
-  // Listo
   bootstrap();
-
-  // También re-intenta al cargar con Turbo
   document.addEventListener('turbo:load', bootstrap);
 })();
 </script>
@@ -845,7 +864,7 @@
   z-index:var(--z-player); overflow:hidden;
 }
 
-/* Player (sin cambios de estilo general) */
+/* Player */
 #rightPlayer .current-song{
   padding:20px; display:flex; flex-direction:column; align-items:center;
   border-bottom:1px solid var(--pl-line);
@@ -867,17 +886,14 @@
 #rightPlayer .options{ display:flex; justify-content:center; align-items:center; gap:18px; padding:14px; border-top:1px solid var(--pl-line); background:var(--pl-bg-2) }
 #rightPlayer .icon-btn{ background:none; border:none; color:var(--pl-fg); font-size:20px; cursor:pointer; transition:.25s }
 #rightPlayer .icon-btn:hover{ color:var(--pl-accent); transform:scale(1.12) }
-#rightPlayer .vol-range{ -webkit-appearance:none; width:120px; height:6px; border-radius:999px; background:linear-gradient(to right,var(--pl-accent) 0%, var(--pl-accent2) 70%, #35354f 70%, #35354f 100%); cursor:pointer }
+#rightPlayer .vol-range{ -webkit-appearance:none; width:120px; height:6px; border-radius:999px; background:linear-gradient(to right,var(--pl-accent) 0%, var(--pl-accent2) 70%, #35354f 70%, #35354f 100%) }
 #rightPlayer .vol-range::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid var(--pl-accent2); box-shadow:0 0 8px var(--pl-glow) }
 
-/* === Lista (pegada a los bordes) === */
-#rightPlayer .play-list{
-  flex:1; background:var(--pl-bg-1); padding:0; overflow-y:auto; position:relative;
-}
+/* Lista */
+#rightPlayer .play-list{ flex:1; background:var(--pl-bg-1); padding:0; overflow-y:auto; position:relative; }
 #rightPlayer .play-list::-webkit-scrollbar{ width:6px }
 #rightPlayer .play-list::-webkit-scrollbar-thumb{ background:linear-gradient(180deg,var(--pl-accent),var(--pl-accent2)); border-radius:999px }
 
-/* Título sticky (no se va atrás) */
 #rightPlayer .queue-title{
   position:sticky; top:0; z-index:5;
   background:linear-gradient(180deg, rgba(21,21,33,.98) 0%, rgba(21,21,33,.92) 100%);
@@ -912,23 +928,15 @@
 #rightPlayer #queueList .queue-item .qi-play{ background:#2b2d46; color:#fff; border:none; border-radius:9px; padding:8px 12px; cursor:pointer }
 #rightPlayer #queueList .queue-item .qi-play:hover{ background:#3a3d62 }
 
-/* Indicador de drop con animación (apertura) */
 #rightPlayer #queueList .drop-indicator{
-  width:100%;
-  height:0; margin:0; border-radius:0;
+  width:100%; height:0; margin:0; border-radius:0;
   border:2px dashed #6d64c4; background:rgba(109,100,196,.10);
   opacity:0; transition: height .18s ease, margin .18s ease, opacity .15s ease;
 }
-#rightPlayer #queueList .drop-indicator.show{
-  height:58px; margin:8px 0; opacity:1;
-}
+#rightPlayer #queueList .drop-indicator.show{ height:58px; margin:8px 0; opacity:1; }
 
-/* Mensaje vacío */
-#rightPlayer .queue-empty{
-  opacity:.7; font-size:13px; padding:14px; border-top:1px dashed #2b2d46;
-}
+#rightPlayer .queue-empty{ opacity:.7; font-size:13px; padding:14px; border-top:1px dashed #2b2d46; }
 
-/* Animación al quitar (por reproducirse) */
 @keyframes queueRemove {
   0% { opacity:1; transform:translateX(0) scale(1); }
   60%{ opacity:.35; transform:translateX(18px) scale(.98); }
@@ -936,21 +944,18 @@
 }
 #rightPlayer #queueList .queue-item.removing{ animation:queueRemove .32s ease forwards }
 
-/* ===== Asidero de redimensionado ===== */
 #rightPlayer .rp-resize-handle{
   position:absolute; top:0; left:-6px; width:12px; height:100%;
   cursor:ew-resize; background:transparent; border:0; padding:0; margin:0;
   outline:none; z-index:6;
 }
-/* Capa base: sin morado por defecto */
 #rightPlayer .rp-resize-handle::before{
   content:""; position:absolute; inset:0;
-  background:transparent;                         /* neutral por defecto */
+  background:transparent;
   border-left:1px solid var(--pl-line);
   border-right:1px solid transparent;
   transition:background .2s, box-shadow .2s, border-color .2s;
 }
-/* Grip con puntitos (siempre, tenue) */
 #rightPlayer .rp-resize-handle::after{
   content:""; position:absolute; left:2px; top:50%; transform:translateY(-50%);
   width:8px; height:36px;
@@ -959,8 +964,6 @@
     radial-gradient(circle, #8c8fb3 35%, transparent 36%) 4px 4px/4px 8px repeat-y;
   opacity:.45; pointer-events:none;
 }
-
-/* Morado SOLO en hover/drag/teclado */
 #rightPlayer .rp-resize-handle:hover::before,
 #rightPlayer.resizing .rp-resize-handle::before,
 #rightPlayer .rp-resize-handle:focus-visible::before{
@@ -970,7 +973,6 @@
   border-right-color:rgba(76,29,149,.8);
 }
 
-/* Modal playlists */
 #rightPlayer .playlist-modal{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.35); backdrop-filter: blur(3px); z-index:var(--z-popup) }
 #rightPlayer .playlist-modal[hidden]{ display:none }
 #rightPlayer .playlist-modal-content{ min-width:320px; max-width:420px; background:#191a2a; border:1px solid #2b2d46; border-radius:16px; padding:18px; color:#fff; box-shadow:0 20px 60px rgba(0,0,0,.55) }
