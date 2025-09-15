@@ -19,8 +19,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
-  {{-- CSS + JS principal (evita @vite() vacío) --}}
-  @vite(['resources/css/ed_perfil.css', 'resources/js/ed-perfil.js'])
+  {{-- CSS + JS principal (un solo @vite con entradas válidas) --}}
+  @vite(['resources/css/ed_perfil.css','resources/js/ed_perfil.js'])
 
   @php
     use Illuminate\Support\Str;
@@ -56,7 +56,7 @@
 
     $isAuth  = Auth::check();
     $isOwner = $isAuth && Auth::id() === $user->id;
-  @endphp>
+  @endphp
 
   <!-- Preload banner above-the-fold -->
   <link rel="preload" as="image" href="{{ $bannerLow }}">
