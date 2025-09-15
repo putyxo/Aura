@@ -148,4 +148,60 @@ class CancionController extends Controller
             // noop
         }
     }
+
+    /**
+     * Extrae fileId desde:
+     *  - un id crudo
+     *  - URL Drive: /d/{id} o ?id=...
+     *  - URL interna tuya con ?id=...
+     */
+    private function extractDriveId($value): ?string
+    {
+        if (!$value) return null;
+        $v = trim((string)$value);
+
+        // Id crudo (sin http)
+        if (!str_starts_with($v, 'http://') && !str_starts_with($v, 'https://')) {
+            return preg_match('/^[A-Za-z0-9_\-]{10,}$/', $v) ? $v : null;
+        }
+
+        // ?id=...
+        $q = parse_url($v, PHP_URL_QUERY);
+        if ($q) {
+            parse_str($q, $params);
+            if (!empty($params['id']) && preg_match('/^[A-Za-z0-9_\-]{10,}$/', $params['id'])) {
+                return $params['id'];
+            }
+        }
+
+        // /d/{id} o /folders/{id}
+        if (preg_match('~/(?:d|folders)/([^/?#]+)~', $v, $m)) {
+            return $m[1];
+        }
+
+        return null;
+    }
+
+public function lyrics(\App\Models\Cancion $cancion)
+{
+    if ($cancion->lyric) {
+        return response()->json([
+            'song_id' => $cancion->id,
+            'lyrics'  => $cancion->lyric->content,
+            'synced'  => (bool) $cancion->lyric->synced,
+            'status'  => 'ready',
+        ]);
+    }
+
+    // Si no hay letra, dispara job
+    \App\Jobs\GenerateLyricsJob::dispatch($cancion->id);
+
+    return response()->json([
+        'song_id' => $cancion->id,
+        'lyrics'  => null,
+        'synced'  => false,
+        'status'  => 'pending',
+    ]);
+}
+
 }

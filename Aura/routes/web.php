@@ -19,11 +19,14 @@ use App\Http\Controllers\LikeApiController;
 
 
 use App\Http\Controllers\Auth\PasswordController;
+use App\Models\Cancion;
 use App\Models\Album;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\LyricsController;
+
 
 // ===== Página principal =====
 Route::get('/', fn () => view('welcome'))->name('welcome');
@@ -85,6 +88,9 @@ Route::middleware(['web','auth'])->group(function () {
 
     // (Antigua) Página "Me gusta" de canciones (si la usas)
     Route::get('/like', [CancionController::class, 'like'])->name('like');
+Route::get('/cancion/{cancion}', [CancionController::class, 'show'])
+    ->name('cancion.show');
+Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
 
     /*
     |--------------------------------------------------------------------------

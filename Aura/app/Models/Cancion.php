@@ -6,8 +6,7 @@ use App\Jobs\GenerateLyricsJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cancion extends Model
 {
@@ -65,48 +64,22 @@ class Cancion extends Model
                     ->withTimestamps();
     }
 
-    /* ========= Accessors ========= */
+    // 🎤 Relación con la letra
+    public function lyric(): HasOne
+    {
+        return $this->hasOne(Lyric::class, 'song_id');
+    }
 
+    // Accesor para la portada
     public function getCoverUrlAttribute(): string
     {
-        $p = $this->cover_path;
-        if (!$p) {
-            return asset('img/default-cancion.png');
-        }
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
+        return $this->cover_path 
+            ? $this->cover_path 
+            : asset('img/default-song.png');
     }
 
     public function getAudioUrlAttribute(): ?string
     {
-        $p = $this->audio_path;
-        if (!$p) return null;
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
-    }
-
-    /* ========= Hooks ========= */
-
-    protected static function booted()
-    {
-        // Borrar archivos locales si las rutas son relativas
-        static::deleting(function (Cancion $song) {
-            foreach (['audio_path', 'cover_path'] as $col) {
-                $path = $song->{$col};
-                if ($path && !Str::startsWith($path, ['http://', 'https://'])) {
-                    Storage::disk('public')->delete($path);
-                }
-            }
-        });
-
-        // Al crear, si no hay letra, dispara el job (opcional)
-        static::created(function (Cancion $song) {
-            if (empty($song->lyrics)) {
-                GenerateLyricsJob::dispatch($song->id)->onQueue('default');
-            }
-        });
+        return $this->audio_path ?? '';
     }
 }
