@@ -172,13 +172,23 @@ function aplicarTraducciones() {
 $(document).ready(function() {
   guardarOriginal();
 
-  // 📝 Mantener idioma al navegar
-  let idiomaGuardado = localStorage.getItem("idiomaSeleccionado") || "es";
-  $("#lang").val(idiomaGuardado);
-  traducirPagina(idiomaGuardado);
+  // Set initial value to current Laravel locale
+  let currentLocale = "{{ app()->getLocale() }}";
+  $("#lang").val(currentLocale);
 
   $("#lang").change(function() {
-    traducirPagina($(this).val());
+    let selectedLang = $(this).val();
+    $.ajax({
+      url: "/languages/" + selectedLang,
+      method: "POST",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function() {
+        traducirPagina(selectedLang);
+      },
+      error: function() {
+        alert("Error changing language. Please try again.");
+      }
+    });
   });
 });
 </script>
