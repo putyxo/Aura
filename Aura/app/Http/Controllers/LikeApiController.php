@@ -7,17 +7,26 @@ use Illuminate\Http\JsonResponse;
 
 class LikeApiController extends Controller
 {
-    // SIN constructor: el middleware 'auth' lo ponemos en la ruta
-
-    // POST /canciones/{cancion}/like -> { liked: bool, song?: {...} }
+    /**
+     * Alterna el "me gusta" de una canción para el usuario autenticado.
+     * Ruta sugerida (con middleware auth en la ruta):
+     * POST /canciones/{cancion}/like
+     */
     public function toggle(Cancion $cancion): JsonResponse
     {
         $user = auth()->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
 
         $exists = $user->likedSongs()->whereKey($cancion->getKey())->exists();
+
         if ($exists) {
             $user->likedSongs()->detach($cancion->getKey());
-            return response()->json(['liked' => false, 'song' => ['id' => $cancion->getKey()]]);
+            return response()->json([
+                'liked' => false,
+                'song'  => ['id' => $cancion->getKey()],
+            ]);
         }
 
         $user->likedSongs()->attach($cancion->getKey());
@@ -32,22 +41,26 @@ class LikeApiController extends Controller
                 'id'       => $cancion->getKey(),
                 'title'    => $cancion->title ?? $cancion->titulo ?? 'Sin título',
                 'artist'   => $artist,
-                'cover'    => $cancion->cover_path ?? $cancion->portada ?? asset('img/default-cover.jpg'),
-                'audio'    => $cancion->audio_path ?? $cancion->ruta_audio ?? null,
+                // usa accessors del modelo para URL correcta en /storage
+                'cover'    => $cancion->cover_url ?? ($cancion->cover_path ?? asset('img/default-cover.jpg')),
+                'audio'    => $cancion->audio_url ?? ($cancion->audio_path ?? null),
                 'duration' => $cancion->duration ?? $cancion->duracion ?? 0,
             ],
         ]);
     }
 
-    // GET /canciones/{cancion}/liked -> { liked: bool }
+    /**
+     * Indica si el usuario autenticado ya dio "me gusta" a la canción.
+     * GET /canciones/{cancion}/liked
+     */
     public function liked(Cancion $cancion): JsonResponse
     {
-        if (!auth()->check()) {
+        $user = auth()->user();
+        if (!$user) {
             return response()->json(['liked' => false]);
         }
 
-        $user = auth()->user();
-        $is   = $user->likedSongs()->whereKey($cancion->getKey())->exists();
+        $is = $user->likedSongs()->whereKey($cancion->getKey())->exists();
 
         return response()->json(['liked' => $is]);
     }

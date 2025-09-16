@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Cancion;
 use App\Models\UserEqualizer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -44,19 +45,19 @@ class User extends Authenticatable
         ];
     }
 
-    // Para que al serializar (JSON) salgan estas URLs ya listas (opcional)
+    // Para que al serializar (JSON) salgan estas URLs listas
     protected $appends = ['avatar_url', 'banner_url', 'imagen_portada_url'];
 
     /* ==============================
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
-    public function followings()
+    public function followings(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
     }
 
-    public function followers()
+    public function followers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'followed_id', 'follower_id');
     }
@@ -72,13 +73,21 @@ class User extends Authenticatable
     }
 
     /* ==============================
-       RELACIONES EXTRA
+       RELACIONES EXTRA (Likes)
        ============================== */
 
-    public function likes()
+    /** Relación principal: canciones que el usuario ha likeado */
+    public function likes(): BelongsToMany
     {
+        // Pivot: likes (user_id, song_id) → canciones están en tabla 'songs'
         return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
                     ->withTimestamps();
+    }
+
+    /** Alias para compatibilidad con controladores/vistas existentes */
+    public function likedSongs(): BelongsToMany
+    {
+        return $this->likes();
     }
 
     public function equalizer()
@@ -93,9 +102,8 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         $p = $this->avatar;
-        if (!$p) {
-            return asset('img/default-avatar.png');
-        }
+        if (!$p) return asset('img/default-avatar.png');
+
         return Str::startsWith($p, ['http://', 'https://'])
             ? $p
             : asset('storage/' . ltrim($p, '/'));
@@ -104,9 +112,8 @@ class User extends Authenticatable
     public function getBannerUrlAttribute(): string
     {
         $p = $this->banner;
-        if (!$p) {
-            return asset('img/default-banner.png');
-        }
+        if (!$p) return asset('img/default-banner.png');
+
         return Str::startsWith($p, ['http://', 'https://'])
             ? $p
             : asset('storage/' . ltrim($p, '/'));
@@ -115,9 +122,8 @@ class User extends Authenticatable
     public function getImagenPortadaUrlAttribute(): string
     {
         $p = $this->imagen_portada;
-        if (!$p) {
-            return asset('img/default-cover.png');
-        }
+        if (!$p) return asset('img/default-cover.png');
+
         return Str::startsWith($p, ['http://', 'https://'])
             ? $p
             : asset('storage/' . ltrim($p, '/'));

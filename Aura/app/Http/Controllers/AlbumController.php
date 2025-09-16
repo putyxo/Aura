@@ -2,190 +2,139 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Album;
-use App\Models\Cancion;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class ProfileController extends Controller
+class AlbumController extends Controller
 {
     /**
-     * Mostrar el formulario del perfil del usuario.
+     * Mostrar detalle de un álbum (portada + canciones).
      */
-    public function edit(Request $request): View
+    public function show(int $id): View
     {
-        $user = $request->user();
-
-        // Álbumes del usuario
-        $albumes = Album::where('user_id', $user->id)->get();
-
-        // Normalizar para la vista
-        $albumsNormalized = collect($albumes)->map(function ($a) {
-            return (object) [
-                'id'      => $a->id,
-                'titulo'  => $a->title ?? $a->titulo ?? 'Sin título',
-                'portada' => $a->cover_path ?? $a->portada ?? null,
-            ];
-        });
-
-        // 4 álbumes por "página" (para el carrusel / grid)
-        $albumPages = $albumsNormalized->chunk(4);
-
-        return view('profile.edit', [
-            'user'       => $user,
-            'albumPages' => $albumPages,
-        ]);
+        $album = Album::with(['user', 'songs.user'])->findOrFail($id);
+        return view('albums.show', compact('album'));
     }
 
     /**
-     * Mostrar los álbumes del usuario (pantalla de menú de álbum).
+     * Actualiza nombre y/o portada del álbum.
+     * Acepta:
+     *  - title: string
+     *  - cover: image
      */
-    public function menuAlbum(Request $request): View
-    {
-        $user = $request->user();
-
-        $albumes = Album::where('user_id', $user->id)->get();
-
-        // Si tu modelo User tiene relación followers(), úsala; si no, cae en un campo numérico.
-        $followersCount = method_exists($user, 'followers')
-            ? $user->followers()->count()
-            : (int) ($user->seguidores ?? 0);
-
-        return view('menu_album', [
-            'user'           => $user,
-            'albumes'        => $albumes,
-            'followersCount' => $followersCount,
-        ]);
-    }
-
-    /**
-     * Actualizar la información del perfil del usuario.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        // Si el email cambió, reinicia la verificación
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Eliminar la cuenta del usuario.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        // Validar password actual
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        // Eliminar usuario
-        $user->delete();
-
-        // Invalidar sesión
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
-
-    /**
-     * Guardar un nuevo álbum (almacenamiento LOCAL).
-     */
-    public function storeAlbum(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
-            'genre'        => ['nullable', 'string', 'max:255'],
-            'release_date' => ['nullable', 'date'],
-            'cover'        => ['nullable', 'image', 'max:10240'], // 10MB
-        ]);
-
-        $data = $request->only(['title', 'genre', 'release_date']);
-        $data['user_id'] = auth()->id();
-
-        // Subir portada local (opcional)
-        if ($request->hasFile('cover')) {
-            $img      = $request->file('cover');
-            $slug     = Str::slug($data['title']) . '-' . time();
-            $ext      = $img->getClientOriginalExtension();
-            $imgName  = $slug . '-cover.' . $ext;
-
-            // Guarda en storage/app/public/portadas
-            $relativePath = $img->storeAs('portadas', $imgName, 'public'); // ej: portadas/mi-album-...-cover.jpg
-            $data['cover_path'] = $relativePath;
-        }
-
-        Album::create($data);
-
-        return redirect()->route('profile.edit')->with('success', 'Álbum creado correctamente.');
-    }
-
-    /**
-     * Eliminar un álbum (y sus canciones) con archivos LOCALES.
-     */
-    public function destroyAlbum($id): RedirectResponse
+    public function update(Request $request, int $id)
     {
         $album = Album::findOrFail($id);
 
-        // Verificación de propietario
-        if ((int) $album->user_id !== (int) auth()->id()) {
+        // Solo el dueño puede editar
+        if ((int)$album->user_id !== (int)Auth::id()) {
             abort(403, 'Acción no autorizada.');
         }
 
-        // Borrar canciones del álbum (DB + archivos locales)
-        $songs = Cancion::where('album_id', $album->id)->get();
+        $validated = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'cover' => ['nullable', 'image', 'max:10240'], // 10MB
+        ]);
 
-        foreach ($songs as $s) {
-            // Intenta encontrar rutas relativas en distintos nombres de campo
-            $songCoverPath = $s->cover_path ?? $s->portada ?? null;
-            $songAudioPath = $s->audio_path ?? $s->audio ?? null;
+        $changed = [];
+
+        if (array_key_exists('title', $validated)) {
+            $album->title = $validated['title'];
+            $changed['title'] = $album->title;
+        }
+
+        if ($request->hasFile('cover')) {
+            $img  = $request->file('cover');
+            $slug = Str::slug($album->title ?: ($album->titulo ?? 'album')) . '-' . time();
+            $ext  = $img->getClientOriginalExtension();
+            $path = $img->storeAs('portadas', $slug . '.' . $ext, 'public');
+
+            // Borra la portada anterior si era ruta local
+            $old = $album->cover_path ?? $album->portada ?? null;
+            if ($old && !preg_match('~^https?://~i', $old)) {
+                Storage::disk('public')->delete(ltrim(preg_replace('#^/?public/#', '', $old), '/'));
+            }
+
+            $album->cover_path = $path;
+            $changed['cover_path'] = $path;
+        }
+
+        $album->save();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok'      => true,
+                'album'   => $album->only(['id','title','cover_path']),
+                'changed' => $changed,
+            ]);
+        }
+
+        return back()->with('ok', 'Álbum actualizado correctamente.');
+    }
+
+    /**
+     * Eliminar un álbum (y sus canciones) + archivos locales.
+     * (Si no usas esta acción, tu ruta ya apunta a ProfileController@destroyAlbum)
+     */
+    public function destroy($album, Request $request)
+    {
+        $model = $album instanceof Album ? $album : Album::findOrFail($album);
+
+        if ((int) $model->user_id !== (int) Auth::id()) {
+            abort(403, 'Acción no autorizada.');
+        }
+
+        $model->load('songs');
+
+        foreach ($model->songs as $song) {
+            $songCoverPath = $song->cover_path ?? $song->portada ?? null;
+            $songAudioPath = $song->audio_path ?? $song->audio ?? null;
 
             $this->deleteLocalIfRelative($songAudioPath);
             $this->deleteLocalIfRelative($songCoverPath);
 
-            $s->delete();
+            if (method_exists($song, 'likedBy')) {
+                $song->likedBy()->detach();
+            }
+            if (method_exists($song, 'playlists')) {
+                $song->playlists()->detach();
+            }
+
+            $song->delete();
         }
 
-        // Borrar portada del álbum (al final, por si alguna canción la reutilizaba)
-        $albumCoverPath = $album->cover_path ?? $album->portada ?? null;
+        $albumCoverPath = $model->cover_path ?? $model->portada ?? null;
         $this->deleteLocalIfRelative($albumCoverPath);
 
-        // Borrar álbum
-        $album->delete();
+        $model->delete();
 
-        return back()->with('success', 'Álbum eliminado correctamente.');
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => 'Álbum eliminado correctamente ✅']);
+        }
+
+        return back()->with('success', 'Álbum eliminado correctamente ✅');
     }
 
-    /**
-     * Elimina un archivo del disco 'public' si la ruta es RELATIVA (no URL absoluta).
-     */
     private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
+        if (preg_match('~^https?://~i', $path)) return;
 
-        // Si es URL absoluta http/https, no borrar aquí
-        if (preg_match('~^https?://~i', $path)) {
-            return;
-        }
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+                return;
+            }
+        } catch (\Throwable $e) {}
 
-        // Asegura formato relativo tipo "portadas/archivo.jpg" o "audios/archivo.mp3"
-        Storage::disk('public')->delete($path);
+        try {
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+            }
+        } catch (\Throwable $e) {}
     }
 }

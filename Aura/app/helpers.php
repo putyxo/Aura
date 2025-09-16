@@ -1,33 +1,68 @@
 <?php
-use Illuminate\Support\Facades\App;
+declare(strict_types=1);
 
-if (!function_exists('drive_img_url')) {
-    /**
-     * Devuelve una URL optimizada de Google Drive para mostrar imágenes.
-     *
-     * @param string|null $value   El ID del archivo o la URL completa de Drive.
-     * @param int|null    $size    Ancho deseado (si usas thumbnail).
-     * @return string|null
-     */
-    function drive_img_url(?string $value, ?int $size = null): ?string
+use Illuminate\Support\Str;
+
+/**
+ * Normaliza una ruta guardada en BD y devuelve su URL pública.
+ * - Si es http/https → la devuelve tal cual.
+ * - Si es una ruta absoluta del storage (incluyendo Windows) → la convierte a /storage/...
+ * - Si es relativa (p.ej. "songs/foo.mp3" o "covers/portada.jpg") → /storage/<ruta>
+ * - Si $fallbackAsset está definido y $path es vacío → asset($fallbackAsset).
+ */
+if (!function_exists('public_media_url')) {
+    function public_media_url(?string $path, ?string $fallbackAsset = null): string
     {
-        if (!$value) return null;
-
-        // Extraer fileId si viene como URL
-        if (preg_match('~/d/([^/]+)~', $value, $m)) {
-            $id = $m[1];
-        } elseif (preg_match('~[?&]id=([^&]+)~', $value, $m)) {
-            $id = $m[1];
-        } else {
-            $id = $value; // ya es fileId
+        if (!$path || trim($path) === '') {
+            return $fallbackAsset ? asset($fallbackAsset) : '';
         }
 
-        // Usar thumbnail si se pasa $size
-        if ($size) {
-            return "https://drive.google.com/thumbnail?id={$id}&sz=w{$size}";
+        $path = trim($path);
+
+        // Si ya es URL absoluta (CDN, otro host, etc.)
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
         }
 
-        // Si no hay size → usar export=view
-        return "https://drive.google.com/uc?export=view&id={$id}";
+        // Normaliza separadores Windows → Unix
+        $path = str_replace('\\', '/', $path);
+
+        // Si nos pasaron un path absoluto dentro del proyecto que apunta al storage/app/public
+        // recortamos hasta quedar con la parte relativa dentro de "public"
+        $marker = 'storage/app/public/';
+        $ipos   = stripos($path, $marker);
+        if ($ipos !== false) {
+            $path = substr($path, $ipos + strlen($marker));
+        }
+
+        // Quita prefijos "public/" o "/public/"
+        $path = preg_replace('#^/?public/#i', '', $path);
+
+        // Quita "storage/" al inicio si ya viene, para no duplicarlo
+        $path = ltrim(preg_replace('#^/?storage/#i', '', $path), '/');
+
+        // Construye URL pública (requiere php artisan storage:link)
+        return asset('storage/' . $path);
+    }
+}
+
+/**
+ * URL para imágenes locales o externas.
+ * $fallbackAsset: asset() a usar si $path viene vacío (ej: 'img/default-cancion.png').
+ */
+if (!function_exists('img_url')) {
+    function img_url(?string $path, ?string $fallbackAsset = 'img/default-cancion.png'): string
+    {
+        return public_media_url($path, $fallbackAsset);
+    }
+}
+
+/**
+ * URL para audios locales o externos.
+ */
+if (!function_exists('audio_url')) {
+    function audio_url(?string $path): string
+    {
+        return public_media_url($path);
     }
 }

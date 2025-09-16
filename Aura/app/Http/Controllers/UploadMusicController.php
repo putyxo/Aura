@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\Cancion;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,13 +21,14 @@ class UploadMusicController extends Controller
         if (!auth()->user()?->es_artista) {
             abort(403, 'Solo artistas pueden subir música.');
         }
+
         return view('musica.subir');
     }
 
     /**
      * Guarda una canción individual (single) en almacenamiento LOCAL y BD.
      */
-    public function storeSong(Request $request)
+    public function storeSong(Request $request): RedirectResponse
     {
         if (!auth()->user()?->es_artista) {
             abort(403, 'Solo artistas pueden subir música.');
@@ -38,16 +41,16 @@ class UploadMusicController extends Controller
             'portada'   => ['nullable','image','mimes:jpg,jpeg,png,webp','max:10240'], // 10MB
         ]);
 
-        $slug = Str::slug($data['nombre']).'-'.time();
+        $slug = Str::slug($data['nombre']) . '-' . time();
 
         // Subir MP3 a storage/app/public/audios
-        $mp3      = $request->file('mp3');
+        $mp3 = $request->file('mp3');
         $audioRel = $mp3->storeAs('audios', $slug.'.'.$mp3->getClientOriginalExtension(), 'public');
 
         // Subir portada opcional a storage/app/public/portadas
         $coverRel = null;
         if ($request->hasFile('portada')) {
-            $img      = $request->file('portada');
+            $img = $request->file('portada');
             $coverRel = $img->storeAs('portadas', $slug.'-cover.'.$img->getClientOriginalExtension(), 'public');
         }
 
@@ -60,7 +63,10 @@ class UploadMusicController extends Controller
             'cover_path' => $coverRel,
             'status'     => 'published',
         ]);
-    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
+
+        // Job opcional (si tu Job acepta el modelo o el ID ajústalo)
+        \App\Jobs\GenerateLyricsJob::dispatch($cancion);
+
         return redirect()
             ->route('busqueda_individual')
             ->with('ok', "Canción subida: {$cancion->title}")
@@ -70,9 +76,9 @@ class UploadMusicController extends Controller
 
     /**
      * Guarda un ÁLBUM con múltiples canciones en almacenamiento LOCAL y BD.
-     * RUTA: POST /musica/subir-albums  (name: albums.store)
+     * RUTA sugerida: POST /musica/subir-albums  (name: albums.store)
      */
-    public function storeAlbum(Request $request)
+    public function storeAlbum(Request $request): RedirectResponse
     {
         if (!auth()->user()?->es_artista) {
             abort(403, 'Solo artistas pueden subir música.');
@@ -90,14 +96,20 @@ class UploadMusicController extends Controller
         ]);
 
         $user = $request->user();
-        $slug = Str::slug($data['title']).'-'.time();
+        $slug = Str::slug($data['title']) . '-' . time();
 
-        return DB::transaction(function () use ($request, $user, $data, $slug) {
+        // Para limpiar archivos si algo falla:
+        $storedFiles = [];
+
+        try {
+            DB::beginTransaction();
+
             // 1) Subir portada del álbum (opcional)
             $albumCoverRel = null;
             if ($request->hasFile('cover')) {
-                $img          = $request->file('cover');
-                $albumCoverRel= $img->storeAs('portadas', $slug.'-cover.'.$img->getClientOriginalExtension(), 'public');
+                $img = $request->file('cover');
+                $albumCoverRel = $img->storeAs('portadas', $slug.'-cover.'.$img->getClientOriginalExtension(), 'public');
+                $storedFiles[] = $albumCoverRel;
             }
 
             // 2) Crear álbum en BD
@@ -111,37 +123,54 @@ class UploadMusicController extends Controller
 
             // 3) Subir múltiples canciones y ligarlas al álbum
             $titles = $request->input('titles', []);
+
             foreach ($request->file('tracks') as $i => $mp3) {
-    $base     = pathinfo($mp3->getClientOriginalName(), PATHINFO_FILENAME);
-    $name     = $titles[$i] ?? $base;
-    $nameSlug = Str::slug($name) ?: ('track-'.($i+1));
-    $mp3Name  = $slug.'-'.$nameSlug.'.'.$mp3->getClientOriginalExtension();
+                $base     = pathinfo($mp3->getClientOriginalName(), PATHINFO_FILENAME);
+                $name     = $titles[$i] ?? $base;
+                $nameSlug = Str::slug($name) ?: ('track-'.($i+1));
+                $mp3Name  = $slug.'-'.$nameSlug.'.'.$mp3->getClientOriginalExtension();
 
-    // Sube MP3 a Drive
-    $audio    = $drive->uploadPublic($mp3->getRealPath(), $mp3Name, 'audio/mpeg', $folderId);
-    $audioUrl = $audio['directUrl'];
+                // Sube MP3 a storage/app/public/audios
+                $audioRel = $mp3->storeAs('audios', $mp3Name, 'public');
+                $storedFiles[] = $audioRel;
 
-    // Crea canción ligada al álbum
-    $cancion = Cancion::create([
-        'user_id'    => $user->id,
-        'album_id'   => $album->id,
-        'title'      => $name,
-        'genre'      => $data['genre'] ?? null,
-        'audio_path' => $audioUrl,
-        'cover_path' => $albumCoverUrl,
-        'duration'   => null,
-        'status'     => 'published',
-    ]);
+                // Usa la misma portada del álbum para cada track (si existe)
+                $coverRel = $albumCoverRel;
 
-    // 🔥 Generar letra automática en background
-    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
-}
+                // Crea canción ligada al álbum (rutas RELATIVAS)
+                $cancion = Cancion::create([
+                    'user_id'    => $user->id,
+                    'album_id'   => $album->id,
+                    'title'      => $name,
+                    'genre'      => $data['genre'] ?? null,
+                    'audio_path' => $audioRel,
+                    'cover_path' => $coverRel,
+                    'duration'   => null,
+                    'status'     => 'published',
+                ]);
+
+                // Job opcional (si tu Job acepta el modelo o ID, ajusta)
+                \App\Jobs\GenerateLyricsJob::dispatch($cancion);
+            }
+
+            DB::commit();
 
             return redirect()
                 ->route('busqueda_album')
                 ->with('ok', 'Álbum y canciones subidos correctamente.')
                 ->with('cover_url', $albumCoverRel ? asset('storage/'.$albumCoverRel) : null)
                 ->with('album_id', $album->id);
-        });
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            // Limpieza de archivos subidos si la transacción falla
+            foreach ($storedFiles as $rel) {
+                try { Storage::disk('public')->delete($rel); } catch (\Throwable $t) {}
+            }
+
+            // Vuelve a arrojar para que el handler muestre el error
+            throw $e;
+        }
     }
 }

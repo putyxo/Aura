@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\GenerateLyricsJob;
+use App\Models\Album;
 use App\Models\Cancion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,28 +11,84 @@ use Illuminate\Support\Facades\Storage;
 
 class CancionController extends Controller
 {
+    // (Opcional) si usas show:
+    public function show(Cancion $cancion)
+    {
+        $cancion->load('user', 'album.user');
+        return view('canciones.show', compact('cancion'));
+    }
+
+    /**
+     * Actualiza campos simples de la canción (por ahora: título y/o portada).
+     */
+    public function update(Request $request, int $cancion)
+    {
+        $song = Cancion::findOrFail($cancion);
+
+        // Dueño: por user_id directo o por dueño del álbum
+        $ownerId = $song->user_id ?? optional(Album::find($song->album_id))->user_id;
+        if ((int)$ownerId !== (int)Auth::id()) {
+            abort(403, 'Acción no autorizada.');
+        }
+
+        $validated = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'cover' => ['nullable', 'image', 'max:8192'],
+        ]);
+
+        $changed = [];
+
+        if (array_key_exists('title', $validated)) {
+            $song->title = $validated['title'];
+            $changed['title'] = $song->title;
+        }
+
+        if ($request->hasFile('cover')) {
+            $img  = $request->file('cover');
+            $slug = \Str::slug($song->title ?: 'cancion') . '-' . time();
+            $ext  = $img->getClientOriginalExtension();
+            $path = $img->storeAs('covers', $slug . '.' . $ext, 'public');
+
+            $old = $song->cover_path ?? $song->portada ?? null;
+            if ($old && !preg_match('~^https?://~i', $old)) {
+                Storage::disk('public')->delete(ltrim(preg_replace('#^/?public/#', '', $old), '/'));
+            }
+
+            $song->cover_path = $path;
+            $changed['cover_path'] = $path;
+        }
+
+        $song->save();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok'   => true,
+                'song' => $song->only(['id', 'title', 'cover_path']),
+                'changed' => $changed,
+            ]);
+        }
+
+        return back()->with('ok', 'Canción actualizada correctamente.');
+    }
+
     /**
      * Eliminar una canción (archivos locales + relaciones).
      */
     public function destroy(Cancion $cancion, Request $request)
     {
-        // Verifica que la canción pertenezca al usuario actual
         if ((int) $cancion->user_id !== (int) Auth::id()) {
             abort(403, 'Acción no autorizada.');
         }
 
-        // --- Eliminar archivos locales (si las rutas son relativas) ---
         $songCoverPath = $cancion->cover_path ?? $cancion->portada ?? null;
         $songAudioPath = $cancion->audio_path ?? $cancion->audio ?? null;
 
         $this->deleteLocalIfRelative($songAudioPath);
         $this->deleteLocalIfRelative($songCoverPath);
 
-        // --- Quitar relaciones (si no usas ON DELETE CASCADE) ---
         $cancion->likedBy()->detach();
         $cancion->playlists()->detach();
 
-        // --- Eliminar la canción ---
         $cancion->delete();
 
         if ($request->wantsJson()) {
@@ -42,14 +99,11 @@ class CancionController extends Controller
     }
 
     /**
-     * ❤️ Alternar like/unlike a una canción.
-     * Ruta: POST /canciones/{cancion}/like
+     * ❤️ Alternar like/unlike a una canción. (normalmente usas LikeApiController)
      */
     public function toggleLike(Cancion $cancion)
     {
         $user = Auth::user();
-
-        // Usamos la relación de la canción (no dependemos de $user->likes())
         $yaLeDioLike = $cancion->likedBy()->where('users.id', $user->id)->exists();
 
         if ($yaLeDioLike) {
@@ -61,10 +115,6 @@ class CancionController extends Controller
         }
     }
 
-    /**
-     * ✅ Saber si el usuario ya dio like a una canción.
-     * Ruta: GET /canciones/{cancion}/liked
-     */
     public function liked(Cancion $cancion)
     {
         $user = Auth::user();
@@ -73,15 +123,10 @@ class CancionController extends Controller
         return response()->json(['liked' => $liked]);
     }
 
-    /**
-     * 🎵 Vista de canciones que el usuario ha marcado con like.
-     * Ruta: GET /like
-     */
     public function like()
     {
         $user = Auth::user();
 
-        // Traemos las canciones donde el pivot likes tiene al user actual
         $likedSongs = Cancion::with('user')
             ->whereHas('likedBy', fn ($q) => $q->where('users.id', $user->id))
             ->get();
@@ -89,18 +134,12 @@ class CancionController extends Controller
         return view('like', compact('likedSongs'));
     }
 
-    /**
-     * 📝 Disparar (o reintentar) la generación de letras para una canción.
-     * Ruta: POST /canciones/{cancion}/lyrics
-     */
     public function generateLyrics(Cancion $cancion)
     {
-        // Solo el dueño puede solicitar
         if ((int) $cancion->user_id !== (int) Auth::id()) {
             abort(403, 'Acción no autorizada.');
         }
 
-        // Limpia estado y relanza
         $cancion->update([
             'lyrics'        => null,
             'lyrics_status' => 'pending',
@@ -115,93 +154,43 @@ class CancionController extends Controller
         ]);
     }
 
-    /* ================== Helpers privados ================== */
-
-    /**
-     * Elimina un archivo del disco 'public' si la ruta es RELATIVA (no URL absoluta).
-     */
     private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
+        if (preg_match('~^https?://~i', $path)) return;
 
-        // Si es URL http(s), no borrar aquí
-        if (preg_match('~^https?://~i', $path)) {
-            return;
-        }
-
-        // Elimina en el disco 'public' (storage/app/public)
         try {
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
                 return;
             }
-        } catch (\Throwable $e) {
-            // noop
-        }
+        } catch (\Throwable $e) {}
 
-        // Como fallback, intenta en el disco por defecto
         try {
             if (Storage::exists($path)) {
                 Storage::delete($path);
             }
-        } catch (\Throwable $e) {
-            // noop
-        }
+        } catch (\Throwable $e) {}
     }
 
-    /**
-     * Extrae fileId desde:
-     *  - un id crudo
-     *  - URL Drive: /d/{id} o ?id=...
-     *  - URL interna tuya con ?id=...
-     */
-    private function extractDriveId($value): ?string
+    public function lyrics(\App\Models\Cancion $cancion)
     {
-        if (!$value) return null;
-        $v = trim((string)$value);
-
-        // Id crudo (sin http)
-        if (!str_starts_with($v, 'http://') && !str_starts_with($v, 'https://')) {
-            return preg_match('/^[A-Za-z0-9_\-]{10,}$/', $v) ? $v : null;
+        if ($cancion->lyric) {
+            return response()->json([
+                'song_id' => $cancion->id,
+                'lyrics'  => $cancion->lyric->content,
+                'synced'  => (bool) $cancion->lyric->synced,
+                'status'  => 'ready',
+            ]);
         }
 
-        // ?id=...
-        $q = parse_url($v, PHP_URL_QUERY);
-        if ($q) {
-            parse_str($q, $params);
-            if (!empty($params['id']) && preg_match('/^[A-Za-z0-9_\-]{10,}$/', $params['id'])) {
-                return $params['id'];
-            }
-        }
+        \App\Jobs\GenerateLyricsJob::dispatch($cancion->id);
 
-        // /d/{id} o /folders/{id}
-        if (preg_match('~/(?:d|folders)/([^/?#]+)~', $v, $m)) {
-            return $m[1];
-        }
-
-        return null;
-    }
-
-public function lyrics(\App\Models\Cancion $cancion)
-{
-    if ($cancion->lyric) {
         return response()->json([
             'song_id' => $cancion->id,
-            'lyrics'  => $cancion->lyric->content,
-            'synced'  => (bool) $cancion->lyric->synced,
-            'status'  => 'ready',
+            'lyrics'  => null,
+            'synced'  => false,
+            'status'  => 'pending',
         ]);
     }
-
-    // Si no hay letra, dispara job
-    \App\Jobs\GenerateLyricsJob::dispatch($cancion->id);
-
-    return response()->json([
-        'song_id' => $cancion->id,
-        'lyrics'  => null,
-        'synced'  => false,
-        'status'  => 'pending',
-    ]);
-}
-
 }

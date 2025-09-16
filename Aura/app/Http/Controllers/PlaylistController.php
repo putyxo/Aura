@@ -113,14 +113,31 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Devuelve las playlists del usuario autenticado en JSON (id, nombre).
+     * Devuelve las playlists del usuario autenticado (JSON) con portada y conteo.
      */
     public function myPlaylists(): JsonResponse
     {
-        return response()->json(
-            Playlist::where('user_id', Auth::id())
-                ->get(['id', 'nombre'])
-        );
+        $playlists = Playlist::where('user_id', Auth::id())
+            ->select(['id','nombre','cover_url','created_at'])
+            ->withCount('songs')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($pl) {
+                $url = $pl->cover_url;
+                // Normaliza a URL absoluta si está guardada como /storage/...
+                if ($url && !preg_match('~^https?://~i', $url)) {
+                    $url = url($url);
+                }
+                return [
+                    'id'          => $pl->id,
+                    'nombre'      => $pl->nombre,
+                    'cover_url'   => $url,
+                    'songs_count' => $pl->songs_count ?? 0,
+                    'created_at'  => optional($pl->created_at)->toDateTimeString(),
+                ];
+            });
+
+        return response()->json($playlists);
     }
 
     /**
@@ -132,7 +149,10 @@ class PlaylistController extends Controller
 
         $playlist->songs()->syncWithoutDetaching([$cancion->id]);
 
-        return response()->json(['message' => 'Canción agregada a la playlist']);
+        return response()->json([
+            'message' => 'Canción agregada a la playlist',
+            'ok'      => true,
+        ]);
     }
 
     /**
@@ -162,9 +182,11 @@ class PlaylistController extends Controller
         ]);
 
         return response()->json([
-            'id'      => $playlist->id,
-            'nombre'  => $playlist->nombre,
-            'message' => 'Playlist creada correctamente',
+            'id'          => $playlist->id,
+            'nombre'      => $playlist->nombre,
+            'cover_url'   => $playlist->cover_url,
+            'songs_count' => 0,
+            'message'     => 'Playlist creada correctamente',
         ]);
     }
 
