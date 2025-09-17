@@ -1,420 +1,225 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AURA — Interfaz</title>
-  @vite('resources/css/admin.css')
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AURA — Admin Canciones</title>
+    @vite('resources/css/admin.css')
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+    .cover-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        display: block;
+    }
+
+    .cover-img {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+    }
+
+
+    .btn-admin {
+        background: #6f36ff;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-admin:hover {
+        background: #5329c7;
+    }
+    </style>
+
 </head>
+
 <body>
-@yield('content')
-@include('components.traductor')
-@include('components.footer')
+    @yield('content')
+    @include('components.traductor')
 
-<div class="with-sidebar">
-  @include('components.sidebar')
-  @include('components.header')
-  @include('components.traductor')
-  @include('components.fondo')
-  <div class="app">
+
     <div class="with-sidebar">
-      <div class="main-content">
-        <div class="page-studio studio">
+        @include('components.sidebar')
+        @include('components.header')
+        @include('components.traductor')
+        @include('components.fondo')
 
-          <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Contenido</h1>
-            <div class="studio__filters">
-              <div class="studio__search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="search" placeholder="Buscar nuevas canciones…" aria-label="Buscar">
-              </div>
-              <div class="studio__select">
-                <label>Visibilidad</label>
-                <select>
-                  <option value="">Todas</option>
-                  <option>Público</option>
-                  <option>No listado</option>
-                  <option>Privado</option>
-                </select>
-              </div>
-              <div class="studio__select">
-                <label>Restricciones</label>
-                <select>
-                  <option value="">Todas</option>
-                  <option>Ninguna</option>
-                  <option>Derechos de autor</option>
-                  <option>Parcialmente bloqueado</option>
-                </select>
-              </div>
-              <button class="studio__btn" type="button" data-animate="pulse">
-                <i class="fa-solid fa-filter"></i> Filtrar
-              </button>
+        <div class="app">
+            <div class="with-sidebar">
+                <div class="main-content">
+                    <div class="page-studio studio">
+
+                        <br>
+                        <div class="studio__toolbar"
+                            style="display: flex; justify-content: center; align-items: center;">
+                            <h1 class="studio__title"><i class="fa-solid fa-music"></i> Canciones</h1>
+                        </div>
+
+<div class="admin-nav" style="display:flex; gap:10px; justify-content:center; margin:20px 0;">
+   
+    <a href="{{ route('albumadmin') }}" class="btn-admin">
+        <i  class="fa-solid fa-film"></i> Álbumes
+    </a>
+    <a href="{{ route('usuarioadmin') }}" class="btn-admin">
+        <i  class="fa-solid fa-users"></i> Usuarios
+    </a>
+</div>
+<br>
+                        <div class="studio__table" id="studioTable">
+                            <div class="studio__thead">
+                                <div class="c1"></div>
+                                <div class="c2">Titulo</div>
+                                <div class="c3">Visibilidad</div>
+                                <div class="c4">Copyright</div>
+                                <div class="c5">Fecha</div>
+                                <div class="c6">Reproductor</div>
+                                <div class="c7 ta-r">Acciones</div>
+                            </div>
+
+                            @forelse($canciones as $cancion)
+
+                            <div class="studio__row reveal" data-id="{{ $cancion->id }}">
+
+
+                                <!-- Portada -->
+                                <div class="c1">
+                                    <span class="thumb"
+                                        style="background:url('{{ $cancion->cover_url }}') center/cover"></span>
+                                </div>
+
+                                <!-- Usuario + Link -->
+                                <div class="c2">
+                                    <div class="vtitle">{{ $cancion->clean_title }}</div>
+                                    <a class="vlink" href="{{ $cancion->audio_url }}" target="_blank" rel="noopener">
+                                        {{ $cancion->nombre_artistico }}
+                                    </a>
+                                </div>
+
+
+                                <!-- Visibilidad -->
+                                <div class="c3">
+                                    <span
+                                        class="pill pill--publico">{{ ucfirst($cancion->status ?? 'Desconocido') }}</span>
+                                </div>
+
+                                <!-- Copyright -->
+                                <div class="c4"><span class="pill pill--none">N/A</span></div>
+
+                                <!-- Fecha -->
+                                <div class="c5">{{ $cancion->created_at->format('d M Y') }}</div>
+
+                                <!-- Reproductor -->
+                                <div class="c6">
+                                    <div class="drive-player">
+                                        <div id="player-{{ $cancion->id }}"></div>
+                                    </div>
+
+                                    <script>
+                                    (function() {
+                                        let url = @json($cancion -> audio_url ?? '');
+                                        if (!url) return;
+
+                                        let match = url.match(/[-\w]{25,}/);
+                                        if (match) {
+                                            let fileId = match[0];
+                                            let iframe = document.createElement('iframe');
+                                            iframe.width = "100%";
+                                            iframe.height = "90";
+                                            iframe.frameBorder = "0";
+                                            iframe.allow = "autoplay";
+                                            iframe.style.borderRadius = "12px";
+                                            iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                                            document.getElementById("player-{{ $cancion->id }}").appendChild(
+                                                iframe);
+                                        }
+                                    })();
+                                    </script>
+                                </div>
+
+
+                                <!-- Acciones -->
+                                <div class="c7">
+                                    <div class="actions ta-r">
+                                        <form method="POST" action="{{ route('cancion.destroy', $cancion->id) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-act btn-delete" title="Borrar">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <p style="padding:20px; text-align:center;">No hay canciones cargadas aún.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="studio__table" id="studioTable">
-            <div class="studio__thead">
-              <div class="c1"></div>
-              <div class="c2">Usuario</div>
-              <div class="c3">Visibilidad</div>
-              <div class="c4">Copyright</div>
-              <div class="c5">Fecha</div>
-              <div class="c6">Reproductor</div>
-              <div class="c7 ta-r">Acciones</div>
-            </div>
-
-            <!-- Fila 1 -->
-            <div class="studio__row reveal" data-id="1">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/XXXXXXXX" target="_blank" rel="noopener">https://youtu.be/XXXXXXXX</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
-              <div class="c5">7 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="45"><span class="fill" style="width:45%"></span></div>
-                  <span class="time">1:12/3:05</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="1" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="1" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="1" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 2 -->
-            <div class="studio__row reveal" data-id="2">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/YYYYYYYY" target="_blank" rel="noopener">https://youtu.be/YYYYYYYY</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
-              <div class="c5">8 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20"><span class="fill" style="width:20%"></span></div>
-                  <span class="time">0:38/2:10</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="2" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="2" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="2" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 3 -->
-            <div class="studio__row reveal" data-id="3">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/ZZZZZZZZ" target="_blank" rel="noopener">https://youtu.be/ZZZZZZZZ</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
-              <div class="c5">9 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70"><span class="fill" style="width:70%"></span></div>
-                  <span class="time">2:18/3:16</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="3" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="3" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="3" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 4 -->
-            <div class="studio__row reveal" data-id="4">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/AAAAAAA1" target="_blank" rel="noopener">https://youtu.be/AAAAAAA1</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
-              <div class="c5">10 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="5"><span class="fill" style="width:5%"></span></div>
-                  <span class="time">0:07/2:21</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="4" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="4" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="4" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 5 -->
-            <div class="studio__row reveal" data-id="5">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/BBBBBBB2" target="_blank" rel="noopener">https://youtu.be/BBBBBBB2</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
-              <div class="c5">11 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33"><span class="fill" style="width:33%"></span></div>
-                  <span class="time">0:49/2:27</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="5" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="5" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="5" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 6 -->
-            <div class="studio__row reveal" data-id="6">
-              <div class="c1"><span class="thumb shimmer"></span></div>
-              <div class="c2">
-                <div class="vtitle">Nombre de usuario</div>
-                <a class="vlink" href="https://youtu.be/CCCCCCC3" target="_blank" rel="noopener">https://youtu.be/CCCCCCC3</a>
-              </div>
-              <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
-              <div class="c5">12 sept 2020</div>
-              <div class="c6">
-                <div class="mini-player" aria-label="Reproductor">
-                  <button class="play" title="Reproducir/Pausar" type="button"><i class="fa-solid fa-play"></i></button>
-                  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="58"><span class="fill" style="width:58%"></span></div>
-                  <span class="time">1:45/3:00</span>
-                </div>
-              </div>
-              <div class="c7">
-                <div class="actions ta-r">
-                  <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="6" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="6" title="Denegar"><i class="fa-solid fa-ban"></i></button>
-                  <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="6" title="Borrar"><i class="fa-solid fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="studio__pagination">
-            <button class="studio__btn studio__btn--ghost" type="button">
-              <i class="fa-solid fa-angle-left"></i> Anterior
-            </button>
-            <span class="studio__page">1 de 5</span>
-            <button class="studio__btn studio__btn--ghost" type="button">
-              Siguiente <i class="fa-solid fa-angle-right"></i>
-            </button>
-          </div>
-
         </div>
-      </div>
     </div>
 
-    <!-- Modales compartidos -->
-    <div class="modal" id="modal-approve" aria-hidden="true">
-      <div class="modal__dialog" role="dialog" aria-modal="true">
-        <div class="modal__head">
-          <h3>Confirmar aceptación</h3>
-          <button class="modal__close" data-close aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal__body">¿Deseas <strong>aceptar</strong> este contenido?</div>
-        <div class="modal__foot">
-          <button class="studio__btn studio__btn--ghost" data-close>Cancelar</button>
-          <button class="studio__btn" id="approveConfirm">Aceptar</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal" id="modal-deny" aria-hidden="true">
-      <div class="modal__dialog" role="dialog" aria-modal="true">
-        <div class="modal__head">
-          <h3>Denegar contenido</h3>
-          <button class="modal__close" data-close aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal__body">
-          <label class="modal__label">Motivo</label>
-          <textarea id="denyReason" class="modal__input" rows="3" placeholder="Describe el motivo de la denegación"></textarea>
-        </div>
-        <div class="modal__foot">
-          <button class="studio__btn studio__btn--ghost" data-close>Cancelar</button>
-          <button class="studio__btn" id="denyConfirm">Denegar</button>
-        </div>
-      </div>
-    </div>
-
+    <!-- Modal eliminar -->
     <div class="modal" id="modal-delete" aria-hidden="true">
-      <div class="modal__dialog" role="dialog" aria-modal="true">
-        <div class="modal__head">
-          <h3>Eliminar contenido</h3>
-          <button class="modal__close" data-close aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal__dialog" role="dialog" aria-modal="true">
+            <div class="modal__head">
+                <h3>Eliminar canción</h3>
+                <button class="modal__close" data-close aria-label="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal__body">Acción irreversible. ¿Borrar definitivamente?</div>
+            <div class="modal__foot">
+                <button class="studio__btn studio__btn--ghost" data-close>Cancelar</button>
+                <button class="studio__btn" id="deleteConfirm">Borrar</button>
+            </div>
         </div>
-        <div class="modal__body">Acción irreversible. ¿Borrar definitivamente?</div>
-        <div class="modal__foot">
-          <button class="studio__btn studio__btn--ghost" data-close>Cancelar</button>
-          <button class="studio__btn" id="deleteConfirm">Borrar</button>
-        </div>
-      </div>
     </div>
 
-    <!-- Modal inspector único -->
-    <div class="modal" id="modal-inspector" aria-hidden="true">
-      <div class="modal__dialog modal__dialog--wide" role="dialog" aria-modal="true">
-        <div class="modal__head">
-          <h3>Detalles del contenido</h3>
-          <button class="modal__close" data-close aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="inspector">
-          <div class="inspector__left">
-            <div class="inspector__thumb" id="inspectorThumb"></div>
-            <div class="inspector__meta">
-              <div class="inspector__title" id="inspectorTitle">—</div>
-              <a id="inspectorUrl" href="#" target="_blank" rel="noopener" class="inspector__link">—</a>
-            </div>
-            <div class="inspector__grid">
-              <div><span>Visibilidad</span><strong id="inspectorVis">—</strong></div>
-              <div><span>Restricción</span><strong id="inspectorRes">—</strong></div>
-              <div><span>Fecha</span><strong id="inspectorDate">—</strong></div>
-              <div class="inspector__player">
-                <span>Reproductor</span>
-                <div class="playerbar" aria-label="Barra de reproducción">
-                  <div class="track"><span class="progress" style="width:40%"></span></div>
-                  <div class="times"><small>1:02</small><small>3:12</small></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="inspector__right">
-            <label class="modal__label">Notas para el autor</label>
-            <textarea id="inspectorNotes" class="modal__input" rows="6" placeholder="Opcional: feedback o razones..."></textarea>
-            <div class="inspector__actions">
-              <button class="studio__btn" id="inspectorAccept"><i class="fa-solid fa-check"></i> Aceptar</button>
-              <button class="studio__btn" id="inspectorDeny"><i class="fa-solid fa-ban"></i> Denegar</button>
-              <button class="studio__btn studio__btn--ghost" id="inspectorDelete"><i class="fa-solid fa-trash"></i> Borrar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-  </div>
-
-  <!-- JS -->
-  <script>
-    // Reveal
-    (function(){
-      const io=new IntersectionObserver(es=>es.forEach(e=>{
-        if(e.isIntersecting){e.target.classList.add('reveal--show');io.unobserve(e.target)}
-      }),{threshold:.1});
-      document.querySelectorAll('.studio__row.reveal').forEach(el=>io.observe(el));
+    <!-- JS -->
+    <script>
+    // Animación reveal
+    (function() {
+        const io = new IntersectionObserver(entries =>
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('reveal--show');
+                    io.unobserve(e.target);
+                }
+            }), {
+                threshold: .1
+            });
+        document.querySelectorAll('.studio__row.reveal').forEach(el => io.observe(el));
     })();
 
-    // Pulse
-    document.addEventListener('click',e=>{
-      const b=e.target.closest('[data-animate="pulse"]'); if(!b) return;
-      b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse');
-    });
-
+    // Modal borrar
     let activeId = null;
-    const openModal = (sel)=>document.querySelector(sel)?.classList.add('show');
-    const closeAll = ()=>document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));
-
-    // Cerrar modales
-    document.addEventListener('click',e=>{
-      if(e.target.matches('.modal,[data-close]')) closeAll();
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-delete');
+        if (!btn) return;
+        e.preventDefault();
+        activeId = btn.closest('.studio__row').dataset.id;
+        document.getElementById('modal-delete').classList.add('show');
     });
-
-    // Botones de acciones
-    document.addEventListener('click',e=>{
-      const act = e.target.closest('.btn-act');
-      if(!act) return;
-      e.stopPropagation();
-      activeId = act.getAttribute('data-id') || act.closest('.studio__row')?.dataset.id || null;
-      const modalSel = act.getAttribute('data-open');
-      if(modalSel) openModal(modalSel);
-    });
-
-    // Click en fila -> Inspector
-    document.addEventListener('click',e=>{
-      const row = e.target.closest('.studio__row');
-      if(!row || e.target.closest('.actions')) return;
-      activeId = row.dataset.id;
-
-      const title = row.querySelector('.c2 .vtitle')?.textContent.trim() || 'Sin título';
-      const urlEl = row.querySelector('.c2 .vlink');
-      const url = urlEl?.href || '#';
-      const vis = row.querySelector('.c3 .pill')?.textContent.trim() || '—';
-      const res = row.querySelector('.c4 .pill')?.textContent.trim() || '—';
-      const date = row.querySelector('.c5')?.textContent.trim() || '—';
-      const views = row.querySelector('.c6')?.textContent.trim() || '0';
-      const com = row.querySelector('.c7')?.textContent.trim() || '0';
-      const like = row.querySelector('.c8')?.textContent.trim() || '0%';
-
-      document.getElementById('inspectorTitle').textContent = title;
-      const link = document.getElementById('inspectorUrl');
-      link.textContent = url; link.href = url;
-      document.getElementById('inspectorVis').textContent = vis;
-      document.getElementById('inspectorRes').textContent = res;
-      document.getElementById('inspectorDate').textContent = date;
-      document.getElementById('inspectorViews').textContent = views;
-      document.getElementById('inspectorCom').textContent = com;
-      document.getElementById('inspectorLike').textContent = like;
-
-      // opcional: imitar miniatura
-      const th = row.querySelector('.thumb');
-      const thumb = document.getElementById('inspectorThumb');
-      thumb.style.background = getComputedStyle(th || document.body).background || '#2a2b31';
-      thumb.style.border = '1px solid var(--studio-border)';
-
-      openModal('#modal-inspector');
-    });
-
-    // Acciones inspector
-    document.getElementById('inspectorAccept').onclick=()=>{ closeAll(); openModal('#modal-approve'); }
-    document.getElementById('inspectorDeny').onclick=()=>{ 
-      const notes = document.getElementById('inspectorNotes').value;
-      const denyArea = document.getElementById('denyReason');
-      if(denyArea) denyArea.value = notes;
-      closeAll(); openModal('#modal-deny'); 
-    }
-    document.getElementById('inspectorDelete').onclick=()=>{ closeAll(); openModal('#modal-delete'); }
-
-    // Confirmaciones
-    document.getElementById('approveConfirm').onclick=()=>{ closeAll(); alert("Video "+activeId+" aceptado"); }
-    document.getElementById('denyConfirm').onclick=()=>{ 
-      closeAll(); alert("Video "+activeId+" denegado. Motivo: "+document.getElementById('denyReason').value); 
-    }
-    document.getElementById('deleteConfirm').onclick=()=>{ 
-      document.querySelector(`.studio__row[data-id="${activeId}"]`)?.remove(); 
-      closeAll(); alert("Video "+activeId+" eliminado"); 
-    }
-  </script>
+    document.querySelectorAll('[data-close]').forEach(el =>
+        el.addEventListener('click', () => document.getElementById('modal-delete').classList.remove('show'))
+    );
+    document.getElementById('deleteConfirm').onclick = () => {
+        if (activeId) {
+            document.querySelector(`.studio__row[data-id="${activeId}"] form`).submit();
+        }
+    };
+    </script>
 </body>
+
 </html>
