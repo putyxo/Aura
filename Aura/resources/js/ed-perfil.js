@@ -358,8 +358,6 @@
   }
 
   // Soporte Turbo/Hotwire y carga inicial
-  document.addEventListener('turbo:load', bootOncePerRender);
-  document.addEventListener('DOMContentLoaded', bootOncePerRender);
 })();
 
 

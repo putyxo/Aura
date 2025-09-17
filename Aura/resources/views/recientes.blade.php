@@ -1,3 +1,4 @@
+{{-- resources/views/menu_album.blade.php --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,13 +16,13 @@
   <!-- Vite -->
   @vite(['resources/css/recientes.css','resources/js/recientes.js'])
 </head>
+
 <body>
 <div class="app">
-  <div class="with-sidebar">
-    @include('components.sidebar')
-    @include('components.header')
-    @include('components.traductor')
-    @include('components.fondo')
+  @include('components.sidebar')   {{-- Sidebar fijo a la izquierda --}}
+        @include('components.header')
+        @include('components.traductor')
+        @include('components.fondo')
 
     <!-- ROOT AISLADO -->
     <main id="axrcRoot"
