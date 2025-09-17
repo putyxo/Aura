@@ -29,7 +29,7 @@ use App\Models\Album;
 use App\Models\User;
 
 // ===== Página principal =====
-Route::get('/', fn () => view('welcome'))->name('welcome');
+Route::get('/', fn () => view('menu'))->name('menu');
 
 /*
 |--------------------------------------------------------------------------

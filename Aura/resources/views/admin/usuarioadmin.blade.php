@@ -30,7 +30,18 @@
 .studio__title {
   margin: 0;
 }
-
+.btn-admin {
+    background: #6f36ff;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.btn-admin:hover {
+    background: #5329c7;
+}
   </style>
 </head>
 <body>
@@ -52,9 +63,17 @@
         <br>
         
           <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Usuarios</h1>
+            <h1 class="studio__title"><i class="fa-solid fa-users"></i> Usuarios</h1>
           </div>
-<br>
+<div class="admin-nav" style="display:flex; gap:10px; justify-content:center; margin:20px 0;">
+    <a href="{{ route('admin') }}" class="btn-admin">
+        <i class="fa-solid fa-music"></i> Canciones
+    </a>
+    <a href="{{ route('albumadmin') }}" class="btn-admin">
+        <i class="fa-solid fa-film"></i> Álbumes
+    </a>
+    
+</div>
         <br>
           <!-- Tabla de usuarios -->
           <div class="studio__table" id="studioTable">
@@ -117,14 +136,6 @@
 @endforeach
 
           </div>
-
-          <!-- Paginación -->
-          <div class="studio__pagination">
-            <button class="studio__btn studio__btn--ghost" type="button"><i class="fa-solid fa-angle-left"></i> Anterior</button>
-            <span class="studio__page">1 de 1</span>
-            <button class="studio__btn studio__btn--ghost" type="button">Siguiente <i class="fa-solid fa-angle-right"></i></button>
-          </div>
-
         </div>
       </div>
     </div>
