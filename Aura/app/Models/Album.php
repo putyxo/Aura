@@ -18,14 +18,6 @@ class Album extends Model
         'release_date',
     ];
 
-<<<<<<< HEAD
-    // In Album model (App\Models\Album)
-public function user()
-{
-    return $this->belongsTo(User::class);
-}
-
-=======
     protected $casts = [
         'release_date' => 'date',
     ];
@@ -39,7 +31,6 @@ public function user()
     {
         return $this->belongsTo(User::class);
     }
->>>>>>> recup-ayer
 
     public function songs()
     {

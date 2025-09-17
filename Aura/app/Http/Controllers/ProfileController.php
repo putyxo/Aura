@@ -15,48 +15,6 @@ use Illuminate\Http\RedirectResponse;
 
 class PerfilController extends Controller
 {
-<<<<<<< HEAD
-    /**
-     * Mostrar el formulario del perfil del usuario.
-     */
-    public function edit(Request $request): View
-    {
-        // Obtener el usuario autenticado
-        $user = $request->user();
-
-        // Obtener los álbumes asociados al usuario
-        $albumes = Album::where('user_id', $user->id)->get();
-
-        // Normalizar los álbumes para la vista
-        $albumsNormalized = collect($albumes)->map(function($a) {
-            return (object)[
-                'id'      => $a->id,
-                'titulo'  => $a->title ?? $a->titulo ?? 'Sin título',
-                'portada' => $a->cover_path ?? $a->portada ?? null,
-            ];
-        });
-
-        // Paginación de los álbumes (4 álbumes por página)
-        $albumPages = $albumsNormalized->chunk(4);
-
-        // Pasar datos a la vista
-        return view('profile.edit', [
-            'user' => $user,
-            'albumPages' => $albumPages,
-        ]);
-    }
-
-    /**
-     * Actualizar la información del perfil del usuario.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        // Si el email ha cambiado, eliminar la verificación de email
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-=======
     public function show($id): View
     {
         $user = User::findOrFail($id);
@@ -74,7 +32,6 @@ class PerfilController extends Controller
                 'anio'       => $album->anio ?? optional($album->created_at)->format('Y'),
                 'created_at' => $album->created_at,
             ]);
->>>>>>> recup-ayer
         }
 
         foreach ($canciones as $cancion) {
@@ -142,13 +99,9 @@ class PerfilController extends Controller
     }
 
     /**
-<<<<<<< HEAD
-     * Eliminar la cuenta del usuario.
-=======
      * Vista "Mis álbumes" / detalle de álbum con edición condicional.
      * - Si viene ?album=ID y NO eres dueño => muestra solo ese álbum (modo lectura).
      * - Si eres dueño => lista tus álbumes y el seleccionado editable.
->>>>>>> recup-ayer
      */
     public function albumsMenu(Request $request): View
     {
@@ -204,17 +157,6 @@ class PerfilController extends Controller
             $user->biografia = $request->bio;
         }
 
-<<<<<<< HEAD
-        // Desconectar al usuario
-        Auth::logout();
-
-        // Eliminar al usuario de la base de datos
-        $user->delete();
-
-        // Invalidar la sesión
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-=======
         if ($request->hasFile('avatar')) {
             $relative = $request->file('avatar')->store('avatars', 'public');
             $this->deleteLocalIfRelative($user->avatar ?? null);
@@ -228,7 +170,6 @@ class PerfilController extends Controller
         }
 
         $user->save();
->>>>>>> recup-ayer
 
         return redirect()
             ->route('perfil.show', $user->id)

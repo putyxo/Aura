@@ -8,24 +8,28 @@
   </a>
   <nav class="menu">
     <a href="{{ url('/menu') }}" class="item active">
-      <i class="fas fa-house"></i><span class="label">{{ __('components.sidebar.home') }}</span>
+      <i class="fas fa-house"></i><span class="label">Inicio</span>
     </a>
 
     <a href="{{ url('/like') }}" class="item">
-      <i class="fas fa-heart"></i><span class="label">{{ __('components.sidebar.favorites') }}</span>
+      <i class="fas fa-heart"></i><span class="label">Favoritos</span>
     </a>
 
     <a href="{{ url('/playlists') }}" class="item">
-      <i class="fa-solid fa-notes-medical"></i><span class="label">{{ __('components.sidebar.playlist') }}</span>
+      <i class="fa-solid fa-notes-medical"></i><span class="label">Playlist</span>
     </a>
 
     <a href="{{ url('/follow_artist') }}" class="item">
-      <i class="fa-solid fa-user-check"></i><span class="label">{{ __('components.sidebar.followed') }}</span>
+      <i class="fa-solid fa-user-check"></i><span class="label">Tus Seguidos</span>
     </a>
 
+    <a href="{{ url('/menu_album') }}" class="item">
+      <i class="fa-solid fa-book-bookmark"></i><span class="label">Tus Albumes</span>
+    </a>
 
-
-
+    <a href="{{ url('/recientes') }}" class="item">
+      <i class="fa-solid fa-list"></i><span class="label">Recientes</span>
+    </a>
 
     <div class="menu-sep"></div>
   </nav>

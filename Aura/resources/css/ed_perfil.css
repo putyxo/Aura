@@ -467,7 +467,6 @@ body.modal-open{overflow:hidden}
   z-index: 2000;
 }
 
-
 .confirm-modal[aria-hidden="false"] {
   opacity: 1;
   visibility: visible;
@@ -568,7 +567,8 @@ body.modal-open{overflow:hidden}
 }
 
 
-
+/* Bloquea el scroll y hace blur del contenido detrás */
+body.blurred .main-content{ filter: blur(6px) }
 
 /* ===== FIX SCOPING / AISLAMIENTO ===== */
 #page-profile{

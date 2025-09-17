@@ -9,12 +9,11 @@ class Playlist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'nombre', 'descripcion', 'cover_url'];
+    protected $fillable = ['user_id','nombre','descripcion','cover_url'];
 
-    // Relación con las canciones (muchos a muchos)
-    public function songs()
-    {
-        return $this->belongsToMany(\App\Models\Cancion::class, 'playlist_song', 'playlist_id', 'song_id')
-                    ->withTimestamps();
-    }
+public function songs()
+{
+    return $this->belongsToMany(\App\Models\Cancion::class, 'playlist_song', 'playlist_id', 'song_id')
+                ->withTimestamps();
+}
 }

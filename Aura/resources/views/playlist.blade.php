@@ -113,7 +113,13 @@
 
           <!-- Playlists -->
           @forelse($playlists as $pl)
-            <div class="axpl-tile" title="{{ $pl->nombre }}" data-name="{{ \Illuminate\Support\Str::lower($pl->nombre) }}" data-count="{{ $pl->canciones_count ?? 0 }}" data-id="{{ $pl->id }}">
+            <div
+              class="axpl-tile"
+              title="{{ $pl->nombre }}"
+              data-name="{{ \Illuminate\Support\Str::lower($pl->nombre) }}"
+              data-count="{{ $pl->canciones_count ?? 0 }}"
+              data-id="{{ $pl->id }}"
+            >
               <a href="{{ route('playlists.show', $pl->id) }}" class="axpl-tile-link" aria-label="Abrir {{ $pl->nombre }}"></a>
 
               <div class="axpl-tile-cover">
@@ -125,17 +131,17 @@
                   <div class="axpl-cover-placeholder">{{ __('playlist.no_cover') }}</div>
                 @endif
 
-                <button type="button" class="axpl-pencil" data-id="{{ $pl->id }}" data-nombre="{{ $pl->nombre }}" data-descripcion="{{ $pl->descripcion }}" data-cover="{{ $pl->cover_url }}">
+                <button type="button"
+                        class="axpl-pencil"
+                        data-id="{{ $pl->id }}"
+                        data-nombre="{{ $pl->nombre }}"
+                        data-descripcion="{{ $pl->descripcion }}"
+                        data-cover="{{ $pl->cover_url }}">
                   <i class="fa-solid fa-pen"></i>
                 </button>
 
                 <button type="button" class="axpl-play-btn" data-action="quick-play" aria-label="Reproducir {{ $pl->nombre }}">
                   <i class="fa-solid fa-play"></i>
-                </button>
-
-                <!-- Botón Eliminar -->
-                <button type="button" class="axpl-trash" data-id="{{ $pl->id }}">
-                  <i class="fa-solid fa-trash-can"></i> Eliminar
                 </button>
 
                 <div class="axpl-selected-mark" aria-hidden="true"><i class="fa-solid fa-check"></i></div>
@@ -160,12 +166,10 @@
       <div id="axplModalBackdrop" class="axpl-modal-backdrop" hidden></div>
 
       <div id="axplModal" class="axpl-modal" hidden role="dialog" aria-modal="true" aria-labelledby="axplModalTitle">
-        <form id="axplForm" action="{{ route('playlists.update', ['playlist' => 'playlist_id_placeholder']) }}" method="POST" enctype="multipart/form-data" novalidate>
+        <form id="axplForm" action="{{ route('playlists.store') }}" method="POST" enctype="multipart/form-data" novalidate>
           @csrf
-          @method('PUT') <!-- Asegúrate de agregar este campo para hacer una solicitud PUT -->
-
           <div class="axpl-modal-header">
-            <h3 id="axplModalTitle" class="axpl-modal-title">Editar Playlist</h3>
+            <h3 id="axplModalTitle" class="axpl-modal-title">Añadir Playlist</h3>
             <button class="axpl-modal-close" id="axplCloseModal" type="button" aria-label="Cerrar">×</button>
           </div>
 
@@ -221,28 +225,61 @@
 
 <!-- Guard-rails de layout: calcula márgenes seguros según sidebar/header/footer/player -->
 <script>
-// Eliminar Playlist
-document.querySelectorAll('.axpl-trash').forEach(button => {
-  button.addEventListener('click', function() {
-    const playlistId = this.getAttribute('data-id'); // Obtén el ID de la playlist
-    fetch(`/playlists/${playlistId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.message === 'Playlist eliminada correctamente') {
-        // Eliminar la playlist del DOM
-        const playlistElement = this.closest('.axpl-tile');
-        playlistElement.remove();
-      }
-    })
-    .catch(error => console.error('Error al eliminar la playlist:', error));
-  });
-});
+(() => {
+  const root = document.querySelector('#axplRoot.axpl');
+
+  function setVar(name, px){
+    const v = (Math.max(0, Math.round(px || 0))) + 'px';
+    document.documentElement.style.setProperty(name, v);
+    root?.style.setProperty(name, v);
+  }
+
+  function widthIfDockedLeft(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(r.left) < 2 ? r.width : 0;
+  }
+
+  function widthIfDockedRight(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
+    // si no está pegado al borde derecho => 0
+  }
+
+  function heightIfDockedTop(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return r.top <= 0 ? r.height : 0;
+  }
+
+  function heightIfDockedBottom(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerHeight - r.bottom) < 2 ? r.height : 0;
+  }
+
+  function measure(){
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('[class*="side"]');
+    const player  = document.querySelector('.player, .right-player') || document.querySelector('[class*="player"]');
+    const header  = document.querySelector('.header') || document.querySelector('header');
+    const footer  = document.querySelector('.footer') || document.querySelector('footer');
+
+    setVar('--safe-left',   widthIfDockedLeft(sidebar));
+    setVar('--safe-right',  widthIfDockedRight(player));
+    setVar('--safe-top',    heightIfDockedTop(header));
+    setVar('--safe-bottom', heightIfDockedBottom(footer));
+  }
+
+  const ro = new ResizeObserver(measure);
+  ['.sidebar','[class*="side"]','.player','.right-player','[class*="player"]','.header','header','.footer','footer']
+    .forEach(sel => document.querySelectorAll(sel).forEach(el => ro.observe(el)));
+
+  window.addEventListener('resize', measure);
+  window.addEventListener('orientationchange', measure);
+  document.addEventListener('DOMContentLoaded', measure);
+  measure();
+})();
 </script>
 </body>
 </html>

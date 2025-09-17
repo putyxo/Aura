@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURA — Interfaz</title>
-  @vite('resources/css/admin.css')
-  @vite('resources/js/admin.js')
+  @vite('resources/css/artistasadmin.css')
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -26,7 +25,7 @@
         <div class="page-studio studio">
 
           <div class="studio__toolbar">
-            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Albumes</h1>
+            <h1 class="studio__title"><i class="fa-solid fa-film"></i> Artistas</h1>
             <div class="studio__filters">
               <div class="studio__search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -60,10 +59,10 @@
             <div class="studio__thead">
               <div class="c1"></div>
               <div class="c2">Usuario</div>
-              <div class="c3">Album</div>
-              <div class="c4">Copyright</div>
-              <div class="c5">Fecha</div>
-              <div class="c6">Canciones</div>
+              <div class="c3">Disponibilidad</div>
+              <div class="c4">Baneos</div>
+              <div class="c5">Union</div>
+              <div class="c6">Subidos</div>
               <div class="c7 ta-r">Acciones</div>
             </div>
 
@@ -75,7 +74,7 @@
                 <a class="vlink" href="https://youtu.be/XXXXXXXX" target="_blank" rel="noopener">https://youtu.be/XXXXXXXX</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">2</span></div>
               <div class="c5">7 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -87,7 +86,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="1" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="1" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="1" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -101,7 +99,7 @@
                 <a class="vlink" href="https://youtu.be/YYYYYYYY" target="_blank" rel="noopener">https://youtu.be/YYYYYYYY</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">3</span></div>
               <div class="c5">8 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -113,7 +111,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="2" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="2" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="2" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -127,7 +124,7 @@
                 <a class="vlink" href="https://youtu.be/ZZZZZZZZ" target="_blank" rel="noopener">https://youtu.be/ZZZZZZZZ</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">1</span></div>
               <div class="c5">9 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -139,7 +136,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="3" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="3" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="3" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -153,7 +149,7 @@
                 <a class="vlink" href="https://youtu.be/AAAAAAA1" target="_blank" rel="noopener">https://youtu.be/AAAAAAA1</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">0</span></div>
               <div class="c5">10 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -165,7 +161,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="4" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="4" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="4" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -179,7 +174,7 @@
                 <a class="vlink" href="https://youtu.be/BBBBBBB2" target="_blank" rel="noopener">https://youtu.be/BBBBBBB2</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">No detectado</span></div>
+              <div class="c4"><span class="pill pill--none">2</span></div>
               <div class="c5">11 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -191,7 +186,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="5" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="5" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="5" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
@@ -205,7 +199,7 @@
                 <a class="vlink" href="https://youtu.be/CCCCCCC3" target="_blank" rel="noopener">https://youtu.be/CCCCCCC3</a>
               </div>
               <div class="c3"><span class="pill pill--publico">Público</span></div>
-              <div class="c4"><span class="pill pill--none">Detectado</span></div>
+              <div class="c4"><span class="pill pill--none">4</span></div>
               <div class="c5">12 sept 2020</div>
               <div class="c6">
                 <span class="songcount" aria-label="Canciones subidas">
@@ -217,7 +211,6 @@
               <div class="c7">
                 <div class="actions ta-r">
                   <button type="button" class="btn-act btn-accept" data-open="#modal-approve" data-id="6" title="Aceptar"><i class="fa-solid fa-check"></i></button>
-                  <button type="button" class="btn-act btn-deny"    data-open="#modal-deny"    data-id="6" title="Denegar"><i class="fa-solid fa-ban"></i></button>
                   <button type="button" class="btn-act btn-delete"  data-open="#modal-delete"  data-id="6" title="Borrar"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>

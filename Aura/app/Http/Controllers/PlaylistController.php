@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cancion;
 use App\Models\Playlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,15 +15,9 @@ use Illuminate\Http\JsonResponse;
 class PlaylistController extends Controller
 {
     /**
-<<<<<<< HEAD
-     * Muestra todas las playlists del usuario autenticado.
-     */
-    public function index()
-=======
      * Lista de playlists del usuario autenticado.
      */
     public function index(): View
->>>>>>> recup-ayer
     {
         $playlists = Playlist::where('user_id', Auth::id())
             ->orderByDesc('created_at')
@@ -32,30 +27,18 @@ class PlaylistController extends Controller
     }
 
     /**
-<<<<<<< HEAD
-     * Muestra una playlist específica.
-     */
-    public function show(Playlist $playlist)
-=======
      * Mostrar una playlist (propietario).
      */
     public function show(Playlist $playlist): View
->>>>>>> recup-ayer
     {
         $this->authorizeOwner($playlist);
         return view('playlist_card', compact('playlist'));
     }
 
     /**
-<<<<<<< HEAD
-     * Crea una nueva playlist.
-     */
-    public function store(Request $request)
-=======
      * Crear playlist con portada opcional (LOCAL).
      */
     public function store(Request $request): RedirectResponse
->>>>>>> recup-ayer
     {
         $data = $request->validate([
             'nombre'      => ['required','string','max:120'],
@@ -82,15 +65,6 @@ class PlaylistController extends Controller
     }
 
     /**
-<<<<<<< HEAD
-     * Elimina una playlist.
-     */
-public function destroy(Playlist $playlist)
-{
-    // Verificar que el usuario autenticado es el dueño de la playlist
-    if ($playlist->user_id !== Auth::id()) {
-        return response()->json(['error' => 'No autorizado'], 403);
-=======
      * Actualizar nombre/descripcion y (opcional) cambiar portada.
      */
     public function update(Request $request, Playlist $playlist): RedirectResponse
@@ -116,57 +90,9 @@ public function destroy(Playlist $playlist)
         $playlist->save();
 
         return redirect()->back()->with('ok', 'Playlist actualizada.');
->>>>>>> recup-ayer
     }
-
-    // Eliminar la playlist
-    try {
-        $playlist->delete();
-        return response()->json(['message' => 'Playlist eliminada correctamente']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error eliminando la playlist: ' . $e->getMessage()], 500);
-    }
-}
 
     /**
-<<<<<<< HEAD
-     * Actualiza una playlist existente.
-     */
-    public function update(Request $request, Playlist $playlist)
-    {
-        // Verificar que el usuario autenticado es el dueño de la playlist
-        if ($playlist->user_id !== Auth::id()) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
-        // Validar los datos de la solicitud
-        $data = $request->validate([
-            'nombre'      => ['required', 'string', 'max:120'],
-            'descripcion' => ['nullable', 'string', 'max:1000'],
-            'portada'     => ['nullable', 'image', 'max:5120'], // 5MB
-        ]);
-
-        // Manejar la imagen de portada si se sube una nueva
-        $coverUrl = $playlist->cover_url; // Mantener la portada actual si no se sube una nueva
-        if ($request->hasFile('portada')) {
-            // Si se sube una nueva portada, guardarla y actualizar la URL
-            $path = $request->file('portada')->store('portadas', 'public');
-            $coverUrl = Storage::url($path);
-        }
-
-        // Actualizar la playlist con los nuevos datos
-        $playlist->update([
-            'nombre'      => $data['nombre'],
-            'descripcion' => $data['descripcion'] ?? null,
-            'cover_url'   => $coverUrl,
-        ]);
-
-        return response()->json([
-            'message' => 'Playlist actualizada correctamente',
-            'playlist' => $playlist
-        ]);
-    }
-=======
      * Eliminar playlist (borra portada local y detacha canciones).
      */
     public function destroy(Playlist $playlist): RedirectResponse
@@ -299,5 +225,4 @@ public function destroy(Playlist $playlist)
             // noop
         }
     }
->>>>>>> recup-ayer
 }
