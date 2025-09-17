@@ -18,18 +18,13 @@
 @php
   use Illuminate\Support\Str;
 
-  // Esperado: $user, $albumes (collection). $album (opcional).
+  // Espera: $album (con ->user y ->songs cargados por el controlador) y $user = $album->user
   $selectedAlbum = $album ?? null;
-  if (!$selectedAlbum && isset($albumes) && request()->filled('album')) {
-    $selectedAlbum = $albumes->firstWhere('id', (int)request('album'));
-  }
-  if (!$selectedAlbum && isset($albumes) && $albumes->count()) {
-    $selectedAlbum = $albumes->first();
-  }
+  $user = $user ?? optional($selectedAlbum)->user;
 
   $isOwner = auth()->check() && isset($user) && auth()->id() === (int)($user->id ?? 0);
 
-  // Helpers de url
+  // Helpers de URL seguros (aceptan http/https o rutas locales de storage)
   $imgUrl = function ($raw, $fallback) {
     if (!$raw) return $fallback;
     return Str::startsWith($raw, ['http://','https://','/storage/'])
@@ -47,6 +42,7 @@
 <body>
 <div class="page">
   <div class="with-sidebar">
+    {{-- Si usas estos componentes, déjalos. Si no, elimina las líneas de include. --}}
     @include('components.sidebar')
     @include('components.header')
     @include('components.traductor')
@@ -68,7 +64,7 @@
               <a class="btn btn--primary" href="{{ route('musica.subir') }}"><i class="fa-solid fa-upload"></i> Subir música</a>
             @endif
             @if(Route::has('perfil.show') && isset($user))
-              <a class="btn btn--ghost" href="{{ route('perfil.show', $user->id) }}"><i class="fa-solid fa-user"></i> Volver al perfil</a>
+              <a class="btn btn--ghost guard-link" href="{{ route('perfil.show', $user->id) }}"><i class="fa-solid fa-user"></i> Volver al perfil</a>
             @endif
           </div>
         </header>
@@ -86,11 +82,11 @@
                 $songs    = $selectedAlbum->songs ?? collect();
                 if (is_array($songs)) $songs = collect($songs);
 
-                // Rutas “seguras”
+                // Rutas actualización/eliminación
                 $albumUpdateUrl  = Route::has('albums.update') ? route('albums.update', $selectedAlbum->id) : url('/albums/'.$selectedAlbum->id);
-                $destroyAlbumUrl = Route::has('profile.albums.destroy') ? route('profile.albums.destroy', $selectedAlbum->id) : url('/albums/'.$selectedAlbum->id.'/delete');
+                $destroyAlbumUrl = Route::has('profile.albums.destroy') ? route('profile.albums.destroy', $selectedAlbum->id) : url('/albums/'.$selectedAlbum->id);
 
-                // Para dataset (sin closures en @json)
+                // Dataset canciones para JS (sin closures)
                 $songsForJs = [];
                 foreach ($songs as $s) {
                   $songsForJs[] = [
@@ -117,12 +113,19 @@
                        src="{{ $alCover }}"
                        alt="Portada de {{ $alTitle }}"
                        onerror="this.onerror=null;this.src='{{ asset('img/default-album.png') }}'">
+
                   @if($isOwner)
                     <button class="chip chip--overlay" id="btnChangeCover" title="Cambiar portada">
                       <i class="fa-solid fa-camera"></i> Cambiar portada
                     </button>
                     <input type="file" id="albumCoverInput" accept="image/*" hidden>
                   @endif
+
+                  {{-- Scrim de progreso cuando se propaga portada --}}
+                  <div id="coverScrim" class="progress-scrim" hidden>
+                    <div class="spinner"></div>
+                    <span>Actualizando portadas…</span>
+                  </div>
                 </div>
 
                 <div class="meta">
@@ -133,7 +136,9 @@
                            data-original="{{ $alTitle }}"
                            {{ $isOwner ? '' : 'readonly' }}>
                     @if($isOwner)
-                      <button class="chip" id="btnSaveTitle" title="Guardar nombre"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                      <button class="chip chip--save" id="btnSaveTitle" title="Guardar nombre">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                      </button>
                       <span class="save-state" id="albumTitleState" aria-live="polite"></span>
                     @endif
                   </div>
@@ -162,23 +167,7 @@
               </div>
             @endif
 
-            {{-- Otros álbumes (switch rápido) --}}
-            @if(isset($albumes) && $albumes->count() > 1)
-              <h3 class="sec-ttl sub"><i class="fa-solid fa-layer-group"></i> Otros álbumes</h3>
-              <div class="mini-list">
-                @foreach($albumes as $a)
-                  @continue($selectedAlbum && $a->id === $selectedAlbum->id)
-                  @php
-                    $t = $a->title ?? $a->titulo ?? 'Álbum';
-                    $c = $imgUrl($a->cover_path ?? $a->portada ?? null, asset('img/default-album.png'));
-                    $href = route('menu_album', ['album'=>$a->id]);
-                  @endphp
-                  <a class="mini" href="{{ $href }}">
-                    <img src="{{ $c }}" alt=""><span class="ellip">{{ $t }}</span>
-                  </a>
-                @endforeach
-              </div>
-            @endif
+            {{-- Nota: no mostramos lista de "otros álbumes" aquí para centrarnos en este álbum --}}
           </aside>
 
           {{-- ================== DERECHA ================== --}}
@@ -186,12 +175,13 @@
             <h2 class="sec-ttl"><i class="fa-solid fa-music"></i> Canciones del álbum</h2>
 
             @php
-              $likeStateUrl = Route::has('canciones.liked') ? route('canciones.liked', 0) : url('/canciones/0/liked');
-              $likeToggleUrl = Route::has('api.canciones.like.toggle') ? route('api.canciones.like.toggle', 0)
-                              : (Route::has('canciones.like.toggle') ? route('canciones.like.toggle', 0) : url('/api/canciones/0/like/toggle'));
-              $songDeleteUrl = Route::has('cancion.destroy') ? route('cancion.destroy', 0) : url('/cancion/0');
-              $songUpdateUrl = Route::has('canciones.update') ? route('canciones.update', 0)
-                              : (Route::has('cancion.update') ? route('cancion.update', 0) : url('/canciones/0'));
+              // URLs que consume el JS
+              $likeStateUrl   = Route::has('canciones.liked') ? route('canciones.liked', 0) : url('/canciones/0/liked');
+              $likeToggleUrl  = Route::has('api.canciones.like.toggle') ? route('api.canciones.like.toggle', 0)
+                                : (Route::has('canciones.like.toggle') ? route('canciones.like.toggle', 0) : url('/api/canciones/0/like/toggle'));
+              $songDeleteUrl  = Route::has('cancion.destroy') ? route('cancion.destroy', 0) : url('/cancion/0');
+              $songUpdateUrl  = Route::has('canciones.update') ? route('canciones.update', 0)
+                                : (Route::has('cancion.update') ? route('cancion.update', 0) : url('/canciones/0'));
             @endphp
 
             @if($selectedAlbum)
@@ -252,7 +242,7 @@
                                  data-original="{{ $stitle }}"
                                  {{ $isOwner ? '' : 'readonly' }}>
                           @if($isOwner)
-                            <button class="chip save-song" title="Guardar"><i class="fa-solid fa-floppy-disk"></i></button>
+                            <button class="chip chip--save save-song" title="Guardar"><i class="fa-solid fa-floppy-disk"></i></button>
                             <span class="save-state song-state" aria-live="polite"></span>
                           @endif
                         </div>
@@ -283,7 +273,7 @@
       </div>
     </main>
 
-    {{-- Modal de confirmación de cambios (in-page) --}}
+    {{-- Modal de confirmación de cambios in-page (para no usar alert nativo) --}}
     <div id="changesModal" class="modal" aria-hidden="true">
       <div class="modal__backdrop"></div>
       <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="chgTitle">

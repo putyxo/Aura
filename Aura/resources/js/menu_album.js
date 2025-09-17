@@ -54,26 +54,21 @@
     }
   }
 
-  /* =================== CHANGE TRACKER =================== */
+  /* =================== CHANGE TRACKER (solo títulos) =================== */
   const Change = {
     albumTitle: null,
-    albumCoverFile: null,
-    songTitles: new Map(),      // id -> {old, next}
-    coverPropagate: false,
-    get count(){
-      return (this.albumTitle?1:0) + (this.albumCoverFile?1:0) + this.songTitles.size;
-    },
+    songTitles: new Map(), // id -> {old, next}
+    get count(){ return (this.albumTitle?1:0) + this.songTitles.size; },
     list(){
       const items = [];
       if (this.albumTitle) items.push(`Álbum: “${this.albumTitle.old}” → “${this.albumTitle.next}”`);
-      if (this.albumCoverFile) items.push(`Nueva portada de álbum (se aplicará a todas las canciones)`);
       this.songTitles.forEach((v, id)=> items.push(`Canción #${id}: “${v.old}” → “${v.next}”`));
       return items;
     },
-    clear(){ this.albumTitle=null; this.albumCoverFile=null; this.songTitles.clear(); this.coverPropagate=false; }
+    clear(){ this.albumTitle=null; this.songTitles.clear(); }
   };
 
-  /* ====== Modal guard ====== */
+  /* ====== Modal de confirmación in-page (sin prompt del navegador) ====== */
   let pendingHref = null;
   const modal = $('#changesModal');
   const listEl = $('#changesList');
@@ -87,7 +82,7 @@
   function hideModal(){ modal.classList.remove('show'); }
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-  // interceptar enlaces que cambian de sección
+  // Interceptar enlaces marcados con .guard-link
   document.addEventListener('click', (e)=>{
     const a = e.target.closest('a.guard-link');
     if (!a) return;
@@ -97,19 +92,7 @@
     showModal();
   });
 
-  // beforeunload (cerrar pestaña/recargar)
-  window.addEventListener('beforeunload', (e)=>{
-    if (Change.count > 0) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
-
-  btnDiscard?.addEventListener('click', ()=>{
-    pendingHref = null;
-    hideModal();
-  });
-
+  btnDiscard?.addEventListener('click', ()=>{ pendingHref = null; hideModal(); });
   btnSaveAndLeave?.addEventListener('click', async ()=>{
     btnSaveAndLeave.disabled = true;
     const ok = await saveAllChanges();
@@ -131,8 +114,9 @@
       const titleState = $('#albumTitleState');
       const coverInput = $('#albumCoverInput');
       const coverImg = $('#albumCoverImg');
+      const coverScrim = $('#coverScrim');
 
-      // marcar cambio de título con estilo
+      // título de álbum -> resalta botón Guardar
       titleInput?.addEventListener('input', ()=>{
         const old = titleInput.dataset.original || titleInput.getAttribute('value') || '';
         const next = titleInput.value.trim();
@@ -146,7 +130,7 @@
         titleInline?.classList.add('saving');
         titleState.innerHTML = '<span class="spin" aria-hidden="true"></span>';
         const ok = await updateAlbum({ url:updateUrl, title:Change.albumTitle.next });
-        if (ok){
+        if (ok?.ok){
           titleInput.setAttribute('value', Change.albumTitle.next);
           titleInput.dataset.original = Change.albumTitle.next;
           Change.albumTitle = null;
@@ -161,19 +145,26 @@
         }
       });
 
+      // CAMBIO DE PORTADA: subir y propagar INMEDIATO a canciones
       $('#btnChangeCover')?.addEventListener('click', ()=> coverInput?.click());
-      coverInput?.addEventListener('change', ()=>{
+      coverInput?.addEventListener('change', async ()=>{
         const file = coverInput.files?.[0]; if (!file) return;
-        Change.albumCoverFile = file;
-        Change.coverPropagate = true;
-        // Vista previa
+
+        // Previsualización inmediata
         const blob = URL.createObjectURL(file);
-        coverImg && (coverImg.src = blob);
-        // Previsualiza en cada fila
-        $$('.row').forEach(row=>{
-          const img = $('.thumb', row);
-          if (img) img.src = blob;
-        });
+        if (coverImg) coverImg.src = blob;
+        $$('.row .thumb').forEach(img => { img.src = blob; });
+
+        // Guardar y propagar
+        coverScrim?.removeAttribute('hidden');
+        const { ok, cover_path } = await updateAlbum({ url: updateUrl, coverFile: file });
+        if (!ok){
+          coverScrim?.setAttribute('hidden','');
+          alert('No se pudo actualizar la portada del álbum.');
+          return;
+        }
+        await propagateCoverToSongs({ coverPath: cover_path, coverFile: file });
+        coverScrim?.setAttribute('hidden','');
       });
     }
   }
@@ -252,6 +243,7 @@
             input.dataset.original = change.next;
             inline?.classList.remove('is-dirty');
             setTimeout(()=>{ row.classList.remove('saved'); state.innerHTML=''; }, 1200);
+            Change.songTitles.delete(id);
           }else{
             row.classList.add('error');
             state.innerHTML = '<i class="fa-solid fa-triangle-exclamation err" title="Error"></i>';
@@ -259,7 +251,6 @@
           }
           saveBtn.disabled = false;
           saveBtn.innerHTML = oldIcon;
-          if (ok) Change.songTitles.delete(id);
         });
 
         // eliminar canción
@@ -293,25 +284,15 @@
       if (Change.albumTitle){
         setAlbumState('saving');
         const ok = await updateAlbum({ url: albumUrl, title: Change.albumTitle.next });
-        setAlbumState(ok ? 'saved' : 'idle', ok ? 'ok' : 'err');
-        if (!ok) throw new Error('No se pudo guardar el título del álbum.');
+        setAlbumState(ok?.ok ? 'saved' : 'idle', ok?.ok ? 'ok' : 'err');
+        if (!ok?.ok) throw new Error('No se pudo guardar el título del álbum.');
         $('#albumTitleInput')?.setAttribute('value', Change.albumTitle.next);
         $('#albumTitleInput')?.setAttribute('data-original', Change.albumTitle.next);
         $('#albumTitleInline')?.classList.remove('is-dirty');
         Change.albumTitle = null;
       }
 
-      // 2) Subir nueva portada del álbum
-      let albumCoverPath = null;
-      if (Change.albumCoverFile){
-        setAlbumState('saving');
-        const res = await updateAlbum({ url: albumUrl, coverFile: Change.albumCoverFile });
-        albumCoverPath = res.cover_path || null;
-        setAlbumState(res.ok ? 'saved' : 'idle', res.ok ? 'ok' : 'err');
-        if (!res.ok) throw new Error('No se pudo actualizar la portada del álbum.');
-      }
-
-      // 3) Guardar títulos de canciones con animación
+      // 2) Guardar títulos de canciones con animación
       const tbl = $('#songsTable');
       const updateTpl = tbl?.dataset.songUpdate || '/canciones/0';
       for (const [id, change] of Change.songTitles.entries()){
@@ -345,40 +326,40 @@
         if (saveBtn){ saveBtn.disabled = false; saveBtn.innerHTML = saveBtn.dataset._icon || '<i class="fa-solid fa-floppy-disk"></i>'; }
       }
 
-      // 4) Propagar portada a canciones si corresponde
-      if (Change.coverPropagate && (Change.albumCoverFile || albumCoverPath)){
-        const coverFile = Change.albumCoverFile || null;
-        const coverPath = albumCoverPath || null;
-        const rows = $$('.row');
-        const tbl2 = $('#songsTable');
-        const updateTpl2 = tbl2?.dataset.songUpdate || '/canciones/0';
-
-        for (const row of rows){
-          const id = row.dataset.id;
-          // animación de "saving"
-          row.classList.remove('error','saved'); row.classList.add('saving');
-
-          let ok = await updateSong({ url: updateTpl2.replace(/0(?!.*0)/, id), coverFromAlbum: true, coverPath });
-          if (!ok && coverFile){
-            ok = await updateSong({ url: updateTpl2.replace(/0(?!.*0)/, id), coverFile });
-          }
-
-          row.classList.remove('saving');
-          if (ok){
-            row.classList.add('saved');
-            setTimeout(()=> row.classList.remove('saved'), 900);
-          }else{
-            row.classList.add('error');
-            setTimeout(()=> row.classList.remove('error'), 1200);
-            throw new Error('No se pudo propagar portada a la canción #'+id);
-          }
-        }
-      }
-
       return true;
     }catch(err){
       alert(err.message || 'No se pudieron guardar los cambios.');
       return false;
+    }
+  }
+
+  /* =================== Propagación de portada =================== */
+  async function propagateCoverToSongs({ coverPath=null, coverFile=null }){
+    const tbl = $('#songsTable'); if (!tbl) return;
+    const updateTpl = tbl.dataset.songUpdate || '/canciones/0';
+
+    for (const row of $$('.row', tbl)){
+      const id = row.dataset.id;
+      row.classList.remove('error','saved'); row.classList.add('saving');
+
+      // 1) Intento vía cover_path (rápido, server-side)
+      let ok = false;
+      if (coverPath){
+        ok = await updateSong({ url: updateTpl.replace(/0(?!.*0)/, id), coverFromAlbum: true, coverPath });
+      }
+      // 2) Fallback: subir archivo a cada canción (si el backend no soporta cover_from_album)
+      if (!ok && coverFile){
+        ok = await updateSong({ url: updateTpl.replace(/0(?!.*0)/, id), coverFile });
+      }
+
+      row.classList.remove('saving');
+      if (ok){
+        row.classList.add('saved');
+        setTimeout(()=> row.classList.remove('saved'), 900);
+      }else{
+        row.classList.add('error');
+        setTimeout(()=> row.classList.remove('error'), 1200);
+      }
     }
   }
 

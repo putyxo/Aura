@@ -19,7 +19,10 @@ class CancionController extends Controller
     }
 
     /**
-     * Actualiza campos simples de la canción (por ahora: título y/o portada).
+     * Actualiza campos de la canción (título/portada).
+     * Además soporta propagación desde portada de álbum:
+     *  - cover_from_album=1 + cover_path (copiar ruta ya subida del álbum)
+     *  - o subir archivo 'cover'
      */
     public function update(Request $request, int $cancion)
     {
@@ -32,8 +35,10 @@ class CancionController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => ['nullable', 'string', 'max:255'],
-            'cover' => ['nullable', 'image', 'max:8192'],
+            'title'            => ['nullable', 'string', 'max:255'],
+            'cover'            => ['nullable', 'image', 'max:8192'],
+            'cover_from_album' => ['nullable', 'in:1'],
+            'cover_path'       => ['nullable', 'string', 'max:255'],
         ]);
 
         $changed = [];
@@ -43,11 +48,17 @@ class CancionController extends Controller
             $changed['title'] = $song->title;
         }
 
-        if ($request->hasFile('cover')) {
+        // 1) Copiar ruta desde el álbum si viene cover_from_album y cover_path
+        if (!empty($validated['cover_from_album']) && !empty($validated['cover_path'])) {
+            $song->cover_path = ltrim($validated['cover_path'], '/');
+            $changed['cover_path'] = $song->cover_path;
+        }
+        // 2) O subir archivo directo
+        elseif ($request->hasFile('cover')) {
             $img  = $request->file('cover');
             $slug = \Str::slug($song->title ?: 'cancion') . '-' . time();
             $ext  = $img->getClientOriginalExtension();
-            $path = $img->storeAs('covers', $slug . '.' . $ext, 'public');
+            $path = $img->storeAs('songs/covers', $slug . '.' . $ext, 'public');
 
             $old = $song->cover_path ?? $song->portada ?? null;
             if ($old && !preg_match('~^https?://~i', $old)) {
@@ -62,8 +73,8 @@ class CancionController extends Controller
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'ok'   => true,
-                'song' => $song->only(['id', 'title', 'cover_path']),
+                'ok'      => true,
+                'song'    => $song->only(['id', 'title', 'cover_path']),
                 'changed' => $changed,
             ]);
         }
@@ -86,8 +97,12 @@ class CancionController extends Controller
         $this->deleteLocalIfRelative($songAudioPath);
         $this->deleteLocalIfRelative($songCoverPath);
 
-        $cancion->likedBy()->detach();
-        $cancion->playlists()->detach();
+        if (method_exists($cancion, 'likedBy')) {
+            $cancion->likedBy()->detach();
+        }
+        if (method_exists($cancion, 'playlists')) {
+            $cancion->playlists()->detach();
+        }
 
         $cancion->delete();
 
@@ -154,6 +169,43 @@ class CancionController extends Controller
         ]);
     }
 
+    public function lyrics(Cancion $cancion)
+    {
+        $lyric = $cancion->lyric ?? null;
+
+        if ($lyric) {
+            $segments = [];
+            if ($lyric->json_segments) {
+                $raw = json_decode($lyric->json_segments, true);
+                foreach ($raw as $seg) {
+                    $segments[] = [
+                        'start' => $seg['start'] ?? 0,
+                        'end'   => $seg['end'] ?? 0,
+                        'text'  => $seg['text'] ?? '',
+                    ];
+                }
+            }
+
+            return response()->json([
+                'song_id'  => $cancion->id,
+                'lyrics'   => $lyric->content,
+                'segments' => $segments,
+                'synced'   => !empty($segments),
+                'status'   => 'ready',
+            ]);
+        }
+
+        GenerateLyricsJob::dispatch($cancion->id);
+
+        return response()->json([
+            'song_id'  => $cancion->id,
+            'lyrics'   => null,
+            'segments' => [],
+            'synced'   => false,
+            'status'   => 'pending',
+        ]);
+    }
+
     private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
@@ -172,43 +224,4 @@ class CancionController extends Controller
             }
         } catch (\Throwable $e) {}
     }
-
-public function lyrics(\App\Models\Cancion $cancion)
-{
-    $lyric = $cancion->lyric;
-
-    if ($lyric) {
-        $segments = [];
-        if ($lyric->json_segments) {
-            $raw = json_decode($lyric->json_segments, true);
-            foreach ($raw as $seg) {
-                $segments[] = [
-                    'start' => $seg['start'] ?? 0,
-                    'end'   => $seg['end'] ?? 0,
-                    'text'  => $seg['text'] ?? '',
-                ];
-            }
-        }
-
-        return response()->json([
-            'song_id'  => $cancion->id,
-            'lyrics'   => $lyric->content,
-            'segments' => $segments,
-            'synced'   => !empty($segments),
-            'status'   => 'ready',
-        ]);
-    }
-
-    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
-
-    return response()->json([
-        'song_id'  => $cancion->id,
-        'lyrics'   => null,
-        'segments' => [],
-        'synced'   => false,
-        'status'   => 'pending',
-    ]);
-}
-
-
 }

@@ -1,3 +1,4 @@
+/* resources/css/menu_album.css */
 :root{
   --vio-400:#a78bfa; --vio-500:#8b5cf6; --vio-600:#7c3aed;
   --bg:#0b0b10; --panel:#11111a; --elev:#171725; --line:rgba(255,255,255,.10);
@@ -39,6 +40,8 @@ button{font:inherit;cursor:pointer}
 .cover-wrap img{display:block;width:100%;height:auto;max-height:520px;object-fit:cover}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font-weight:800}
 .chip--overlay{position:absolute;right:10px;bottom:10px}
+.chip--save{transition: box-shadow .2s ease, transform .2s ease, background .2s ease}
+
 .lbl{display:block;margin:12px 0 6px;color:#eae5ff}
 .inline-edit{display:flex;gap:8px;align-items:center}
 .txt{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff}
@@ -47,20 +50,16 @@ button{font:inherit;cursor:pointer}
 
 .empty{display:grid;place-items:center;padding:26px;border:1px dashed rgba(167,139,250,.45);border-radius:14px;background:rgba(255,255,255,.04);color:#e9d5ff}
 
-/* ===== Indicadores de cambios ===== */
+/* ===== Indicadores de cambios (sin texto “Sin guardar”) ===== */
 .inline-edit.is-dirty .txt{
   border-color: rgba(167,139,250,.85);
   box-shadow: 0 0 0 2px rgba(167,139,250,.25), 0 10px 24px rgba(124,58,237,.22);
 }
-.inline-edit.is-dirty::after{
-  content:"Sin guardar";
-  margin-left:6px;
-  padding:5px 8px;
-  font-size:12px;
-  border-radius:8px;
-  background:rgba(124,58,237,.15);
-  border:1px solid rgba(124,58,237,.45);
-  color:#e9d5ff;
+.inline-edit.is-dirty .chip--save{
+  background: linear-gradient(135deg,var(--vio-600),var(--vio-500));
+  border-color: transparent;
+  box-shadow: 0 10px 26px rgba(124,58,237,.35);
+  transform: translateY(-1px);
 }
 
 /* ===== Tabla canciones ===== */
@@ -81,11 +80,8 @@ button{font:inherit;cursor:pointer}
 .col-act{width:190px;display:flex;gap:8px;justify-content:flex-end}
 .chip.danger{border-color:rgba(239,68,68,.45);color:#ffdede}
 
-.mini-list{display:grid;gap:8px}
-.mini{display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.24)}
-.mini:hover{border-color:rgba(167,139,250,.45)}
-.mini img{width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.12)}
-.ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ===== Ocultar lista de otros álbumes en esta pantalla (solo este álbum) ===== */
+.mini-list{display:none}
 
 /* ===== Modal cambios ===== */
 .modal{position:fixed;inset:0;display:none}
@@ -146,3 +142,14 @@ button{font:inherit;cursor:pointer}
 /* ===== Estado guardado a nivel de álbum ===== */
 #albumTitleInline.saving .txt{ border-color: rgba(167,139,250,.85); box-shadow: 0 0 0 2px rgba(167,139,250,.25); }
 #albumTitleInline.saved .txt{ border-color: rgba(34,197,94,.85); box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+
+/* ===== Scrim/progreso en portada al propagar ===== */
+.progress-scrim{
+  position:absolute; inset:0; display:flex; flex-direction:column; gap:8px;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.45); color:#fff; font-weight:800;
+}
+.progress-scrim .spinner{
+  width:28px; height:28px; border-radius:50%;
+  border:3px solid rgba(255,255,255,.35); border-top-color:#fff; animation: spin .8s linear infinite;
+}

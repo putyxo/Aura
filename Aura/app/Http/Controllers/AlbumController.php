@@ -12,12 +12,20 @@ use Illuminate\View\View;
 class AlbumController extends Controller
 {
     /**
-     * Mostrar detalle de un álbum (portada + canciones).
+     * Mostrar detalle de un álbum (misma UI visual para dueño y visitantes).
+     * - Dueño: verá controles de edición (la vista los muestra con $isOwner).
+     * - Visitante/no autenticado: solo lectura.
      */
     public function show(int $id): View
     {
         $album = Album::with(['user', 'songs.user'])->findOrFail($id);
-        return view('albums.show', compact('album'));
+
+        // Reutiliza la vista visual "menu_album" que ya maneja $isOwner internamente
+        // mediante (auth()->check() && auth()->id() === $user->id)
+        return view('menu_album', [
+            'user'  => $album->user,
+            'album' => $album,
+        ]);
     }
 
     /**
@@ -51,7 +59,8 @@ class AlbumController extends Controller
             $img  = $request->file('cover');
             $slug = Str::slug($album->title ?: ($album->titulo ?? 'album')) . '-' . time();
             $ext  = $img->getClientOriginalExtension();
-            $path = $img->storeAs('portadas', $slug . '.' . $ext, 'public');
+            // Carpeta de portadas de álbum
+            $path = $img->storeAs('albums/covers', $slug . '.' . $ext, 'public');
 
             // Borra la portada anterior si era ruta local
             $old = $album->cover_path ?? $album->portada ?? null;

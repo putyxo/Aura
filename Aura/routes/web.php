@@ -49,6 +49,15 @@ Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked']
 
 /*
 |--------------------------------------------------------------------------
+| VER ÁLBUM (PÚBLICO: dueño edita, visitante solo observa)
+|--------------------------------------------------------------------------
+| Esta ruta muestra la UI visual (menu_album.blade.php) tanto para dueños como visitantes.
+*/
+Route::get('/albums/{id}', [AlbumController::class, 'show'])->name('album.show');
+Route::get('/album/{id}',  [AlbumController::class, 'show'])->name('album.show.legacy');
+
+/*
+|--------------------------------------------------------------------------
 | Rutas protegidas (requieren login)
 |--------------------------------------------------------------------------
 */
@@ -93,7 +102,7 @@ Route::middleware('auth')->group(function () {
     // (Antigua) Página "Me gusta" de canciones (si la usas)
     Route::get('/like', [CancionController::class, 'like'])->name('like');
 
-    // ===== Canción: ver y letras =====
+    // ===== Canción: ver y letras (si prefieres con login)
     Route::get('/cancion/{cancion}', [CancionController::class, 'show'])->name('cancion.show');
     Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
 
@@ -115,7 +124,7 @@ Route::middleware('auth')->group(function () {
     // CRUD RESTful de playlists (colocado DESPUÉS de los endpoints anteriores para evitar colisiones)
     Route::resource('playlists', PlaylistController::class);
 
-    // ===== Vistas principales (Blade suelto) =====
+    // ===== Vistas principales (Blade suelto)
     Route::get('/menu', fn () => view('menu'))->name('menu');
     Route::get('/menu_artista', fn () => view('menu_artista'))->name('menu_artista');
     Route::get('/playlist_card', fn () => view('playlist_card'))->name('playlist_card');
@@ -129,7 +138,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/estadisticas', fn () => view('estadisticas'))->name('estadisticas');
     Route::get('/artistasadmin', fn () => view('artistasadmin'))->name('artistasadmin');
 
-    // Menú de álbumes (detalle editable solo si es dueño; ver otro álbum en modo lectura con ?album=ID)
+    // Menú de álbumes (si tu lógica interna lo usa)
     Route::get('/menu_album', [PerfilController::class, 'albumsMenu'])->name('menu_album');
 
     // Cambiar tipo de cuenta (usuario ↔ artista)
@@ -138,25 +147,20 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Álbumes
+    | Álbumes (actualización / eliminación)
     |--------------------------------------------------------------------------
-    | Ver / actualizar / eliminar.
     */
-    // Ver álbum (actual + legacy)
-    Route::get('/albums/{id}', [AlbumController::class, 'show'])->name('album.show');
-    Route::get('/album/{id}',  [AlbumController::class, 'show'])->name('album.show.legacy');
-
     // Actualizar (título/portada) — acepta PATCH o POST con _method=PATCH
     Route::match(['patch','post'], '/albums/{id}', [AlbumController::class, 'update'])
         ->name('albums.update');
 
-    // Eliminar álbum (lo maneja ProfileController@destroyAlbum)
+    // Eliminar álbum (si usas ProfileController@destroyAlbum)
     Route::delete('/albums/{id}', [ProfileController::class, 'destroyAlbum'])
         ->name('profile.albums.destroy');
     Route::delete('/album/{id}', [ProfileController::class, 'destroyAlbum'])
         ->name('profile.albums.destroy.legacy');
 
-    // Listado general de álbumes
+    // Listado general de álbumes (solo para usuarios logueados, opcional)
     Route::get('/albumes', function () {
         $albumes = Album::with('user')->latest()->get();
         return view('album_principal', compact('albumes'));
