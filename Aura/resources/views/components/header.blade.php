@@ -43,12 +43,13 @@
       <!-- Usuario -->
       <div class="ah-user">
         <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
+          @php
+            $avatarUrl = img_url(auth()->user()->avatar, 'img/default-user.png');
+            $ver = auth()->user()->updated_at?->getTimestamp() ?? time();
+            $avatarChip = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . $ver;
+          @endphp
           <img class="ah-chip-avatar"
-               src="@if(auth()->user()->avatar)
-                       {{ drive_img_url(auth()->user()->avatar, 100) }}&v={{ time() }}
-                     @else
-                       {{ asset('img/default-user.png') }}
-                     @endif"
+               src="{{ $avatarChip }}"
                alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
           <span class="ah-chip-name">
             {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
@@ -59,12 +60,12 @@
         <div class="ah-dropdown" id="ahUserDropdown" aria-hidden="true" role="menu">
           <div class="ah-profile-header">
             <div class="ah-profile-info">
+              @php
+                $avatarDrop = img_url(auth()->user()->avatar, 'img/default-user.png');
+                $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
+              @endphp
               <img class="ah-profile-avatar"
-                   src="@if(auth()->user()->avatar)
-                           {{ drive_img_url(auth()->user()->avatar, 300) }}&v={{ time() }}
-                         @else
-                           {{ asset('img/default-user.png') }}
-                         @endif"
+                   src="{{ $avatarDrop }}"
                    alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
               <div class="ah-profile-text">
                 <div class="ah-profile-name">

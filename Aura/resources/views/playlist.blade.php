@@ -50,13 +50,13 @@
                 <i class="fa-solid fa-music" aria-hidden="true"></i>
               </div>
               <div>
-                <h1 class="axpl-hero__title">Tus Playlists</h1>
-                <p class="axpl-hero__sub">Organiza tu música y crea la banda sonora perfecta para cada momento.</p>
+                <h1 class="axpl-hero__title">{{ __('playlist.title') }}</h1>
+                <p class="axpl-hero__sub">{{ __('playlist.subtitle') }}</p>
               </div>
             </div>
             <div class="axpl-hero__actions">
               <button class="axpl-btn axpl-btn-primary" id="axplOpenModal">
-                <i class="fa-solid fa-plus"></i> <span>Nueva playlist</span>
+                <i class="fa-solid fa-plus"></i> <span>{{ __('playlist.new_playlist') }}</span>
               </button>
             </div>
           </div>
@@ -65,27 +65,27 @@
             <div class="axpl-toolbar__left">
               <div class="axpl-search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <input id="axplSearch" type="search" placeholder="Buscar playlist..." aria-label="Buscar playlist" autocomplete="off">
-                <button class="axpl-clear" id="axplClearSearch" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+                <input id="axplSearch" type="search" placeholder="{{ __('playlist.search_placeholder') }}" aria-label="{{ __('playlist.search_placeholder') }}" autocomplete="off">
+                <button class="axpl-clear" id="axplClearSearch" aria-label="{{ __('playlist.clear_search') }}"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div class="axpl-filters">
-                <button class="axpl-chip is-active" data-sort="recientes">Recientes</button>
-                <button class="axpl-chip" data-sort="az">A–Z</button>
-                <button class="axpl-chip" data-sort="cantidad">Más canciones</button>
+                <button class="axpl-chip is-active" data-sort="recientes">{{ __('playlist.filter_recent') }}</button>
+                <button class="axpl-chip" data-sort="az">{{ __('playlist.filter_az') }}</button>
+                <button class="axpl-chip" data-sort="cantidad">{{ __('playlist.filter_most_songs') }}</button>
               </div>
 
               <!-- Visible en modo selección -->
               <span id="axplSelectIndicator" class="axpl-select-ind" hidden>
                 <i class="fa-regular fa-square-check"></i>
-                <span><b id="axplSelCount">0</b> seleccionadas</span>
+                <span><b id="axplSelCount">0</b> {{ __('playlist.selected_count') }}</span>
               </span>
             </div>
             <div class="axpl-toolbar__right">
               <button class="axpl-btn axpl-btn-ghost" id="axplSelectMode" aria-pressed="false">
-                <i class="fa-regular fa-square"></i><span class="axpl-btn-text">Seleccionar</span>
+                <i class="fa-regular fa-square"></i><span class="axpl-btn-text">{{ __('playlist.select') }}</span>
               </button>
               <button class="axpl-btn axpl-btn-ghost axpl-is-danger" id="axplDeleteSelected" disabled>
-                <i class="fa-regular fa-trash-can"></i><span class="axpl-btn-text">Eliminar</span>
+                <i class="fa-regular fa-trash-can"></i><span class="axpl-btn-text">{{ __('playlist.delete') }}</span>
               </button>
             </div>
           </div>
@@ -108,7 +108,7 @@
             <div class="axpl-tile-cover axpl-create-cover" aria-hidden="true">
               <i class="fa-solid fa-plus"></i>
             </div>
-            <div class="axpl-tile-name">Nueva playlist</div>
+            <div class="axpl-tile-name">{{ __('playlist.new_playlist') }}</div>
           </button>
 
           <!-- Playlists -->
@@ -122,7 +122,7 @@
                 @if($pl->cover_url)
                   <img src="{{ $pl->cover_url }}" alt="Portada de {{ $pl->nombre }}" width="260" height="260" loading="lazy" decoding="async">
                 @else
-                  <div class="axpl-cover-placeholder">Sin portada</div>
+                  <div class="axpl-cover-placeholder">{{ __('playlist.no_cover') }}</div>
                 @endif
 
                 <button type="button" class="axpl-pencil" data-id="{{ $pl->id }}" data-nombre="{{ $pl->nombre }}" data-descripcion="{{ $pl->descripcion }}" data-cover="{{ $pl->cover_url }}">

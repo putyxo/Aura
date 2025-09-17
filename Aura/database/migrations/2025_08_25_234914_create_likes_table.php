@@ -15,14 +15,14 @@ return new class extends Migration
                 ->constrained()              // -> references users(id)
                 ->cascadeOnDelete();
 
-            // DEBE referenciar la tabla real de canciones: 'songs'
+            // Debe referenciar la tabla real de canciones: 'songs'
             $table->foreignId('song_id')
-                ->constrained('songs')       // <- AQUÍ está la corrección
+                ->constrained('songs')       // <- importante
                 ->cascadeOnDelete();
 
             $table->timestamps();
 
-            // evita duplicados (un usuario no puede likear la misma canción 2 veces)
+            // Evita duplicados (un usuario no puede likear 2 veces la misma canción)
             $table->unique(['user_id', 'song_id']);
         });
     }
