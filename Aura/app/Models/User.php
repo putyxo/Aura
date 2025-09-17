@@ -52,7 +52,7 @@ class User extends Authenticatable
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
-    public function followings(): BelongsToMany
+    public function followings()
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
     }
@@ -76,56 +76,53 @@ class User extends Authenticatable
        RELACIONES EXTRA (Likes)
        ============================== */
 
-    /** Relación principal: canciones que el usuario ha likeado */
-    public function likes(): BelongsToMany
+
+       
+
+    public function getAvatarUrlAttribute()
     {
-        // Pivot: likes (user_id, song_id) → canciones están en tabla 'songs'
-        return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
-                    ->withTimestamps();
+        return $this->avatar
+            ? route('media.drive', ['id' => $this->avatar])
+            : asset('img/default-avatar.png');
     }
 
-    /** Alias para compatibilidad con controladores/vistas existentes */
-    public function likedSongs(): BelongsToMany
+    public function getBannerUrlAttribute()
     {
-        return $this->likes();
+        return $this->banner
+            ? route('media.drive', ['id' => $this->banner])
+            : asset('img/default-banner.png');
     }
 
-    public function equalizer()
+    public function getImagenPortadaUrlAttribute()
     {
-        return $this->hasOne(UserEqualizer::class);
+        return $this->imagen_portada
+            ? route('media.drive', ['id' => $this->imagen_portada])
+            : asset('img/default-cover.png');
     }
 
+public function likes1()
+{
+    return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
+                ->withTimestamps();
+}
+
+public function equalizer()
+{
+    return $this->hasOne(UserEqualizer::class);
+}
     /* ==============================
-       ACCESSORS AVATAR / BANNER / PORTADA
+       ME GUSTA (LIKES)
        ============================== */
 
-    public function getAvatarUrlAttribute(): string
+    public function likedSongs()
     {
-        $p = $this->avatar;
-        if (!$p) return asset('img/default-avatar.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
+        // Tabla pivot: likes (user_id, song_id, timestamps)
+        return $this->belongsToMany(Song::class, 'likes', 'user_id', 'song_id');
     }
 
-    public function getBannerUrlAttribute(): string
+    // Alias opcional
+    public function likes()
     {
-        $p = $this->banner;
-        if (!$p) return asset('img/default-banner.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
-    }
-
-    public function getImagenPortadaUrlAttribute(): string
-    {
-        $p = $this->imagen_portada;
-        if (!$p) return asset('img/default-cover.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
+        return $this->likedSongs();
     }
 }

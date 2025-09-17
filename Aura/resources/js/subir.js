@@ -5,9 +5,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // Elementos principales
   const selection = document.getElementById('axupSelection');
 
+  // Variable para acumular tracks de álbum
+  let selectedAlbumTracks = [];
+
   // Modals
   const modalCancion = document.getElementById('axupModalSong');
   const modalAlbum = document.getElementById('axupModalAlbum');
+
+  // Ensure modals are hidden on load
+  if (modalCancion) modalCancion.hidden = true;
+  if (modalAlbum) modalAlbum.hidden = true;
 
   // Formularios modales
   const formCancionModal = document.getElementById('axupFormSong');
@@ -21,6 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
     portada: document.getElementById('axupSongCover'),
     cover: document.getElementById('axupAlbumCover'),
     tracks: document.getElementById('axupAlbumTracks')
+  };
+
+  // Previews modales
+  const previewsModal = {
+    songCover: document.getElementById('axupSongCoverPreview'),
+    albumCover: document.getElementById('axupAlbumCoverPreview')
   };
 
   // Dropzones modales
@@ -46,22 +59,46 @@ document.addEventListener('DOMContentLoaded', function() {
   // Modal backdrop
   const modalBackdrop = document.getElementById('axupModalBackdrop');
 
+  // Ensure backdrop is hidden on load
+  if (modalBackdrop) modalBackdrop.hidden = true;
+
   // Funciones principales
   window.abrirModal = function(tipo) {
     if (tipo === 'cancion') {
-      modalBackdrop.classList.add('is-open');
-      modalCancion.classList.add('is-open');
+      modalBackdrop.hidden = false;
+      modalCancion.hidden = false;
       // Limpiar formulario
       formCancionModal.reset();
       clearFieldMessagesModal();
+      // Limpiar previews
+      previewsModal.songCover.innerHTML = '';
+      previewsModal.songCover.style.display = 'none';
+      const hintSong = document.querySelector('#axupSongCoverUploader .axup-uploader-hint');
+      if (hintSong) hintSong.style.display = 'flex';
+      // Restaurar hint de archivo
+      const hintSongFile = document.querySelector('#axupSongFileUploader .axup-uploader-hint');
+      if (hintSongFile) {
+        const p = hintSongFile.querySelector('p');
+        if (p && p.dataset.originalHint) {
+          p.textContent = p.dataset.originalHint;
+        }
+        hintSongFile.querySelector('small').style.display = 'block';
+        hintSongFile.querySelector('i').style.display = 'block';
+      }
     } else if (tipo === 'album') {
-      modalBackdrop.classList.add('is-open');
-      modalAlbum.classList.add('is-open');
+      modalBackdrop.hidden = false;
+      modalAlbum.hidden = false;
       // Limpiar formulario
       formAlbumModal.reset();
+      selectedAlbumTracks = [];
       tracksListModal.hidden = true;
       tracksContainerModal.innerHTML = '';
       clearFieldMessagesModal();
+      // Limpiar previews
+      previewsModal.albumCover.innerHTML = '';
+      previewsModal.albumCover.style.display = 'none';
+      const hintAlbum = document.querySelector('#axupAlbumCoverUploader .axup-uploader-hint');
+      if (hintAlbum) hintAlbum.style.display = 'flex';
     }
   };
 
@@ -102,11 +139,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.cerrarModal = function(tipo) {
     if (tipo === 'cancion') {
-      modalCancion.classList.remove('is-open');
-      modalBackdrop.classList.remove('is-open');
+      modalCancion.hidden = true;
+      modalBackdrop.hidden = true;
     } else if (tipo === 'album') {
-      modalAlbum.classList.remove('is-open');
-      modalBackdrop.classList.remove('is-open');
+      modalAlbum.hidden = true;
+      modalBackdrop.hidden = true;
     }
   };
 
@@ -132,16 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelAlbumBtn.addEventListener('click', () => cerrarModal('album'));
   }
 
-  // Close modal when clicking on backdrop
-  if (modalBackdrop) {
-    modalBackdrop.addEventListener('click', () => {
-      if (modalCancion.classList.contains('is-open')) {
-        cerrarModal('cancion');
-      } else if (modalAlbum.classList.contains('is-open')) {
-        cerrarModal('album');
-      }
-    });
-  }
+  // Close modal only with close button or Escape key
+  // Removed backdrop click to prevent accidental closures
 
   // Configurar drag & drop para modals
   function setupDragDropModal(dropzone, input, overlay) {
@@ -183,8 +212,32 @@ document.addEventListener('DOMContentLoaded', function() {
   // Manejar cambio de archivos MP3 modales
   inputsModal.mp3?.addEventListener('change', function() {
     const file = this.files[0];
+    const hint = this.parentElement.querySelector('.axup-uploader-hint');
     if (file) {
       validateFile(file, 'mp3', 'axupMsgSongFile');
+      // Set song name
+      if (inputsModal.nombre) {
+        inputsModal.nombre.value = file.name.replace(/\.[^/.]+$/, '');
+      }
+      // Replace hint with file name
+      if (hint) {
+        const p = hint.querySelector('p');
+        if (p && p.dataset.originalHint) {
+          p.textContent = file.name;
+        }
+        hint.querySelector('small').style.display = 'none';
+        hint.querySelector('i').style.display = 'none';
+      }
+    } else {
+      // Restore hint
+      if (hint) {
+        const p = hint.querySelector('p');
+        if (p && p.dataset.originalHint) {
+          p.textContent = p.dataset.originalHint;
+        }
+        hint.querySelector('small').style.display = 'block';
+        hint.querySelector('i').style.display = 'block';
+      }
     }
   });
 
@@ -193,6 +246,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const file = this.files[0];
     if (file) {
       validateFile(file, 'image', 'axupMsgSongCover');
+      // Show preview
+      const url = URL.createObjectURL(file);
+      previewsModal.songCover.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">`;
+      previewsModal.songCover.style.display = 'block';
+      // Hide hint
+      const hint = this.parentElement.querySelector('.axup-uploader-hint');
+      if (hint) hint.style.display = 'none';
+    } else {
+      previewsModal.songCover.innerHTML = '';
+      previewsModal.songCover.style.display = 'none';
+      const hint = this.parentElement.querySelector('.axup-uploader-hint');
+      if (hint) hint.style.display = 'flex';
     }
   });
 
@@ -201,17 +266,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const file = this.files[0];
     if (file) {
       validateFile(file, 'image', 'axupMsgAlbumCover');
+      // Show preview
+      const url = URL.createObjectURL(file);
+      previewsModal.albumCover.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">`;
+      previewsModal.albumCover.style.display = 'block';
+      // Hide hint
+      const hint = this.parentElement.querySelector('.axup-uploader-hint');
+      if (hint) hint.style.display = 'none';
+    } else {
+      previewsModal.albumCover.innerHTML = '';
+      previewsModal.albumCover.style.display = 'none';
+      const hint = this.parentElement.querySelector('.axup-uploader-hint');
+      if (hint) hint.style.display = 'flex';
     }
   });
 
   // Manejar cambio de tracks de álbum modal
   inputsModal.tracks?.addEventListener('change', function() {
-    const files = Array.from(this.files);
-    if (files.length > 0) {
-      validateTracksModal(files);
-      renderTracksListModal(files);
+    const newFiles = Array.from(this.files);
+    if (newFiles.length > 0) {
+      // Append new files to selectedAlbumTracks
+      selectedAlbumTracks.push(...newFiles);
+      // Update the input.files with all selected
+      const dt = new DataTransfer();
+      selectedAlbumTracks.forEach(file => dt.items.add(file));
+      this.files = dt.files;
+      // Validate and render
+      validateTracksModal(selectedAlbumTracks);
+      renderTracksListModal(selectedAlbumTracks);
     } else {
       tracksListModal.hidden = true;
+      selectedAlbumTracks = [];
     }
   });
 
@@ -315,15 +400,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Remover track modal
   window.removeTrackModal = function(index) {
-    const files = Array.from(inputsModal.tracks.files);
-    files.splice(index, 1);
+    selectedAlbumTracks.splice(index, 1);
 
-    // Crear nuevo FileList
+    // Update input.files
     const dt = new DataTransfer();
-    files.forEach(file => dt.items.add(file));
+    selectedAlbumTracks.forEach(file => dt.items.add(file));
     inputsModal.tracks.files = dt.files;
 
-    renderTracksListModal(files);
+    // Re-render
+    renderTracksListModal(selectedAlbumTracks);
+    if (selectedAlbumTracks.length === 0) {
+      tracksListModal.hidden = true;
+    }
   };
 
   // Limpiar mensajes de campo modales
@@ -418,29 +506,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 3000);
   }
 
-  // Cerrar modal al hacer clic fuera
-  modalCancion?.addEventListener('click', function(e) {
-    if (e.target === modalCancion && modalCancion.classList.contains('is-open')) {
-      cerrarModal('cancion');
-    }
-  });
-
-  modalAlbum?.addEventListener('click', function(e) {
-    if (e.target === modalAlbum && modalAlbum.classList.contains('is-open')) {
-      cerrarModal('album');
-    }
-  });
+  // Cerrar modal solo con el botón de cerrar o clic en el backdrop
+  // Removido el cierre al clic en el modal para evitar cierres accidentales
 
   // Keyboard navigation
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      if (modalCancion.classList.contains('is-open')) {
+      if (!modalCancion.hidden) {
         cerrarModal('cancion');
-      } else if (modalAlbum.classList.contains('is-open')) {
+      } else if (!modalAlbum.hidden) {
         cerrarModal('album');
       }
     }
   });
+
+  // Prevent clicks from being blocked when file picker is open, except for close actions
+  document.addEventListener('click', (e) => {
+    if (backdrop?.dataset.blockClose === '1' && !e.target.closest('.axup-modal-close') && e.target !== modalBackdrop && e.target !== modalCancion && e.target !== modalAlbum) {
+      e.stopPropagation();
+    }
+  }, true);
 
   // Focus management
   const focusableElements = document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -556,4 +641,22 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // General close for modal close buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.axup-modal-close')) {
+      if (!modalCancion.hidden) {
+        cerrarModal('cancion');
+      } else if (!modalAlbum.hidden) {
+        cerrarModal('album');
+      }
+    }
+  });
+
+  // Force hide modals on load to prevent auto-open
+  setTimeout(() => {
+    if (modalCancion) modalCancion.hidden = true;
+    if (modalAlbum) modalAlbum.hidden = true;
+    if (modalBackdrop) modalBackdrop.hidden = true;
+  }, 0);
 });

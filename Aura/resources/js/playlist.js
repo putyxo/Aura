@@ -1,4 +1,3 @@
-// resources/js/playlist.js
 document.addEventListener('DOMContentLoaded', () => {
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -54,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else toast.classList.add('axpl-toast-ok');
     toast.innerHTML = `<i class="fa-solid ${type==='err'?'fa-circle-xmark': type==='info'?'fa-circle-info':'fa-circle-check'}"></i><span>${msg}</span>`;
     toast.hidden = false;
-    requestAnimationFrame(()=> toast.classList.add('is-shown'));
+    requestAnimationFrame(() => toast.classList.add('is-shown'));
     setTimeout(() => {
       toast.classList.remove('is-shown');
       setTimeout(() => (toast.hidden = true), 280);
@@ -158,11 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const link   = $('.axpl-tile-link', t);
     const pencil = $('.axpl-pencil', t);
     const play   = $('.axpl-play-btn', t);
+    const trash  = $('.axpl-trash', t);
 
     // Toggle selección en modo select
     t.addEventListener('click', (e) => {
       const inSelect = root.classList.contains('axpl-select-mode');
-      const targetIsControl = e.target.closest('.axpl-pencil, .axpl-play-btn');
+      const targetIsControl = e.target.closest('.axpl-pencil, .axpl-play-btn, .axpl-trash');
       if (!inSelect || targetIsControl) return;
       e.preventDefault();
       t.classList.toggle('is-selected');
@@ -196,6 +196,36 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // fallback: ir a la vista
         window.location.href = `${SHOW_BASE_URL}/${plid}`;
+      }
+    });
+
+    // Eliminar
+    trash?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const playlistId = t.dataset.id;
+
+      // Realizar la solicitud DELETE a la ruta de eliminación
+      const confirmDelete = confirm("¿Estás seguro de que quieres eliminar esta playlist?");
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch(`/playlists/${playlistId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF
+          }
+        });
+        if (res.ok) {
+          showToast('Playlist eliminada correctamente', 'ok');
+          t.remove();  // Eliminar la playlist del DOM
+        } else {
+          throw new Error('Error al eliminar la playlist');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('No se pudo eliminar la playlist', 'err');
       }
     });
 
