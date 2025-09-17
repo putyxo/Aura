@@ -20,11 +20,16 @@ class AlbumController extends Controller
     {
         $album = Album::with(['user', 'songs.user'])->findOrFail($id);
 
-        // Reutiliza la vista visual "menu_album" que ya maneja $isOwner internamente
-        // mediante (auth()->check() && auth()->id() === $user->id)
+        // Otros álbumes del mismo artista para la columna izquierda
+        $albumes = Album::where('user_id', $album->user_id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Reutiliza la vista visual "menu_album"
         return view('menu_album', [
-            'user'  => $album->user,
-            'album' => $album,
+            'user'    => $album->user,
+            'album'   => $album,     // Álbum seleccionado (evita "No hay álbum seleccionado")
+            'albumes' => $albumes,   // Para "Otros álbumes"
         ]);
     }
 
@@ -59,7 +64,7 @@ class AlbumController extends Controller
             $img  = $request->file('cover');
             $slug = Str::slug($album->title ?: ($album->titulo ?? 'album')) . '-' . time();
             $ext  = $img->getClientOriginalExtension();
-            // Carpeta de portadas de álbum
+            // Guarda en storage/app/public/albums/covers
             $path = $img->storeAs('albums/covers', $slug . '.' . $ext, 'public');
 
             // Borra la portada anterior si era ruta local
@@ -74,11 +79,19 @@ class AlbumController extends Controller
 
         $album->save();
 
+        // Respuesta compatible con el JS (acepta cover_path en raíz o en data.cover_path)
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'ok'      => true,
-                'album'   => $album->only(['id','title','cover_path']),
-                'changed' => $changed,
+                'ok'         => true,
+                'cover_path' => $changed['cover_path'] ?? ($album->cover_path ?? null),
+                'data'       => [
+                    'id'         => $album->id,
+                    'title'      => $album->title,
+                    'cover_path' => $changed['cover_path'] ?? ($album->cover_path ?? null),
+                ],
+                // También devolvemos "album" y "changed" por si tu UI los usa
+                'album'      => $album->only(['id','title','cover_path']),
+                'changed'    => $changed,
             ]);
         }
 
@@ -87,7 +100,6 @@ class AlbumController extends Controller
 
     /**
      * Eliminar un álbum (y sus canciones) + archivos locales.
-     * (Si no usas esta acción, tu ruta ya apunta a ProfileController@destroyAlbum)
      */
     public function destroy($album, Request $request)
     {

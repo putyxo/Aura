@@ -5,15 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ __('account.title') }} — Aura</title>
 
-
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 @php
+  use Illuminate\Support\Facades\Storage;
+
   $u = auth()->user() ?? $user ?? null;
 
-  $bannerLow  = $u && $u->banner ? drive_img_url($u->banner, 640)  . '&v=' . time() : asset('img/default-banner.jpg');
-  $bannerHigh = $u && $u->banner ? drive_img_url($u->banner, 1920) . '&v=' . time() : asset('img/default-banner.jpg');
+  // Helper local (NO Drive): de ruta relativa en storage/public a URL pública
+  $media = function ($path) {
+    if (!$path) return null;
+    return preg_match('/^https?:\/\//', $path) ? $path : asset(Storage::url($path));
+  };
+
+  $bannerSrc = $u && $u->banner ? $media($u->banner) : asset('img/default-banner.jpg');
+  $qs = (strpos($bannerSrc, '?') !== false) ? '&' : '?';
+  $bannerLow  = $bannerSrc . $qs . 'v=' . time();
+  $bannerHigh = $bannerSrc . $qs . 'v=' . time();
 
   $nombre   = $u->nombre_artistico ?? $u->nombre ?? 'Usuario';
   $correo   = $u->email ?? '—';
@@ -438,8 +447,11 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
         </div>
 
         <div class="avatar-wrap">
-          @if($u && $u->avatar)
-            <img id="avatarPreviewLive" class="avatar-img" src="{{ drive_img_url($u->avatar, 500) }}&v={{ time() }}" alt="{{ $nombre }}">
+          @php
+            $avatarSrc = $u && $u->avatar ? $media($u->avatar) : null;
+          @endphp
+          @if($avatarSrc)
+            <img id="avatarPreviewLive" class="avatar-img" src="{{ $avatarSrc }}?v={{ time() }}" alt="{{ $nombre }}">
           @else
             <div class="avatar-fallback">{{ strtoupper(substr($nombre,0,1)) }}</div>
           @endif
@@ -577,7 +589,7 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
           <div class="modal-field">
             <label class="label"><i class="fa-solid fa-camera"></i> {{ __('account.avatar') }}</label>
             <label class="file-preview avatar">
-              <img id="avatarPreview" src="{{ $u && $u->avatar ? drive_img_url($u->avatar, 500).'&v='.time() : '' }}" alt="">
+              <img id="avatarPreview" src="{{ $u && $u->avatar ? $media($u->avatar).'?v='.time() : '' }}" alt="">
               <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
               <div class="overlay"><i class="fa-solid fa-camera"></i></div>
             </label>
@@ -585,7 +597,7 @@ $actionCerts       = RouteFacade::has('verificacion.certificados')? route('verif
           <div class="modal-field">
             <label class="label"><i class="fa-solid fa-image"></i> {{ __('account.banner') }}</label>
             <label class="file-preview banner">
-              <img id="bannerPreview" src="{{ $u && $u->banner ? drive_img_url($u->banner, 1200).'&v='.time() : '' }}" alt="">
+              <img id="bannerPreview" src="{{ $u && $u->banner ? $media($u->banner).'?v='.time() : '' }}" alt="">
               <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
               <div class="overlay"><i class="fa-solid fa-camera"></i></div>
             </label>

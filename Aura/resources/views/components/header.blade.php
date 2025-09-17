@@ -1,6 +1,9 @@
 @vite(['resources/css/header.css', 'resources/js/header.js'])
 
-<header class="ah-header" data-fallback-avatar="{{ asset('img/default-user.png') }}">
+<header class="ah-header"
+        data-fallback-avatar="{{ asset('img/perfil_npc.png') }}"
+        data-fallback-song="{{ asset('img/default-cancion.png') }}"
+        data-fallback-album="{{ asset('img/default-album.png') }}">
   <div class="ah-inner">
     <!-- === Navegación (izquierda del buscador) === -->
     <div class="ah-nav">
@@ -13,9 +16,17 @@
     </div>
 
     <!-- === Buscador (centro) === -->
-    <div class="ah-search-group">
+    <div class="ah-search-group"
+         id="ahSearchGroup"
+         data-search-url="{{ route('search.json') }}">
       <span class="ah-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
-      <input class="ah-search-input" type="text" placeholder="Buscar canciones, artistas..." aria-label="Buscar" autocomplete="off" />
+      <input id="ahSearchInput"
+             class="ah-search-input"
+             type="text"
+             placeholder="Buscar canciones, artistas..."
+             aria-label="Buscar"
+             aria-controls="ahSearchResults"
+             autocomplete="off" />
       <div id="ahSearchResults" class="ah-search-results" role="listbox" aria-expanded="false"></div>
     </div>
 
@@ -46,13 +57,15 @@
       <div class="ah-user">
         <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
           @php
-            $avatarUrl = img_url(auth()->user()->avatar, 'img/default-user.png');
+            // <-- Cambio de fallback a perfil_npc.png
+            $avatarUrl = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
             $ver = auth()->user()->updated_at?->getTimestamp() ?? time();
             $avatarChip = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . $ver;
           @endphp
           <img class="ah-chip-avatar"
                src="{{ $avatarChip }}"
-               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
+               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
+               onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
           <span class="ah-chip-name">
             {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
           </span>
@@ -63,12 +76,14 @@
           <div class="ah-profile-header">
             <div class="ah-profile-info">
               @php
-                $avatarDrop = img_url(auth()->user()->avatar, 'img/default-user.png');
+                // <-- Cambio de fallback a perfil_npc.png
+                $avatarDrop = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
                 $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
               @endphp
               <img class="ah-profile-avatar"
                    src="{{ $avatarDrop }}"
-                   alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}">
+                   alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
+                   onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
               <div class="ah-profile-text">
                 <div class="ah-profile-name">
                   {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}

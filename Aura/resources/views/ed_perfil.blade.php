@@ -7,20 +7,14 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ __('ed_perfil.title', ['name' => $user->nombre_artistico ?? 'Invitado']) }}</title>
 
-  <!-- Hints de red -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome no-bloqueante -->
   <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
-  {{-- CSS + JS principal --}}
   @vite(['resources/css/ed_perfil.css','resources/js/ed_perfil.js'])
 
   @php
@@ -34,7 +28,6 @@
     $bannerHigh  = $bannerSrc.'?v='.$verUser;
 
     $followersCount = method_exists($user,'followers') ? $user->followers()->count() : (int)($user->seguidores ?? 0);
-    $listenersCount = (int)($user->oyentes_mensuales ?? 0);
 
     if (!function_exists('num_format_sp')) {
       function num_format_sp($n){ return is_numeric($n) ? number_format((float)$n,0,',','.'): $n; }
@@ -51,10 +44,12 @@
 
     $loginUrl = (R::has('login') ? route('login') : url('/login'));
 
-    $isAuth  = auth()->check();
-    $isOwner = $isAuth && auth()->id() === $user->id;
+    $isAuth   = auth()->check();
+    $isOwner  = $isAuth && auth()->id() === $user->id;
+    $isArtist = (bool)($user->es_artista ?? 0);
+    $artistMsg = $isOwner ? 'No eres un artista' : 'No es un artista';
 
-    // Preload de 1-2 imágenes críticas
+    // Preloads opcionales
     $firstSong = $canciones->first();
     $preSongCover = null;
     if ($firstSong) {
@@ -71,6 +66,11 @@
     $preAlbumCover = $firstAlbum
       ? (($firstAlbum->cover_url ?? null) ? ($firstAlbum->cover_url.'?v='.(optional($firstAlbum->updated_at)->timestamp ?? 0)) : null)
       : null;
+
+    // ✅ Avatar por defecto
+    $avatarFinal = ($user && !empty($user->avatar))
+      ? ($user->avatar_url.'?v='.$verUser)
+      : asset('img/perfil_npc.png');
   @endphp
 
   <link rel="preload" as="image" href="{{ $bannerLow }}">
@@ -108,267 +108,398 @@
 
         <div class="hero-head">
           <div class="text-shield">
-            <h1 class="hero-title" id="artistName">{{ $user->nombre_artistico ?? 'Artista' }}</h1>
+            <h1 class="hero-title" id="artistName">
+              {{ $isArtist ? ($user->nombre_artistico ?? ($user->nombre ?? 'Usuario')) : ($user->nombre ?? 'Usuario') }}
+            </h1>
           </div>
 
           <div class="follow-under-name">
-            @if($isOwner)
-            @elseif($isAuth)
+            {{-- ✅ Solo seguir si el perfil es artista y no eres tú --}}
+            @if($isArtist && !$isOwner)
               @php
                 $hasToggle    = R::has('follow.toggle');
                 $hasFollow    = R::has('perfil.follow');
                 $hasUnfollow  = R::has('perfil.unfollow');
-                $isFollowing  = method_exists(auth()->user(), 'isFollowing') ? auth()->user()->isFollowing($user->id) : false;
+                $isFollowing  = $isAuth && method_exists(auth()->user(), 'isFollowing') ? auth()->user()->isFollowing($user->id) : false;
               @endphp
-              @if($hasToggle)
-                <form action="{{ route('follow.toggle', $user->id) }}" method="POST">@csrf
-                  <button type="submit" class="pf-btn follow-pill">
-                    <i class="fa-solid {{ $isFollowing ? 'fa-user-minus' : 'fa-user-plus' }}"></i>
-                    {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
-                  </button>
-                </form>
-              @elseif(($isFollowing && $hasUnfollow) || (!$isFollowing && $hasFollow))
-                <form action="{{ $isFollowing ? route('perfil.unfollow', $user->id) : route('perfil.follow', $user->id) }}" method="POST">@csrf
-                  <button type="submit" class="pf-btn follow-pill">
-                    <i class="fa-solid {{ $isFollowing ? 'fa-user-minus' : 'fa-user-plus' }}"></i>
-                    {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
-                  </button>
-                </form>
+
+              @if($isAuth)
+                @if($hasToggle)
+                  <form action="{{ route('follow.toggle', $user->id) }}" method="POST">@csrf
+                    <button type="submit" class="pf-btn follow-pill">
+                      <i class="fa-solid {{ $isFollowing ? 'fa-user-minus' : 'fa-user-plus' }}"></i>
+                      {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
+                    </button>
+                  </form>
+                @elseif(($isFollowing && $hasUnfollow) || (!$isFollowing && $hasFollow))
+                  <form action="{{ $isFollowing ? route('perfil.unfollow', $user->id) : route('perfil.follow', $user->id) }}" method="POST">@csrf
+                    <button type="submit" class="pf-btn follow-pill">
+                      <i class="fa-solid {{ $isFollowing ? 'fa-user-minus' : 'fa-user-plus' }}"></i>
+                      {{ $isFollowing ? 'Dejar de seguir' : 'Seguir' }}
+                    </button>
+                  </form>
+                @endif
               @else
                 <a href="{{ $loginUrl }}" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</a>
               @endif
-            @else
-              <a href="{{ $loginUrl }}" class="pf-btn follow-pill"><i class="fa-solid fa-user-plus"></i> Seguir</a>
             @endif
           </div>
         </div>
 
         <div class="profile-footer">
-          <span class="meta"><i class="fa-solid fa-headphones" aria-hidden="true"></i> {{ num_format_sp($listenersCount) }} oyentes mensuales</span>
+          {{-- ❌ Oyentes mensuales quitado --}}
           <span class="meta"><i class="fa-solid fa-user-group" aria-hidden="true"></i> {{ num_format_sp($followersCount) }} seguidores</span>
         </div>
 
         <div class="avatar-wrap xl">
-          @if($user && $user->avatar)
-            <img id="avatarPreviewLive" class="avatar-img"
-                 src="{{ $user->avatar_url }}?v={{ $verUser }}"
-                 alt="{{ $user->nombre_artistico ?? $user->nombre }}"
-                 width="160" height="160"
-                 loading="eager" fetchpriority="high" decoding="async">
-          @else
-            <div class="avatar-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
-          @endif
+          <img id="avatarPreviewLive" class="avatar-img"
+               src="{{ $avatarFinal }}"
+               alt="{{ $user->nombre_artistico ?? $user->nombre ?? 'Usuario' }}"
+               width="160" height="160"
+               loading="eager" fetchpriority="high" decoding="async">
         </div>
       </div>
     </section>
 
-    <!-- ===== CONTENIDO MÚSICA ===== -->
-    <section class="music-layout no-clip">
-      <!-- CANCIONES -->
-      <div class="music-column left-col no-clip">
-        <div class="section-title"><h2><i class="fa-solid fa-music" aria-hidden="true"></i> Canciones</h2></div>
+    {{-- ===== CONTENIDO (si no es artista, sólo mensaje) ===== --}}
+    @if(!$isArtist)
+      <section class="not-artist-block">
+        <div class="empty-state card glass"
+             style="display:flex;gap:.75rem;align-items:center;justify-content:center;min-height:220px;border-radius:18px;">
+          <i class="fa-solid fa-user-slash" aria-hidden="true"></i>
+          <span>{{ $artistMsg }}</span>
+        </div>
+      </section>
+    @else
+      <!-- ===== MUSIC LAYOUT (Canciones + Álbumes) ===== -->
+      <section class="music-layout no-clip">
+        <!-- CANCIONES -->
+        <div class="music-column left-col no-clip">
+          <div class="section-title"><h2><i class="fa-solid fa-music" aria-hidden="true"></i> Canciones</h2></div>
 
-        <div class="songs-list fixed-six" id="songsList">
-          @foreach($canciones->take(6) as $song)
-            @php
-              $songTitle    = $song->title ?? $song->nombre ?? 'Sin título';
-              $songVer      = optional($song->updated_at)->timestamp ?? 0;
+          <div class="songs-list fixed-six" id="songsList">
+            @foreach($canciones->take(6) as $song)
+              @php
+                $songTitle    = $song->title ?? $song->nombre ?? 'Sin título';
+                $songVer      = optional($song->updated_at)->timestamp ?? 0;
 
-              // COVER
-              $tmpCover = $song->cover_url
-                ?? ((isset($song->cover) || isset($song->cover_path))
-                      ? (Str::startsWith(($song->cover ?? $song->cover_path), ['http://','https://'])
-                          ? ($song->cover ?? $song->cover_path)
-                          : asset('storage/'.ltrim(($song->cover ?? $song->cover_path),'/')))
-                      : asset('img/default-cancion.png'));
-              $coverUrl  = $tmpCover.'?v='.$songVer;
+                $tmpCover = $song->cover_url
+                  ?? ((isset($song->cover) || isset($song->cover_path))
+                        ? (Str::startsWith(($song->cover ?? $song->cover_path), ['http://','https://'])
+                            ? ($song->cover ?? $song->cover_path)
+                            : asset('storage/'.ltrim(($song->cover ?? $song->cover_path),'/')))
+                        : asset('img/default-cancion.png'));
+                $coverUrl  = $tmpCover.'?v='.$songVer;
 
-              // AUDIO
-              $audioPath = $song->audio_path ?? $song->audio ?? null;
-              $audioUrl  = $song->audio_url
-                ?? ($audioPath
-                      ? (Str::startsWith($audioPath, ['http://','https://','/storage/'])
-                          ? $audioPath
-                          : asset('storage/'.ltrim($audioPath,'/')))
-                      : null);
+                $audioPath = $song->audio_path ?? $song->audio ?? null;
+                $audioUrl  = $song->audio_url
+                  ?? ($audioPath
+                        ? (Str::startsWith($audioPath, ['http://','https://','/storage/'])
+                            ? $audioPath
+                            : asset('storage/'.ltrim($audioPath,'/')))
+                        : null);
+                $dur = $song->duration ?? $song->duracion ?? '0:00';
 
-              $dur = $song->duration ?? $song->duracion ?? '0:00';
+                $likeAction = R::has('canciones.like')
+                    ? route('canciones.like', $song->id)
+                    : (R::has('cancion.like') ? route('cancion.like', $song->id) : null);
 
-              $likeAction = R::has('canciones.like')
-                  ? route('canciones.like', $song->id)
-                  : (R::has('cancion.like') ? route('cancion.like', $song->id) : null);
+                $songDelete = (R::has('cancion.destroy') && !empty($song->id))
+                    ? route('cancion.destroy', ['cancion' => $song->id])
+                    : '#';
 
-              // ✅ solo construir ruta si hay id
-              $songDelete = (R::has('cancion.destroy') && !empty($song->id))
-                  ? route('cancion.destroy', ['cancion' => $song->id])
-                  : '#';
+                $isLiked = $isAuth && method_exists($song,'isLikedBy') ? $song->isLikedBy(auth()->user()) : false;
+              @endphp
 
-              $isLiked = $isAuth && method_exists($song,'isLikedBy') ? $song->isLikedBy(auth()->user()) : false;
-            @endphp
+              <div class="song-row"
+                   data-id="{{ $song->id }}"
+                   data-src="{{ $audioUrl }}"
+                   data-title="{{ $songTitle }}"
+                   data-artist="{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}"
+                   data-cover="{{ $coverUrl }}"
+                   role="button" tabindex="0" aria-label="Reproducir {{ $songTitle }}">
+                <div class="song-index">{{ $loop->iteration }}</div>
 
-            <div
-              class="song-row"
-              data-id="{{ $song->id }}"
-              data-src="{{ $audioUrl }}"
-              data-title="{{ $songTitle }}"
-              data-artist="{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}"
-              data-cover="{{ $coverUrl }}"
-              role="button" tabindex="0" aria-label="Reproducir {{ $songTitle }}"
-            >
-              <div class="song-index">{{ $loop->iteration }}</div>
-
-              <div class="song-thumb">
-                <img src="{{ $coverUrl }}" alt="Portada"
-                     width="64" height="64"
-                     loading="lazy" decoding="async">
-              </div>
-
-              <div class="song-info">
-                <h4 class="song-title" title="{{ $songTitle }}">{{ $songTitle }}</h4>
-                <div class="song-sub"><span class="artist-name">{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}</span></div>
-              </div>
-
-              <div class="song-duration">{{ $dur }}</div>
-
-              <div class="song-actions">
-                @auth
-                  @if($likeAction)
-                    <form action="{{ $likeAction }}" method="POST"
-                          class="inline-like"
-                          data-song-id="{{ $song->id }}"
-                          data-liked="{{ $isLiked ? 1 : 0 }}"
-                          data-turbo="false">
-                      @csrf
-                      <button type="button"
-                              class="icon-chip like-btn {{ $isLiked ? 'is-liked' : '' }}"
-                              aria-pressed="{{ $isLiked ? 'true' : 'false' }}"
-                              title="Me gusta">
-                        <i class="fa-{{ $isLiked ? 'solid' : 'regular' }} fa-heart" aria-hidden="true"></i>
-                        <span class="sr-only">Me gusta</span>
-                      </button>
-                    </form>
-                  @else
-                    <button type="button" class="icon-chip like-btn" title="Me gusta no disponible" disabled>
-                      <i class="fa-regular fa-heart" aria-hidden="true"></i>
-                    </button>
-                  @endif
-
-                  <button class="icon-chip add-playlist-btn" title="Agregar a playlist">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                  </button>
-                @else
-                  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
-                  <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
-                @endauth
-
-                <div class="menu-wrap">
-                  <button class="icon-chip more-btn" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
-                  <ul class="kebab-menu">
-                    @auth
-                      <li><button class="menu-item" data-action="queue"><i class="fa-solid fa-list-ol"></i> Añadir a cola</button></li>
-                      <li><button class="menu-item" data-action="playlist"><i class="fa-solid fa-square-plus"></i> Agregar a playlist</button></li>
-                      <li><button class="menu-item" data-action="like"><i class="fa-regular fa-heart"></i> Añadir a Me gusta</button></li>
-                      @if($isOwner && $songDelete !== '#')
-                        <li class="divider"></li>
-                        <li>
-                          <button class="menu-item danger open-delete"
-                                  data-type="song"
-                                  data-action="{{ $songDelete }}"
-                                  data-title="{{ $songTitle }}"
-                                  data-cover="{{ $coverUrl }}">
-                            <i class="fa-solid fa-trash"></i> Eliminar
-                          </button>
-                        </li>
-                      @endif
-                    @else
-                      <li><a class="menu-item" href="{{ $loginUrl }}"><i class="fa-solid fa-right-to-bracket"></i> Inicia sesión para más opciones</a></li>
-                    @endauth
-                  </ul>
+                <div class="song-thumb">
+                  <img src="{{ $coverUrl }}" alt="Portada" width="64" height="64" loading="lazy" decoding="async">
                 </div>
+
+                <div class="song-info">
+                  <h4 class="song-title" title="{{ $songTitle }}">{{ $songTitle }}</h4>
+                  <div class="song-sub"><span class="artist-name">{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}</span></div>
+                </div>
+
+                <div class="song-duration">{{ $dur }}</div>
+
+                <div class="song-actions">
+                  @auth
+                    @if($likeAction)
+                      <form action="{{ $likeAction }}" method="POST"
+                            class="inline-like"
+                            data-song-id="{{ $song->id }}"
+                            data-liked="{{ $isLiked ? 1 : 0 }}"
+                            data-turbo="false">
+                        @csrf
+                        <button type="button" class="icon-chip like-btn {{ $isLiked ? 'is-liked' : '' }}"
+                                aria-pressed="{{ $isLiked ? 'true' : 'false' }}" title="Me gusta">
+                          <i class="fa-{{ $isLiked ? 'solid' : 'regular' }} fa-heart" aria-hidden="true"></i>
+                          <span class="sr-only">Me gusta</span>
+                        </button>
+                      </form>
+                    @else
+                      <button type="button" class="icon-chip like-btn" title="Me gusta no disponible" disabled>
+                        <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                      </button>
+                    @endif
+
+                    <button class="icon-chip add-playlist-btn" title="Agregar a playlist">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                  @else
+                    <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para dar Me gusta"><i class="fa-regular fa-heart"></i></a>
+                    <a href="{{ $loginUrl }}" class="icon-chip" title="Inicia sesión para usar playlists"><i class="fa-solid fa-plus"></i></a>
+                  @endauth
+
+                  <div class="menu-wrap">
+                    <button class="icon-chip more-btn" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
+                    <ul class="kebab-menu">
+                      @auth
+                        <li><button class="menu-item" data-action="queue"><i class="fa-solid fa-list-ol"></i> Añadir a cola</button></li>
+                        <li><button class="menu-item" data-action="playlist"><i class="fa-solid fa-square-plus"></i> Agregar a playlist</button></li>
+                        <li><button class="menu-item" data-action="like"><i class="fa-regular fa-heart"></i> Añadir a Me gusta</button></li>
+                        @if($isOwner && $songDelete !== '#')
+                          <li class="divider"></li>
+                          <li>
+                            <button class="menu-item danger open-delete"
+                                    data-type="song"
+                                    data-action="{{ $songDelete }}"
+                                    data-title="{{ $songTitle }}"
+                                    data-cover="{{ $coverUrl }}">
+                              <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                          </li>
+                        @endif
+                      @else
+                        <li><a class="menu-item" href="{{ $loginUrl }}"><i class="fa-solid fa-right-to-bracket"></i> Inicia sesión para más opciones</a></li>
+                      @endauth
+                    </ul>
+                  </div>
+                </div>
+
+                @if($isOwner && $songDelete !== '#')
+                  {{-- Basurero flotante para canciones --}}
+                  <button class="trash-float open-delete"
+                          title="Eliminar canción"
+                          data-type="song"
+                          data-action="{{ $songDelete }}"
+                          data-title="{{ $songTitle }}"
+                          data-cover="{{ $coverUrl }}">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                @endif
               </div>
+            @endforeach
+          </div>
+        </div>
 
-              @if($isOwner && $songDelete !== '#')
-                <!-- Basurero flotante para canciones -->
-                <button class="trash-float open-delete"
-                        title="Eliminar canción"
-                        data-type="song"
-                        data-action="{{ $songDelete }}"
-                        data-title="{{ $songTitle }}"
-                        data-cover="{{ $coverUrl }}">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              @endif
+        <!-- ÁLBUMES 2×2 -->
+        <div class="music-column right-col no-clip">
+          <div class="albums-head">
+            <div class="section-title"><h2><i class="fa-solid fa-compact-disc" aria-hidden="true"></i> Álbumes</h2></div>
+            <div class="page-label" id="albumsPageLabel"></div>
+          </div>
+
+          @php
+            $albumsNormalized = $albumes->map(function($a){
+              return (object)[
+                'id'        => $a->id,
+                'titulo'    => $a->titulo ?: ($a->title ?? 'Sin título'),
+                'cover_url' => $a->cover_url ?? null,
+                'ver'       => optional($a->updated_at)->timestamp ?? 0,
+              ];
+            });
+            $albumPages = $albumsNormalized->chunk(4);
+          @endphp
+
+          <div class="albums-wrap no-clip">
+            <button class="albums-arrow left" id="albumsPrev" aria-label="Anterior">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <div class="albums-viewport" id="albumsViewport">
+              <div class="albums-track" id="albumsTrack" data-pages="{{ $albumPages->count() }}">
+                @foreach($albumPages as $page)
+                  <div class="albums-page">
+                    <div class="albums-grid-2x2">
+                      @foreach($page as $album)
+                        @php
+                          $albumCoverBase = $album->cover_url ?: asset('img/default-album.png');
+                          $albumCover     = $albumCoverBase.'?v='.$album->ver;
+
+                          $albumHref = !empty($album->id)
+                            ? (R::has('album.show') ? route('album.show', ['id' => $album->id]) : url('/albums/'.$album->id))
+                            : '#';
+
+                          $albumDelete = (R::has('profile.albums.destroy') && !empty($album->id))
+                            ? route('profile.albums.destroy', ['id' => $album->id])
+                            : '#';
+                        @endphp
+
+                        <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
+                          <a href="{{ $albumHref }}" class="card-link" data-prefetch="true">
+                            <div class="card-img">
+                              <img src="{{ $albumCover }}" alt="Portada" width="300" height="300" loading="lazy" decoding="async">
+                              <span class="album-play"><i class="fa-solid fa-play"></i></span>
+                            </div>
+                            <h4 class="album-title">{{ $album->titulo }}</h4>
+                            <p class="album-sub">Por {{ $user->nombre_artistico ?? $user->nombre }}</p>
+                          </a>
+
+                          @if($isOwner && $albumDelete !== '#')
+                            {{-- Basurero flotante para álbumes --}}
+                            <button class="trash-float open-delete"
+                                    title="Eliminar álbum"
+                                    data-type="album"
+                                    data-action="{{ $albumDelete }}"
+                                    data-title="{{ $album->titulo }}"
+                                    data-cover="{{ $albumCover }}">
+                              <i class="fa-solid fa-trash"></i>
+                            </button>
+                          @endif
+                        </div>
+                      @endforeach
+                    </div>
+                  </div>
+                @endforeach
+              </div>
             </div>
-          @endforeach
+
+            <button class="albums-arrow right" id="albumsNext" aria-label="Siguiente">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- ÁLBUMES 2×2 -->
-      <div class="music-column right-col no-clip">
-        <div class="albums-head">
-          <div class="section-title"><h2><i class="fa-solid fa-compact-disc" aria-hidden="true"></i> Álbumes</h2></div>
-          <div class="page-label" id="albumsPageLabel"></div>
+      <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
+      @php
+        $releasesAllUrl = R::has('perfil.releasesAll')
+            ? route('perfil.releasesAll', $user->id)
+            : url('/perfil/'.$user->id.'/lanzamientos');
+
+        $normalizedReleases = collect($lanzamientos)->map(function($it){
+          $tipo   = $it['tipo']   ?? $it->tipo   ?? 'album';
+          $titulo = $it['titulo'] ?? $it->titulo ?? $it->title ?? null;
+
+          $cover     = $it['cover']  ?? $it->cover  ?? $it->portada ?? $it->cover_path ?? null;
+          $coverUrl  = $it['cover_url'] ?? ($it->cover_url ?? null);
+
+          $audioPath = $it['audio'] ?? $it->audio ?? $it->audio_path ?? null;
+          $audioUrl  = $it['audio_url'] ?? (
+                        $audioPath
+                          ? (Str::startsWith($audioPath, ['http://','https://','/storage/'])
+                              ? $audioPath
+                              : asset('storage/'.ltrim($audioPath,'/')))
+                          : null
+                      );
+
+          $anio   = $it['anio']   ?? $it->anio   ?? (isset($it->created_at) ? optional($it->created_at)->format('Y') : '');
+          $ver    = optional($it['updated_at'] ?? ($it->updated_at ?? null))->timestamp ?? 0;
+          $titulo = $titulo ?: 'Sin título';
+
+          return [
+            'id'         => $it['id'] ?? ($it->id ?? null),
+            'tipo'       => $tipo,
+            'titulo'     => $titulo,
+            'cover'      => $cover,
+            'cover_url'  => $coverUrl,
+            'anio'       => $anio,
+            'ver'        => $ver,
+            'audio_url'  => $audioUrl,
+          ];
+        })
+        ->filter(fn($x) => !empty($x['titulo']))
+        ->values();
+
+        $relPages = $normalizedReleases->chunk(8);
+      @endphp
+
+      <section class="releases-section no-clip" id="releasesSection">
+        <div class="releases-head">
+          <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Últimos lanzamientos</h2>
+          <a href="{{ $releasesAllUrl }}" class="pf-link">Ver todo</a>
         </div>
 
-        @php
-          $albumsNormalized = $albumes->map(function($a){
-            return (object)[
-              'id'        => $a->id,
-              'titulo'    => $a->titulo ?: ($a->title ?? 'Sin título'),
-              'cover_url' => $a->cover_url ?? null,
-              'ver'       => optional($a->updated_at)->timestamp ?? 0,
-            ];
-          });
-          $albumPages = $albumsNormalized->chunk(4);
-        @endphp
-
-        <div class="albums-wrap no-clip">
-          <button class="albums-arrow left" id="albumsPrev" aria-label="Anterior">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
-
-          <div class="albums-viewport" id="albumsViewport">
-            <div class="albums-track" id="albumsTrack" data-pages="{{ $albumPages->count() }}">
-              @foreach($albumPages as $page)
-                <div class="albums-page">
-                  <div class="albums-grid-2x2">
-                    @foreach($page as $album)
+        <div class="releases-wrap no-clip">
+          <button class="releases-arrow left" id="releasesPrev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="releases-viewport">
+            <div class="releases-track" id="releasesTrack" data-pages="{{ $relPages->count() }}">
+              @foreach($relPages as $rPage)
+                <div class="releases-page">
+                  <div class="releases-grid-4x2">
+                    @foreach($rPage as $item)
                       @php
-                        $albumCoverBase = $album->cover_url ?: asset('img/default-album.png');
-                        $albumCover     = $albumCoverBase.'?v='.$album->ver;
+                        if (!empty($item['cover_url'])) {
+                          $rCoverBase = $item['cover_url'];
+                        } elseif (!empty($item['cover'])) {
+                          $rCoverBase = Str::startsWith($item['cover'], ['http://','https://'])
+                            ? $item['cover']
+                            : asset('storage/' . ltrim($item['cover'], '/'));
+                        } else {
+                          $rCoverBase = asset('img/default-album.png');
+                        }
+                        $rCover = $rCoverBase.'?v='.$item['ver'];
 
-                        // ⬇️ CAMBIO: al hacer click -> menu_album?album={id}
-                        $albumHref = !empty($album->id)
-                          ? route('menu_album', ['album' => $album->id])
-                          : '#';
+                        $isSong = ($item['tipo'] !== 'album');
 
-                        // ruta de borrado (sin cambios)
-                        $albumDelete = (R::has('profile.albums.destroy') && !empty($album->id))
-                          ? route('profile.albums.destroy', ['id' => $album->id])
-                          : '#';
+                        if (!$isSong) {
+                            $relHref = !empty($item['id'])
+                                ? (R::has('album.show')
+                                    ? route('album.show', ['id' => $item['id']])
+                                    : url('/albums/'.$item['id']))
+                                : null;
+
+                            $relDelete = (!empty($item['id']) && R::has('profile.albums.destroy'))
+                                ? route('profile.albums.destroy', ['id' => $item['id']])
+                                : '#';
+                        } else {
+                            $relHref = null;
+                            $relDelete = (!empty($item['id']) && R::has('cancion.destroy'))
+                                ? route('cancion.destroy', ['cancion' => $item['id']])
+                                : '#';
+                        }
                       @endphp
 
-                      <div class="card album-card {{ $isOwner ? 'has-trash' : '' }}">
-                        <a href="{{ $albumHref }}" class="card-link" data-prefetch="true">
-                          <div class="card-img">
-                            <img src="{{ $albumCover }}" alt="Portada"
-                                 width="300" height="300"
-                                 loading="lazy" decoding="async">
-                            <span class="album-play"><i class="fa-solid fa-play"></i></span>
-                          </div>
-                          <h4 class="album-title">{{ $album->titulo }}</h4>
-                          <p class="album-sub">Por {{ $user->nombre_artistico ?? $user->nombre }}</p>
-                        </a>
+                      <div class="card release-card{{ $isOwner ? ' has-trash' : '' }}" data-type="{{ $isSong ? 'song' : 'album' }}" data-id="{{ $item['id'] ?? '' }}">
+                        <div class="card-img">
+                          <img src="{{ $rCover }}" alt="Portada" width="240" height="240" loading="lazy" decoding="async">
+                          <span class="type-badge">{{ $isSong ? 'Canción' : 'Álbum' }}</span>
+                        </div>
+                        <h4 title="{{ $item['titulo'] }}">{{ $item['titulo'] }}</h4>
+                        <p>{{ $item['anio'] }}</p>
 
-                        @if($isOwner && $albumDelete !== '#')
+                        @if($isOwner && $relDelete !== '#')
                           <button class="trash-float open-delete"
-                                  title="Eliminar álbum"
-                                  data-type="album"
-                                  data-action="{{ $albumDelete }}"
-                                  data-title="{{ $album->titulo }}"
-                                  data-cover="{{ $albumCover }}">
+                                  title="Eliminar"
+                                  data-type="{{ $isSong ? 'song' : 'album' }}"
+                                  data-action="{{ $relDelete }}"
+                                  data-title="{{ $item['titulo'] }}"
+                                  data-cover="{{ $rCover }}">
                             <i class="fa-solid fa-trash"></i>
                           </button>
+                        @endif
+
+                        @if(!$isSong && !empty($relHref))
+                          <a class="card-link" href="{{ $relHref }}" aria-label="Abrir álbum" data-prefetch="true"></a>
+                        @else
+                          <button type="button"
+                                  class="card-link play-release"
+                                  aria-label="Reproducir"
+                                  data-id="{{ $item['id'] ?? '' }}"
+                                  data-src="{{ $item['audio_url'] ?? '' }}"
+                                  data-title="{{ $item['titulo'] }}"
+                                  data-artist="{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}"
+                                  data-cover="{{ $rCover }}"></button>
                         @endif
                       </div>
                     @endforeach
@@ -377,347 +508,167 @@
               @endforeach
             </div>
           </div>
-
-          <button class="albums-arrow right" id="albumsNext" aria-label="Siguiente">
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
-    @php
-      $releasesAllUrl = R::has('perfil.releasesAll')
-          ? route('perfil.releasesAll', $user->id)
-          : url('/perfil/'.$user->id.'/lanzamientos');
-
-      $normalizedReleases = collect($lanzamientos)->map(function($it){
-        $tipo   = $it['tipo']   ?? $it->tipo   ?? 'album';
-        $titulo = $it['titulo'] ?? $it->titulo ?? $it->title ?? null;
-
-        $cover     = $it['cover']  ?? $it->cover  ?? $it->portada ?? $it->cover_path ?? null;
-        $coverUrl  = $it['cover_url'] ?? ($it->cover_url ?? null);
-
-        $audioPath = $it['audio'] ?? $it->audio ?? $it->audio_path ?? null;
-        $audioUrl  = $it['audio_url'] ?? (
-                      $audioPath
-                        ? (Str::startsWith($audioPath, ['http://','https://','/storage/'])
-                            ? $audioPath
-                            : asset('storage/'.ltrim($audioPath,'/')))
-                        : null
-                    );
-
-        $anio   = $it['anio']   ?? $it->anio   ?? (isset($it->created_at) ? optional($it->created_at)->format('Y') : '');
-        $ver    = optional($it['updated_at'] ?? ($it->updated_at ?? null))->timestamp ?? 0;
-        $titulo = $titulo ?: 'Sin título';
-
-        return [
-          'id'         => $it['id'] ?? ($it->id ?? null),
-          'tipo'       => $tipo,
-          'titulo'     => $titulo,
-          'cover'      => $cover,
-          'cover_url'  => $coverUrl,
-          'anio'       => $anio,
-          'ver'        => $ver,
-          'audio_url'  => $audioUrl,
-        ];
-      })
-      ->filter(fn($x) => !empty($x['titulo']))
-      ->values();
-
-      $relPages = $normalizedReleases->chunk(8);
-    @endphp
-
-    <section class="releases-section no-clip" id="releasesSection">
-      <div class="releases-head">
-        <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Últimos lanzamientos</h2>
-        <a href="{{ $releasesAllUrl }}" class="pf-link">Ver todo</a>
-      </div>
-
-      <div class="releases-wrap no-clip">
-        <button class="releases-arrow left" id="releasesPrev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
-        <div class="releases-viewport">
-          <div class="releases-track" id="releasesTrack" data-pages="{{ $relPages->count() }}">
-            @foreach($relPages as $rPage)
-              <div class="releases-page">
-                <div class="releases-grid-4x2">
-                  @foreach($rPage as $item)
-                    @php
-                      if (!empty($item['cover_url'])) {
-                        $rCoverBase = $item['cover_url'];
-                      } elseif (!empty($item['cover'])) {
-                        $rCoverBase = Str::startsWith($item['cover'], ['http://','https://'])
-                          ? $item['cover']
-                          : asset('storage/' . ltrim($item['cover'], '/'));
-                      } else {
-                        $rCoverBase = asset('img/default-album.png');
-                      }
-                      $rCover = $rCoverBase.'?v='.$item['ver'];
-
-                      $isSong = ($item['tipo'] !== 'album');
-
-                      // ⬇️ CAMBIO: abrir menu_album?album={id} para álbumes
-                      if (!$isSong) {
-                        $relHref = (!empty($item['id']))
-                          ? route('menu_album', ['album' => $item['id']])
-                          : null;
-
-                        $relDelete = (!empty($item['id']) && R::has('profile.albums.destroy'))
-                          ? route('profile.albums.destroy', ['id' => $item['id']])
-                          : '#';
-                      } else {
-                        $relHref = null;
-                        $relDelete = (!empty($item['id']) && R::has('cancion.destroy'))
-                          ? route('cancion.destroy', ['cancion' => $item['id']])
-                          : '#';
-                      }
-                    @endphp
-
-                    <div class="card release-card{{ $isOwner ? ' has-trash' : '' }}" data-type="{{ $isSong ? 'song' : 'album' }}" data-id="{{ $item['id'] ?? '' }}">
-                      <div class="card-img">
-                        <img src="{{ $rCover }}" alt="Portada"
-                             width="240" height="240"
-                             loading="lazy" decoding="async">
-                        <span class="type-badge">{{ $isSong ? 'Canción' : 'Álbum' }}</span>
-                      </div>
-                      <h4 title="{{ $item['titulo'] }}">{{ $item['titulo'] }}</h4>
-                      <p>{{ $item['anio'] }}</p>
-
-                      @if($isOwner && $relDelete !== '#')
-                        <button class="trash-float open-delete"
-                                title="Eliminar"
-                                data-type="{{ $isSong ? 'song' : 'album' }}"
-                                data-action="{{ $relDelete }}"
-                                data-title="{{ $item['titulo'] }}"
-                                data-cover="{{ $rCover }}">
-                          <i class="fa-solid fa-trash"></i>
-                        </button>
-                      @endif
-
-                      @if(!$isSong && !empty($relHref))
-                        <a class="card-link" href="{{ $relHref }}" aria-label="Abrir álbum" data-prefetch="true"></a>
-                      @else
-                        <button type="button"
-                                class="card-link play-release"
-                                aria-label="Reproducir"
-                                data-id="{{ $item['id'] ?? '' }}"
-                                data-src="{{ $item['audio_url'] ?? '' }}"
-                                data-title="{{ $item['titulo'] }}"
-                                data-artist="{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}"
-                                data-cover="{{ $rCover }}"></button>
-                      @endif
-                    </div>
-                  @endforeach
-                </div>
-              </div>
-            @endforeach
-          </div>
-        </div>
-        <button class="releases-arrow right" id="releasesNext" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-
-      <div class="releases-pager" id="releasesPager"></div>
-    </section>
-
-    <!-- ===== MODAL CONFIRMAR ELIMINAR ===== -->
-    <div class="confirm-modal" id="confirmModal" aria-hidden="true">
-      <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-        <div class="confirm-media"><img id="confirmCover" alt="" width="240" height="240" loading="lazy" decoding="async"></div>
-        <div class="confirm-copy">
-          <h3 id="confirmTitle">¿Eliminar?</h3>
-          <p id="confirmSubtitle" class="confirm-sub"></p>
-          <div class="confirm-warning">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            Esta acción es permanente y no se puede deshacer.
-          </div>
-          <div class="confirm-actions">
-            <form id="deleteForm" action="#" method="POST">@csrf @method('DELETE')
-              <button id="confirmDeleteBtn" type="submit" class="pf-btn pf-btn--danger">
-                <i class="fa-solid fa-trash"></i> Sí, eliminar
-              </button>
-            </form>
-            <button id="cancelDelete" type="button" class="pf-btn pf-btn--secondary">
-              <i class="fa-solid fa-xmark"></i> Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    @if($isOwner)
-    <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
-      <div class="modal-content glass wide">
-        <div class="modal-header sticky">
-          <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
-          <div class="header-actions">
-            <a href="{{ $cuentaUrl }}" class="pf-btn pf-btn--ghost pf-btn--sm" title="Abrir apartado Cuenta">
-              <i class="fa-solid fa-gear"></i> Cuenta
-            </a>
-            <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeEditTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-          </div>
+          <button class="releases-arrow right" id="releasesNext" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
-        <div class="tabbar sticky" role="tablist">
-          <button type="button" class="tab-btn active" data-tab="basic"><i class="fa-solid fa-wrench"></i> Básico</button>
-          <button type="button" class="tab-btn" data-tab="advanced"><i class="fa-solid fa-sliders"></i> Configuración avanzada</button>
-        </div>
-
-        @php
-          $perfilUpdate = R::has('perfil.update') ? route('perfil.update') : url('/perfil/update');
-        @endphp
-        <form action="{{ $perfilUpdate }}" method="POST" enctype="multipart/form-data">
-          @csrf
-          <div class="tab-pane" data-pane="basic">
-            <div class="modal-grid">
-              <div class="modal-field col">
-                <label>Nombre artístico actual</label>
-                <div class="locked-input">
-                  <input type="text" value="{{ $user->nombre_artistico ?? 'Sin definir' }}" readonly>
-                  <i class="fa-solid fa-lock lock-icon"></i>
-                </div>
-              </div>
-              <div class="modal-field col">
-                <label>Nuevo nombre artístico</label>
-                <input name="nuevo_nombre_artistico" type="text" placeholder="Escribe el nuevo nombre artístico">
-              </div>
-              <div class="modal-field col">
-                <label>Foto de perfil</label>
-                <label class="file-preview avatar-edit">
-                  <img id="avatarPreview" src="{{ $user->avatar ? ($user->avatar_url.'?v='.$verUser) : '' }}" alt="" width="160" height="160" loading="lazy">
-                  <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
-                  <div class="overlay"><i class="fa-solid fa-camera"></i></div>
-                </label>
-              </div>
-              <div class="modal-field col">
-                <label>Banner</label>
-                <label class="file-preview banner-edit">
-                  <img id="bannerPreview" src="{{ $user->banner ? ($user->banner_url.'?v='.$verUser) : '' }}" alt="" width="600" height="200" loading="lazy">
-                  <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
-                  <div class="overlay"><i class="fa-solid fa-camera"></i></div>
-                </label>
-              </div>
-              <div class="modal-field col-2">
-                <label>Descripción</label>
-                <textarea name="bio" rows="4" placeholder="Escribe una breve biografía...">{{ $user->biografia ?? '' }}</textarea>
-              </div>
-            </div>
-          </div>
-
-          <div class="tab-pane hidden" data-pane="advanced">
-            <div class="adv-grid">
-              <div class="adv-card">
-                <h4><i class="fa-solid fa-palette"></i> Color de acento</h4>
-                <div class="field-row">
-                  <input type="color" id="accColor" name="theme_accent" value="#7c3aed" aria-label="Color de acento">
-                  <span class="hint">Afecta botones y aro del avatar.</span>
-                </div>
-              </div>
-
-              <div class="adv-card">
-                <h4><i class="fa-solid fa-layer-group"></i> Degradado del banner</h4>
-                <div class="field-grid">
-                  <label>Estilo</label>
-                  <select id="gradStyle" name="banner_grad_style">
-                    <option value="spotify" selected>Tipo Spotify (oscuro)</option>
-                    <option value="soft">Suave</option>
-                    <option value="contrast">Alto contraste</option>
-                  </select>
-
-                  <label>Opacidad general</label>
-                  <input type="range" id="darknessRange" name="banner_darkness" min="0.70" max="0.99" step="0.01" value="0.94">
-
-                  <label>Tinte (RGB)</label>
-                  <input type="text" id="tintRgb" name="banner_tint_rgb" value="29,185,84" placeholder="r,g,b">
-                  <small class="hint">Por defecto: verde Spotify (29,185,84)</small>
-                </div>
-              </div>
-
-              <div class="adv-card">
-                <h4><i class="fa-solid fa-eye"></i> Vista previa en vivo</h4>
-                <div class="preview-note">Los cambios visuales se previsualizan al instante (no se guardan hasta enviar).</div>
-                <a href="{{ $cuentaUrl }}" class="pf-btn pf-btn--ghost mt-8"><i class="fa-solid fa-gear"></i> Abrir “Cuenta” (más opciones)</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-actions sticky">
-            <button type="submit" class="pf-btn pf-btn--primary"><i class="fa-solid fa-save"></i> Guardar</button>
-            <button type="button" class="pf-btn pf-btn--secondary" id="closeEdit"><i class="fa-solid fa-xmark"></i> Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="releases-pager" id="releasesPager"></div>
+      </section>
     @endif
-
-    <div class="modal" id="bioModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
-      <div class="modal-content bio">
-        <div class="modal-header">
-          <h3><i class="fa-solid fa-circle-info"></i> Sobre {{ $user->nombre_artistico ?? $user->nombre ?? 'el artista' }}</h3>
-          <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeBioTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="bio-grid">
-          <div class="bio-media">
-            @if($user && $user->avatar)
-              <img src="{{ $user->avatar_url }}?v={{ $verUser }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre }}" width="160" height="160" loading="lazy" decoding="async">
-            @else
-              <div class="bio-fallback">{{ strtoupper(substr($user->nombre_artistico ?? $user->nombre ?? 'U',0,1)) }}</div>
-            @endif
-          </div>
-          <div class="bio-copy">
-            <p class="bio-text">{{ $bio }}</p>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="pf-btn pf-btn--secondary" id="closeBio"><i class="fa-solid fa-check"></i> Cerrar</button>
-        </div>
-      </div>
-    </div>
-<!-- ===== MODAL: AGREGAR A PLAYLIST ===== -->
-<div class="modal" id="playlistModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
-  <div class="modal-content glass" style="max-width:560px">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-square-plus"></i> Agregar a playlist</h3>
-      <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="plCloseTop" aria-label="Cerrar">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <div class="pl-body">
-      <div class="pl-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input id="plSearch" type="search" placeholder="Buscar playlist...">
-      </div>
-
-      <ul id="plList" class="pl-list" aria-live="polite">
-        <!-- se rellena por JS -->
-      </ul>
-
-      <div class="pl-quick">
-        <form id="plQuickForm">
-          @csrf
-          <input id="plQuickName" type="text" placeholder="Nueva playlist..." maxlength="120">
-          <button class="pf-btn pf-btn--primary pf-btn--sm" type="submit">
-            <i class="fa-solid fa-plus"></i> Crear y agregar
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button type="button" class="pf-btn pf-btn--secondary" id="plCloseBottom">
-        <i class="fa-solid fa-check"></i> Cerrar
-      </button>
-    </div>
-  </div>
-</div>
-
   </main>
 
   @include('components.footer')
 
 </div><!-- /#page-profile -->
 
-<!-- ===== Scripts ligeros: medición, banner, UI, like, audio ===== -->
+{{-- ===== MODAL CONFIRMAR ELIMINAR ===== --}}
+<div class="confirm-modal" id="confirmModal" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-media"><img id="confirmCover" alt="" width="240" height="240" loading="lazy" decoding="async"></div>
+    <div class="confirm-copy">
+      <h3 id="confirmTitle">¿Eliminar?</h3>
+      <p id="confirmSubtitle" class="confirm-sub"></p>
+      <div class="confirm-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Esta acción es permanente y no se puede deshacer.
+      </div>
+      <div class="confirm-actions">
+        <form id="deleteForm" action="#" method="POST">@csrf @method('DELETE')
+          <button id="confirmDeleteBtn" type="submit" class="pf-btn pf-btn--danger">
+            <i class="fa-solid fa-trash"></i> Sí, eliminar
+          </button>
+        </form>
+        <button id="cancelDelete" type="button" class="pf-btn pf-btn--secondary">
+          <i class="fa-solid fa-xmark"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- ===== MODAL EDITAR PERFIL (solo dueño) ===== --}}
+@if($isOwner)
+<div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
+  <div class="modal-content glass wide">
+    <div class="modal-header sticky">
+      <h3><i class="fa-solid fa-user-pen"></i> Editar perfil</h3>
+      <div class="header-actions">
+        <a href="{{ $cuentaUrl }}" class="pf-btn pf-btn--ghost pf-btn--sm" title="Abrir apartado Cuenta">
+          <i class="fa-solid fa-gear"></i> Cuenta
+        </a>
+        <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeEditTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <div class="tabbar sticky" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="basic"><i class="fa-solid fa-wrench"></i> Básico</button>
+      <button type="button" class="tab-btn" data-tab="advanced"><i class="fa-solid fa-sliders"></i> Configuración avanzada</button>
+    </div>
+
+    @php $perfilUpdate = R::has('perfil.update') ? route('perfil.update') : url('/perfil/update'); @endphp
+    <form action="{{ $perfilUpdate }}" method="POST" enctype="multipart/form-data">
+      @csrf
+      <div class="tab-pane" data-pane="basic">
+        <div class="modal-grid">
+          <div class="modal-field col">
+            <label>Nombre artístico actual</label>
+            <div class="locked-input">
+              <input type="text" value="{{ $user->nombre_artistico ?? 'Sin definir' }}" readonly>
+              <i class="fa-solid fa-lock lock-icon"></i>
+            </div>
+          </div>
+          <div class="modal-field col">
+            <label>Nuevo nombre artístico</label>
+            <input name="nuevo_nombre_artistico" type="text" placeholder="Escribe el nuevo nombre artístico">
+          </div>
+          <div class="modal-field col">
+            <label>Foto de perfil</label>
+            <label class="file-preview avatar-edit">
+              <img id="avatarPreview" src="{{ $user->avatar ? ($user->avatar_url.'?v='.$verUser) : asset('img/perfil_npc.png') }}" alt="" width="160" height="160" loading="lazy">
+              <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
+              <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+            </label>
+          </div>
+          <div class="modal-field col">
+            <label>Banner</label>
+            <label class="file-preview banner-edit">
+              <img id="bannerPreview" src="{{ $user->banner ? ($user->banner_url.'?v='.$verUser) : '' }}" alt="" width="600" height="200" loading="lazy">
+              <input type="file" id="bannerInput" name="banner" accept="image/*" hidden>
+              <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+            </label>
+          </div>
+          <div class="modal-field col-2">
+            <label>Descripción</label>
+            <textarea name="bio" rows="4" placeholder="Escribe una breve biografía...">{{ $user->biografia ?? '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane hidden" data-pane="advanced">
+        <div class="adv-grid">
+          <div class="adv-card">
+            <h4><i class="fa-solid fa-palette"></i> Color de acento</h4>
+            <div class="field-row">
+              <input type="color" id="accColor" name="theme_accent" value="#7c3aed" aria-label="Color de acento">
+              <span class="hint">Afecta botones y aro del avatar.</span>
+            </div>
+          </div>
+
+          <div class="adv-card">
+            <h4><i class="fa-solid fa-layer-group"></i> Degradado del banner</h4>
+            <div class="field-grid">
+              <label>Estilo</label>
+              <select id="gradStyle" name="banner_grad_style">
+                <option value="spotify" selected>Tipo Spotify (oscuro)</option>
+                <option value="soft">Suave</option>
+                <option value="contrast">Alto contraste</option>
+              </select>
+
+              <label>Opacidad general</label>
+              <input type="range" id="darknessRange" name="banner_darkness" min="0.70" max="0.99" step="0.01" value="0.94">
+
+              <label>Tinte (RGB)</label>
+              <input type="text" id="tintRgb" name="banner_tint_rgb" value="29,185,84" placeholder="r,g,b">
+              <small class="hint">Por defecto: verde Spotify (29,185,84)</small>
+            </div>
+          </div>
+
+          <div class="adv-card">
+            <h4><i class="fa-solid fa-eye"></i> Vista previa en vivo</h4>
+            <div class="preview-note">Los cambios visuales se previsualizan al instante (no se guardan hasta enviar).</div>
+            <a href="{{ $cuentaUrl }}" class="pf-btn pf-btn--ghost mt-8"><i class="fa-solid fa-gear"></i> Abrir “Cuenta” (más opciones)</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions sticky">
+        <button type="submit" class="pf-btn pf-btn--primary"><i class="fa-solid fa-save"></i> Guardar</button>
+        <button type="button" class="pf-btn pf-btn--secondary" id="closeEdit"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+@endif
+
+{{-- ===== MODAL BIO ===== --}}
+<div class="modal" id="bioModal" aria-hidden="true" role="dialog" aria-modal="true" inert>
+  <div class="modal-content bio">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-circle-info"></i> Sobre {{ $user->nombre_artistico ?? $user->nombre ?? 'el artista' }}</h3>
+      <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeBioTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="bio-grid">
+      <div class="bio-media">
+        <img src="{{ $avatarFinal }}" alt="Foto de {{ $user->nombre_artistico ?? $user->nombre ?? 'Usuario' }}" width="160" height="160" loading="lazy" decoding="async">
+      </div>
+      <div class="bio-copy"><p class="bio-text">{{ $bio }}</p></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="pf-btn pf-btn--secondary" id="closeBio"><i class="fa-solid fa-check"></i> Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Scripts ===== -->
 <script>
 (function () {
   const rootEl = document.getElementById('page-profile') || document.documentElement;
@@ -770,20 +721,33 @@
   const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
   const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-  /* ===== Sincronizar altura canciones ↔ álbumes 2×2 ===== */
-  function syncSongsBoxHeight(){
-    const host = document.getElementById('page-profile');
-    const viewport = document.getElementById('albumsViewport');
-    if (!host || !viewport) return;
-    host.style.setProperty('--aurp-songs-box-h', `${viewport.getBoundingClientRect().height}px`);
+  /* ===== Abrir/Cerrar modales (Bio / Editar / Confirmar) ===== */
+  function openModal(el){
+    if(!el) return;
+    document.body.classList.add('blurred');
+    el.removeAttribute('inert');
+    el.setAttribute('aria-hidden','false');
   }
-  window.addEventListener('load', syncSongsBoxHeight, { once:true });
-  window.addEventListener('resize', syncSongsBoxHeight, { passive:true });
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(syncSongsBoxHeight);
-    const vp = document.getElementById('albumsViewport');
-    vp && ro.observe(vp);
+  function closeModal(el){
+    if(!el) return;
+    el.setAttribute('aria-hidden','true');
+    el.setAttribute('inert','');
+    document.body.classList.remove('blurred');
   }
+
+  const bioModal  = $('#bioModal');
+  const editModal = $('#editModal');
+  $('#openBio')?.addEventListener('click', ()=> openModal(bioModal));
+  $('#closeBio')?.addEventListener('click', ()=> closeModal(bioModal));
+  $('#closeBioTop')?.addEventListener('click', ()=> closeModal(bioModal));
+  bioModal?.addEventListener('click', (e)=>{ if(e.target===bioModal) closeModal(bioModal); });
+
+  $('#editBtn')?.addEventListener('click', ()=> openModal(editModal));
+  $('#closeEdit')?.addEventListener('click', ()=> closeModal(editModal));
+  $('#closeEditTop')?.addEventListener('click', ()=> closeModal(editModal));
+  editModal?.addEventListener('click', (e)=>{ if(e.target===editModal) closeModal(editModal); });
+
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeModal(bioModal); closeModal(editModal); closeConfirm(); }});
 
   /* ===== Menú 3 puntos ===== */
   function closeMenus(except=null){
@@ -807,7 +771,6 @@
     }
     if (!e.target.closest('.menu-wrap')) closeMenus();
   });
-  document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closeMenus(); });
 
   /* ===== Like (UI optimista) ===== */
   document.addEventListener('click', async (e) => {
@@ -849,7 +812,7 @@
     }
   });
 
-  /* ===== Confirmar eliminar (modal) ===== */
+  /* ===== Confirmar eliminar ===== */
   const confirmModal   = $('#confirmModal');
   const confirmCover   = $('#confirmCover');
   const confirmSubtitle= $('#confirmSubtitle');
@@ -891,7 +854,6 @@
       closeConfirm();
     }
   });
-  document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeConfirm(); });
 
   /* ===== Reproducción rápida ===== */
   const playerCard = document.getElementById('rightPlayer');
@@ -958,18 +920,6 @@
     });
   });
 
-  // Prewarm de audio al pasar el mouse por una canción
-  const prewarmed = new Set();
-  document.addEventListener('pointerenter', (e) => {
-    const row = e.target.closest('.song-row');
-    if (!row) return;
-    const src = row.getAttribute('data-src');
-    if (!src || prewarmed.has(src)) return;
-    const a = new Audio();
-    a.preload = 'metadata';
-    a.src = src;
-  }, { passive:true });
-
   // Prefetch de páginas de álbum
   const hovered = new Set();
   document.addEventListener('pointerenter', (e) => {
@@ -982,7 +932,7 @@
     document.head.appendChild(link);
   }, {passive:true});
 
-  /* ===== Carruseles básicos ===== */
+  /* ===== Carruseles ===== */
   function initCarousel(trackSel, prevSel, nextSel, labelSel, pagerSel){
     const track = $(trackSel); if (!track) return;
     const pages = parseInt(track.dataset.pages || '1', 10) || 1;
