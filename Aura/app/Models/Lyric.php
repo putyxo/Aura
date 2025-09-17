@@ -9,7 +9,12 @@ class Lyric extends Model
 {
     protected $table = 'lyrics';
 
-    protected $fillable = ['song_id', 'content'];
+    // 👉 agrega json_segments aquí
+    protected $fillable = [
+        'song_id',
+        'content',
+        'json_segments',
+    ];
 
     public function song(): BelongsTo
     {

@@ -404,39 +404,52 @@ window.__AURA_PROBE_DURATION__ = (function(){
   let karaokeData = [];
   let karaokeActive = false;
 
-  function loadLyrics(songId){
-    karaokeData = [];
-    karaokeLines.innerHTML = '';
-    if (!songId) return;
-    jsonFetch(R.lyrics(songId)).then(d=>{
-      if(!d.content) return;
-      const lines = d.content.split(/\n/).filter(Boolean);
-      lines.forEach(line=>{
-        const match = line.match(/\[(\d+):(\d+)(?:\.(\d+))?\]\s*(.*)/);
-        if(match){
-          const min = parseInt(match[1]); const sec = parseInt(match[2]); const ms = parseInt(match[3]||0);
-          const t = min*60 + sec + ms/100;
-          karaokeData.push({time:t, text:match[4]});
-          const div = document.createElement('div');
-          div.className='karaoke-line';
-          div.textContent=match[4];
-          karaokeLines.appendChild(div);
-        }
+function loadLyrics(songId){
+  karaokeData = [];
+  karaokeLines.innerHTML = '';
+  if (!songId) return;
+
+  jsonFetch(R.lyrics(songId)).then(d=>{
+    // Si recibimos segments (karaoke real con timestamps)
+    if (d.segments && d.segments.length) {
+      karaokeData = d.segments.map(seg => ({
+        start: seg.start,
+        end: seg.end,
+        text: seg.text
+      }));
+
+      karaokeData.forEach(seg=>{
+        const div = document.createElement('div');
+        div.className = 'karaoke-line';
+        div.textContent = seg.text;
+        karaokeLines.appendChild(div);
       });
-    }).catch(console.error);
-  }
-  function syncKaraoke(){
-    if(!karaokeActive || !karaokeData.length) return;
-    const now = audio.currentTime;
-    let idx=-1;
-    for(let i=0;i<karaokeData.length;i++){ if(now >= karaokeData[i].time) idx=i; else break; }
-    if(idx>=0){
-      [...karaokeLines.children].forEach((el,i)=>{
-        el.classList.toggle('active', i===idx);
-        if(i===idx) el.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+
+    // Fallback: mostrar letra completa sin sincronización
+    if (d.lyrics) {
+      d.lyrics.split(/\n/).filter(Boolean).forEach(line=>{
+        const div = document.createElement('div');
+        div.className = 'karaoke-line';
+        div.textContent = line;
+        karaokeLines.appendChild(div);
       });
     }
+  }).catch(console.error);
+}
+function syncKaraoke(){
+  if (!karaokeActive || !karaokeData.length) return;
+  const now = audio.currentTime;
+  let idx = karaokeData.findIndex(seg => now >= seg.start && now < seg.end);
+  if (idx !== -1) {
+    [...karaokeLines.children].forEach((el,i)=>{
+      el.classList.toggle('active', i === idx);
+      if (i === idx) el.scrollIntoView({behavior:'smooth',block:'center'});
+    });
   }
+}
+
   audio.addEventListener('timeupdate', syncKaraoke);
 
   const oldPlay = window.AuraPlayer.play;

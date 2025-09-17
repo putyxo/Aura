@@ -173,24 +173,42 @@ class CancionController extends Controller
         } catch (\Throwable $e) {}
     }
 
-    public function lyrics(\App\Models\Cancion $cancion)
-    {
-        if ($cancion->lyric) {
-            return response()->json([
-                'song_id' => $cancion->id,
-                'lyrics'  => $cancion->lyric->content,
-                'synced'  => (bool) $cancion->lyric->synced,
-                'status'  => 'ready',
-            ]);
+public function lyrics(\App\Models\Cancion $cancion)
+{
+    $lyric = $cancion->lyric;
+
+    if ($lyric) {
+        $segments = [];
+        if ($lyric->json_segments) {
+            $raw = json_decode($lyric->json_segments, true);
+            foreach ($raw as $seg) {
+                $segments[] = [
+                    'start' => $seg['start'] ?? 0,
+                    'end'   => $seg['end'] ?? 0,
+                    'text'  => $seg['text'] ?? '',
+                ];
+            }
         }
 
-        \App\Jobs\GenerateLyricsJob::dispatch($cancion->id);
-
         return response()->json([
-            'song_id' => $cancion->id,
-            'lyrics'  => null,
-            'synced'  => false,
-            'status'  => 'pending',
+            'song_id'  => $cancion->id,
+            'lyrics'   => $lyric->content,
+            'segments' => $segments,
+            'synced'   => !empty($segments),
+            'status'   => 'ready',
         ]);
     }
+
+    \App\Jobs\GenerateLyricsJob::dispatch($cancion);
+
+    return response()->json([
+        'song_id'  => $cancion->id,
+        'lyrics'   => null,
+        'segments' => [],
+        'synced'   => false,
+        'status'   => 'pending',
+    ]);
+}
+
+
 }
