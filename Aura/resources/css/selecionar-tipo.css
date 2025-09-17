@@ -38,12 +38,12 @@ canvas#canvas {
   backdrop-filter: blur(6px); /* difumina */
   z-index: -1; /* encima del canvas */
 }
-
 /* SOLO ESTE bloque para manejar la visibilidad de secciones */
+
 section {
   opacity: 0;
   transform: translate3d(0, 30px, 0) scale(0.98);
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
               transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   position: absolute;
@@ -60,13 +60,15 @@ section.active {
   position: relative;
 }
 
+
+
 .formulario {
   opacity: 0;
   transform: translate3d(0, 20px, 0) scale(0.97);
   position: absolute;
   top: 0; left: 0;
   width: 100%;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
               transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   will-change: opacity, transform;
@@ -77,8 +79,9 @@ section.active {
   transform: translate3d(0, 0, 0) scale(1);
   position: relative;
   pointer-events: auto;
-  transition-delay: 0.15s; /* cascada */
+  transition-delay: 0.15s; /* Retrasa un poco para cascada */
 }
+
 
 /* Logo */
 .logo-back {
@@ -162,9 +165,10 @@ section.active {
 }
 
 .back-logo-container {
-  display: flex;
+display: flex;
   justify-content: center;
   align-items: center;
+
   margin: 0 auto 25px;
   text-decoration: none;
   width: fit-content;
@@ -172,14 +176,18 @@ section.active {
   cursor: pointer;
   margin-bottom: 24px;
 }
-.back-logo-container:hover { opacity: 0.58; }
+.back-logo-container:hover {
+  opacity: 0.58;
+}
 
 .back-logo-container svg {
   width: 28px;
   height: 28px;
   stroke: #ff5db1;
 }
-.back-logo-container img { height: 48px; }
+.back-logo-container img {
+  height: 48px;
+}
 
 .form-container form {
   background-color: rgba(0, 0, 0, 0.65);
@@ -239,7 +247,9 @@ section.active {
   margin-top: 12px;
 }
 
-.btn-registrarse:hover { background: #b90057; }
+.btn-registrarse:hover {
+  background: #b90057;
+}
 
 /* Planes */
 .plans-section {
@@ -251,6 +261,7 @@ section.active {
 .plans-section h2 {
   font-size: 1.8rem;
   margin-bottom: 24px;
+
 }
 
 .plans {
@@ -270,7 +281,9 @@ section.active {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.plan-card:hover { transform: translateY(-4px); }
+.plan-card:hover {
+  transform: translateY(-4px);
+}
 
 .plan-card h3 {
   color: #ff5db1;
@@ -295,6 +308,9 @@ section.active {
   transform: scale(1.02);
 }
 
+
+
+
 /* Animaciones */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(30px); }
@@ -305,6 +321,11 @@ section.active {
   from { opacity: 0; transform: translateX(30px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+
+
+
+
 
 .remember {
   display: flex;
@@ -318,7 +339,9 @@ section.active {
   text-decoration: none;
 }
 
-.remember a:hover { text-decoration: underline; }
+.remember a:hover {
+  text-decoration: underline;
+}
 
 .signup {
   margin-top: 16px;
@@ -331,7 +354,9 @@ section.active {
   text-decoration: none;
 }
 
-.signup a:hover { text-decoration: underline; }
+.signup a:hover {
+  text-decoration: underline;
+}
 
 .captcha {
   font-size: 0.75rem;
@@ -345,19 +370,8 @@ section.active {
   text-decoration: none;
 }
 
-.captcha a:hover { text-decoration: underline; }
-
-/* Blindaje: no subrayar las tarjetas de HOME */
-.home .container a.card,
-.home .container a.card:link,
-.home .container a.card:visited,
-.home .container a.card:hover,
-.home .container a.card:active {
-  text-decoration: none !important;
-  color: inherit !important;
-  display: block;
+.captcha a:hover {
+  text-decoration: underline;
 }
 
-.home .container a.card p {
-  text-decoration: none !important;
-}
+

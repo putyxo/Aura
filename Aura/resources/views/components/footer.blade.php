@@ -8,8 +8,8 @@
            alt="cover por defecto">
     </div>
 
-    <span class="song-name">Selecciona una canción</span>
-    <span class="song-autor">Artista</span>
+    <span class="song-name">{{ __('components.footer.select_song') }}</span>
+    <span class="song-autor">{{ __('components.footer.artist') }}</span>
 
     <div class="time">
       <span class="current-time">0:00</span>
@@ -19,17 +19,17 @@
     <input type="range" class="seek" min="0" max="100" value="0" step="any" aria-label="Barra de progreso">
 
     <div class="controls">
-      <button class="prev" title="Anterior"><i class="fas fa-backward"></i></button>
-      <button class="play-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
-      <button class="next" title="Siguiente"><i class="fas fa-forward"></i></button>
+      <button class="prev" title="{{ __('components.footer.previous') }}"><i class="fas fa-backward"></i></button>
+      <button class="play-btn" title="{{ __('components.footer.play_pause') }}"><i class="fas fa-play"></i></button>
+      <button class="next" title="{{ __('components.footer.next') }}"><i class="fas fa-forward"></i></button>
     </div>
   </div>
 
   <div class="options">
-    <button class="icon-btn vol-toggle" title="Silenciar"><i class="fa-solid fa-volume-low"></i></button>
-    <input class="vol-range" type="range" min="0" max="100" value="70" title="Volumen" aria-label="Volumen">
-    <button id="likeBtn" class="icon-btn" title="Me gusta"><i class="fa-regular fa-heart"></i></button>
-    <button id="playlistDropdown" class="icon-btn" title="Agregar a playlist"><i class="fa-solid fa-plus"></i></button>
+    <button class="icon-btn vol-toggle" title="{{ __('components.footer.mute') }}"><i class="fa-solid fa-volume-low"></i></button>
+    <input class="vol-range" type="range" min="0" max="100" value="70" title="{{ __('components.footer.volume') }}" aria-label="{{ __('components.footer.volume') }}">
+    <button id="likeBtn" class="icon-btn" title="{{ __('components.footer.like') }}"><i class="fa-regular fa-heart"></i></button>
+    <button id="playlistDropdown" class="icon-btn" title="{{ __('components.footer.add_to_playlist') }}"><i class="fa-solid fa-plus"></i></button>
   </div>
 
   <!-- === Fila de reproducción === -->
@@ -37,12 +37,12 @@
     <div class="queue-title">
       <div class="queue-title-inner">
         <i class="fa-solid fa-list"></i>
-        <span>Fila de reproducción</span>
+        <span>{{ __('components.footer.play_queue') }}</span>
         <span id="queueCount" class="count-badge"></span>
       </div>
     </div>
-    <ul id="queueList" aria-label="Fila de reproducción"></ul>
-    <div id="queueEmpty" class="queue-empty" hidden>No hay canciones en cola.</div>
+    <ul id="queueList" aria-label="{{ __('components.footer.play_queue') }}"></ul>
+    <div id="queueEmpty" class="queue-empty" hidden>{{ __('components.footer.no_songs_in_queue') }}</div>
   </div>
   <!-- === /Fila de reproducción === -->
 
@@ -54,18 +54,18 @@
   <!-- Panel flotante: agregar a playlist -->
   <div id="playlistModal" class="playlist-modal" hidden>
     <div class="playlist-modal-content">
-      <h3>Agregar a Playlist</h3>
+      <h3>{{ __('components.footer.add_playlist') }}</h3>
       <ul id="modalPlaylists"></ul>
       <div class="new-playlist">
-        <input type="text" id="newPlaylistName" placeholder="Nueva playlist...">
-        <button id="createPlaylistBtn">Crear</button>
+        <input type="text" id="newPlaylistName" placeholder="{{ __('components.footer.new_playlist') }}">
+        <button id="createPlaylistBtn">{{ __('components.footer.create') }}</button>
       </div>
-      <button class="close-playlist-modal">Cerrar</button>
+      <button class="close-playlist-modal">{{ __('components.footer.close') }}</button>
     </div>
   </div>
 
   <!-- Asidero lateral para redimensionar -->
-  <button class="rp-resize-handle" aria-label="Ajustar ancho del reproductor" title="Arrastra para ajustar" tabindex="0"></button>
+  <button class="rp-resize-handle" aria-label="{{ __('components.footer.adjust_player_width') }}" title="{{ __('components.footer.adjust_player_width') }}" tabindex="0"></button>
 
   <!-- === Elemento de audio físico === -->
   <audio id="auraAudio" preload="metadata" playsinline crossorigin="anonymous" hidden></audio>

@@ -4,10 +4,10 @@
   <div class="ah-inner">
     <!-- === Navegación (izquierda del buscador) === -->
     <div class="ah-nav">
-      <button class="ah-nav-btn" id="ahBackBtn" title="Atrás" aria-label="Atrás">
+      <button class="ah-nav-btn" id="ahBackBtn" title="{{ __('components.header.back') }}" aria-label="{{ __('components.header.back') }}">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
-      <button class="ah-nav-btn" id="ahForwardBtn" title="Adelante" aria-label="Adelante">
+      <button class="ah-nav-btn" id="ahForwardBtn" title="{{ __('components.header.forward') }}" aria-label="{{ __('components.header.forward') }}">
         <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
@@ -15,7 +15,7 @@
     <!-- === Buscador (centro) === -->
     <div class="ah-search-group">
       <span class="ah-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
-      <input class="ah-search-input" type="text" placeholder="Buscar canciones, artistas..." aria-label="Buscar" autocomplete="off" />
+      <input class="ah-search-input" type="text" placeholder="{{ __('components.header.search_placeholder') }}" aria-label="{{ __('components.header.search_placeholder') }}" autocomplete="off" />
       <div id="ahSearchResults" class="ah-search-results" role="listbox" aria-expanded="false"></div>
     </div>
 
@@ -25,18 +25,18 @@
       <div class="ah-pop ah-notif">
        
         <div class="ah-popover" id="ahNotifPanel" role="dialog" aria-hidden="true">
-          <div class="ah-popover-head"><span>Notificaciones</span></div>
+          <div class="ah-popover-head"><span>{{ __('components.header.notifications') }}</span></div>
           <div class="ah-popover-body">
             <div class="ah-empty">
               <i class="fa-regular fa-bell-slash"></i>
-              <p>Aún no tienes notificaciones</p>
+              <p>{{ __('components.header.no_notifications') }}</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Configuración -->
-      <button class="ah-btn" type="button" title="Ajustes" aria-label="Ajustes">
+      <button class="ah-btn" type="button" title="{{ __('components.header.settings') }}" aria-label="{{ __('components.header.settings') }}">
         <i class="fa-solid fa-gear"></i>
       </button>
 
@@ -80,27 +80,27 @@
 
           <div class="ah-menu-options">
             <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
-              <i class="fas fa-user"></i><span>Ver mi perfil</span>
+              <i class="fas fa-user"></i><span>{{ __('components.header.view_profile') }}</span>
             </a>
             <a href="{{ route('cuenta', auth()->id()) }}" class="ah-menu-item">
-              <i class="fas fa-cog"></i><span>Mi cuenta</span>
+              <i class="fas fa-cog"></i><span>{{ __('components.header.my_account') }}</span>
             </a>
              <a href="{{ route('preferencias', auth()->id()) }}" class="ah-menu-item">
-               <i class="fas fa-sliders-h"></i><span>Preferencias</span>
+               <i class="fas fa-sliders-h"></i><span>{{ __('components.header.preferences') }}</span>
             </a>
 
             @auth
               @if(auth()->user()->es_artista)
                 <a href="{{ route('musica.subir') }}" class="ah-menu-item">
-                  <i class="fas fa-upload"></i><span>Subir música</span>
+                  <i class="fas fa-upload"></i><span>{{ __('components.header.upload_music') }}</span>
                 </a>
               @endif
             @endauth
 
             <!-- Idioma (switch ES/EN) -->
             <div class="ah-menu-item ah-lang-item">
-              <i class="fas fa-globe"></i><span>Idioma</span>
-              <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="Cambiar idioma">
+              <i class="fas fa-globe"></i><span>{{ __('components.header.language') }}</span>
+              <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="{{ __('components.header.language') }}">
                 <span class="ah-toggle-track">
                   <span class="ah-toggle-label ah-l-es">ES</span>
                   <span class="ah-toggle-label ah-l-en">EN</span>
@@ -116,7 +116,7 @@
             <form method="POST" action="{{ route('logout') }}">
               @csrf
               <button type="submit" class="ah-menu-item ah-logout-btn">
-                <i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span>
+                <i class="fas fa-sign-out-alt"></i><span>{{ __('components.header.logout') }}</span>
               </button>
             </form>
           </div>

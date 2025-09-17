@@ -52,13 +52,7 @@ class User extends Authenticatable
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
-<<<<<<< HEAD
-    
-
     public function followings()
-=======
-    public function followings(): BelongsToMany
->>>>>>> recup-ayer
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
     }
@@ -82,7 +76,6 @@ class User extends Authenticatable
        RELACIONES EXTRA (Likes)
        ============================== */
 
-<<<<<<< HEAD
 
        
 
@@ -131,58 +124,5 @@ public function equalizer()
     public function likes()
     {
         return $this->likedSongs();
-=======
-    /** Relación principal: canciones que el usuario ha likeado */
-    public function likes(): BelongsToMany
-    {
-        // Pivot: likes (user_id, song_id) → canciones están en tabla 'songs'
-        return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
-                    ->withTimestamps();
-    }
-
-    /** Alias para compatibilidad con controladores/vistas existentes */
-    public function likedSongs(): BelongsToMany
-    {
-        return $this->likes();
-    }
-
-    public function equalizer()
-    {
-        return $this->hasOne(UserEqualizer::class);
-    }
-
-    /* ==============================
-       ACCESSORS AVATAR / BANNER / PORTADA
-       ============================== */
-
-    public function getAvatarUrlAttribute(): string
-    {
-        $p = $this->avatar;
-        if (!$p) return asset('img/default-avatar.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
-    }
-
-    public function getBannerUrlAttribute(): string
-    {
-        $p = $this->banner;
-        if (!$p) return asset('img/default-banner.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
-    }
-
-    public function getImagenPortadaUrlAttribute(): string
-    {
-        $p = $this->imagen_portada;
-        if (!$p) return asset('img/default-cover.png');
-
-        return Str::startsWith($p, ['http://', 'https://'])
-            ? $p
-            : asset('storage/' . ltrim($p, '/'));
->>>>>>> recup-ayer
     }
 }

@@ -45,39 +45,9 @@
                 <p class="axup-hero__sub">{{ __('upload.subtitle') }}</p>
               </div>
             </div>
-            <div class="axup-hero__actions">
-              <button class="axup-btn axup-btn-primary" id="axupOpenModalSong" type="button">
-                <i class="fa-solid fa-music"></i> <span>{{ __('upload.upload_song') }}</span>
-              </button>
-              <button class="axup-btn axup-btn-secondary" id="axupOpenModalAlbum" type="button">
-                <i class="fa-solid fa-compact-disc"></i> <span>{{ __('upload.create_album') }}</span>
-              </button>
-            </div>
+
           </div>
 
-          <div class="axup-hero__toolbar" role="toolbar" aria-label="Herramientas de subir">
-            <div class="axup-toolbar__left">
-              <div class="axup-search">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <input id="axupSearch" type="search" placeholder="{{ __('upload.search_placeholder') }}" aria-label="{{ __('upload.search_placeholder') }}" autocomplete="off">
-                <button class="axup-clear" id="axupClearSearch" aria-label="Limpiar búsqueda" type="button"><i class="fa-solid fa-xmark"></i></button>
-              </div>
-              <div class="axup-filters">
-                <button class="axup-chip is-active" data-filter="all" type="button">{{ __('upload.filter_all') }}</button>
-                <button class="axup-chip" data-filter="songs" type="button">{{ __('upload.filter_songs') }}</button>
-                <button class="axup-chip" data-filter="albums" type="button">{{ __('upload.filter_albums') }}</button>
-                <button class="axup-chip" data-filter="recent" type="button">{{ __('upload.filter_recent') }}</button>
-              </div>
-            </div>
-            <div class="axup-toolbar__right">
-              <button class="axup-btn axup-btn-ghost" id="axupSelectMode" aria-pressed="false" type="button">
-                <i class="fa-regular fa-square"></i><span class="axup-btn-text">{{ __('upload.select_mode') }}</span>
-              </button>
-              <button class="axup-btn axup-btn-ghost axup-is-danger" id="axupDeleteSelected" type="button" disabled>
-                <i class="fa-regular fa-trash-can"></i><span class="axup-btn-text">{{ __('upload.delete_selected') }}</span>
-              </button>
-            </div>
-          </div>
         </section>
 
         <!-- Toast por sesión -->
@@ -121,7 +91,7 @@
             </div>
             <div class="axup-tile-name">{{ __('upload.album_option_title') }}</div>
             <div class="axup-tile-desc">{{ __('upload.album_option_desc') }}</div>
-            <button class="axup-btn axup-btn-secondary axup-tile-action" type="button">
+            <button class="axup-btn axup-btn-primary axup-tile-action" type="button">
               <i class="fa-solid fa-plus"></i> {{ __('upload.album_option_button') }}
             </button>
           </div>
@@ -145,7 +115,7 @@
             </div>
 
             <div class="axup-modal-grid">
-              <div class="axup-field" id="axupFieldSongNombre">
+              <div class="axup-field axup-field-full" id="axupFieldSongNombre">
                 <label class="axup-label" for="axupSongNombre">{{ __('upload.song_name_label') }}</label>
                 <input class="axup-input" id="axupSongNombre" name="nombre" type="text" placeholder="{{ __('upload.song_name_placeholder') }}" required>
                 <div class="axup-field-msg" id="axupMsgSongNombre"></div>
@@ -156,7 +126,7 @@
                 <div class="axup-file-uploader" id="axupSongFileUploader">
                   <div class="axup-uploader-hint">
                     <i class="fa-solid fa-music"></i>
-                    <p>{{ __('upload.song_file_hint') }}</p>
+                    <p data-original-hint="{{ __('upload.song_file_hint') }}">{{ __('upload.song_file_hint') }}</p>
                     <small>{{ __('upload.song_file_formats') }}</small>
                   </div>
                   <input type="file" id="axupSongFile" name="mp3" accept=".mp3,audio/mpeg" hidden required>
@@ -172,6 +142,7 @@
                     <p>{{ __('upload.song_cover_hint') }}</p>
                     <small>{{ __('upload.song_cover_formats') }}</small>
                   </div>
+                  <div class="axup-cover-preview" id="axupSongCoverPreview"></div>
                   <input type="file" id="axupSongCover" name="portada" accept="image/*" hidden>
                 </div>
                 <div class="axup-field-msg" id="axupMsgSongCover"></div>
@@ -215,6 +186,7 @@
                     <p>{{ __('upload.song_cover_hint') }}</p>
                     <small>{{ __('upload.song_cover_formats') }}</small>
                   </div>
+                  <div class="axup-cover-preview" id="axupAlbumCoverPreview"></div>
                   <input type="file" id="axupAlbumCover" name="cover" accept="image/*" hidden required>
                 </div>
                 <div class="axup-field-msg" id="axupMsgAlbumCover"></div>

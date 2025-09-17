@@ -8,19 +8,19 @@
   </a>
   <nav class="menu">
     <a href="{{ url('/menu') }}" class="item active">
-      <i class="fas fa-house"></i><span class="label">Inicio</span>
+      <i class="fas fa-house"></i><span class="label">{{ __('components.sidebar.home') }}</span>
     </a>
 
     <a href="{{ url('/like') }}" class="item">
-      <i class="fas fa-heart"></i><span class="label">Favoritos</span>
+      <i class="fas fa-heart"></i><span class="label">{{ __('components.sidebar.favorites') }}</span>
     </a>
 
     <a href="{{ url('/playlists') }}" class="item">
-      <i class="fa-solid fa-notes-medical"></i><span class="label">Playlist</span>
+      <i class="fa-solid fa-notes-medical"></i><span class="label">{{ __('components.sidebar.playlist') }}</span>
     </a>
 
     <a href="{{ url('/follow_artist') }}" class="item">
-      <i class="fa-solid fa-user-check"></i><span class="label">Tus Seguidos</span>
+      <i class="fa-solid fa-user-check"></i><span class="label">{{ __('components.sidebar.followed') }}</span>
     </a>
 
 
