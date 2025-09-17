@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class AlbumController  extends Controller
+class AlbumController extends Controller
 {
     /**
      * Mostrar detalle de un álbum (misma UI visual para dueño y visitantes).

@@ -16,21 +16,18 @@ use App\Http\Controllers\CancionController;
 use App\Http\Controllers\TraductorController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\LikeApiController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-
-
-
-
+use App\Http\Controllers\SupportController;
+use App\Http\Controllers\LyricsController;
 
 use App\Http\Controllers\Auth\PasswordController;
 use App\Models\Cancion;
 use App\Models\Album;
-use App\Models\User;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 // ===== Página principal =====
-Route::get('/', fn () => view('menu'))->name('menu');
+Route::get('/', fn () => view('welcome'))->name('welcome');
 
 /*
 |---------------------------------------------------------------------------
@@ -122,67 +119,29 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/playlists/create',   [PlaylistController::class, 'quickStore']);
     Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
 
-    // ===== Vistas principales (Blade suelto) =====
-    Route::get('/menu', fn() => view('menu'))->name('menu');
-    Route::get('/menu_artista', fn() => view('menu_artista'))->name('menu_artista');
-    Route::get('/playlist_card', fn() => view('playlist_card'))->name('playlist_card');
-    Route::get('/preferencias', fn() => view('preferencias'))->name('preferencias');
-    Route::get('/cuenta', fn() => view('cuenta'))->name('cuenta');
-    Route::get('/editar-perfil', fn() => view('editar-perfil'))->name('editar-perfil');
-    Route::get('/seguridad', fn() => view('seguridad'))->name('seguridad');
-    Route::get('/cambiar-usuario', fn() => view('cambiar-usuario'))->name('cambiar-usuario');
-    Route::get('/recientes', fn() => view('recientes'))->name('recientes');
-    Route::get('/estadisticas', fn() => view('estadisticas'))->name('estadisticas');
-    Route::get('/artistasadmin', fn() => view('artistasadmin'))->name('artistasadmin');
-    Route::get('/menu_album', [ProfileController::class, 'menuAlbum'])->name('menu_album');
+    // Endpoints con nombre (usados en data-attributes del Blade)
+    Route::get('/playlists/mine', [PlaylistController::class, 'myPlaylists'])->name('playlists.mine');
+    Route::post('/playlists/quick', [PlaylistController::class, 'quickStore'])->name('playlists.quickStore');
+    Route::post('/playlists/{playlist}/add/{cancion}', [PlaylistController::class, 'addSong'])->name('playlists.addSong');
 
-    // ===== Admin =====
-   function checkAdminAccess() {
-    if (!Auth::check()) {
-        return false;
-    }
+    // CRUD RESTful de playlists
+    Route::resource('playlists', PlaylistController::class);
 
-    $user = Auth::user();
-    return $user->email === 'sf977996@gmail.com' && Hash::check('123', $user->password);
-}
+    // ===== Vistas principales (Blade suelto)
+    Route::get('/menu', fn () => view('menu'))->name('menu');
+    Route::get('/menu_artista', fn () => view('menu_artista'))->name('menu_artista');
+    Route::get('/playlist_card', fn () => view('playlist_card'))->name('playlist_card');
+    Route::get('/preferencias', fn () => view('preferencias'))->name('preferencias');
+    Route::get('/editar-perfil', fn () => view('editar-perfil'))->name('editar-perfil');
+    Route::get('/seguridad', fn () => view('seguridad'))->name('seguridad');
+    Route::get('/cambiar-usuario', fn () => view('cambiar-usuario'))->name('cambiar-usuario');
+    Route::get('/recientes', fn () => view('recientes'))->name('recientes');
 
-// ===== Rutas restringidas =====
+    Route::get('/admin', fn () => view('admin'))->name('admin');
+    Route::get('/estadisticas', fn () => view('estadisticas'))->name('estadisticas');
+    Route::get('/artistasadmin', fn () => view('artistasadmin'))->name('artistasadmin');
 
-Route::get('/admin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    return app(\App\Http\Controllers\CancionController::class)->adminIndex();
-})->name('admin');
-
-Route::get('/albumadmin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    $albumes = \App\Models\Album::with(['user', 'songs'])->get();
-    return view('admin.albumadmin', compact('albumes'));
-})->name('albumadmin');
-
-Route::get('/usuarioadmin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    $usuarios = \App\Models\User::all();
-    return view('admin.usuarioadmin', compact('usuarios'));
-})->name('usuarioadmin');
-
-Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Álbumes
-    |--------------------------------------------------------------------------
-    | Incluye alias /album/{id} y /albums/{id} para compatibilidad.
-    */
-    // Menú de álbumes en perfil (verifica que exista en PerfilController)
+    // Menú de álbumes (acepta ?album=ID para ver álbum de OTRO artista en modo lectura)
     Route::get('/menu_album', [PerfilController::class, 'albumsMenu'])->name('menu_album');
 
     // Cambiar tipo de cuenta (usuario ↔ artista)
@@ -234,7 +193,7 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     | Dashboard (Breeze/Jetstream - requiere email verificado)
     |---------------------------------------------------------------------------
     */
-    Route::get('/dashboard', fn () => view('menu'))->middleware(['verified'])->name('menu');
+    Route::get('/dashboard', fn () => view('dashboard'))->middleware(['verified'])->name('dashboard');
 
     /*
     |---------------------------------------------------------------------------

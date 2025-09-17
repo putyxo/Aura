@@ -52,7 +52,7 @@ class User extends Authenticatable
        FOLLOWERS / FOLLOWINGS
        ============================== */
 
-    public function followings()
+    public function followings(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id');
     }
@@ -76,15 +76,19 @@ class User extends Authenticatable
        RELACIONES EXTRA (Likes)
        ============================== */
 
-    public function likedSongs()
+    /** Relación principal: canciones que el usuario ha likeado */
+    public function likes(): BelongsToMany
     {
+        // Pivot: likes (user_id, song_id) → canciones están en tabla 'songs'
         return $this->belongsToMany(Cancion::class, 'likes', 'user_id', 'song_id')
                     ->withTimestamps();
     }
 
-    /* ==============================
-       USER EQUALIZER
-       ============================== */
+    /** Alias para compatibilidad con controladores/vistas existentes */
+    public function likedSongs(): BelongsToMany
+    {
+        return $this->likes();
+    }
 
     public function equalizer()
     {

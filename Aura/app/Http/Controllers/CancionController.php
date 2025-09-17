@@ -8,72 +8,29 @@ use App\Models\Cancion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Services\GoogleDriveOAuthService; // Asegúrate de importar correctamente el servicio
 
 class CancionController extends Controller
 {
-    public function adminIndex()
+    // (Opcional) si usas show:
+    public function show(Cancion $cancion)
     {
-        // Solo admins
-        if (!checkAdminAccess()) {
-            return redirect()->route('login')
-                ->withErrors(['email' => 'Acceso restringido.']);
-        }
-
-        // Traer canciones con su usuario
-        $canciones = Cancion::with('user')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('admin.admin', compact('canciones'));
-    }
-
-    /**
-     * Eliminar una canción (archivos locales + relaciones).
-     */
-    public function destroy(Cancion $cancion, Request $request, GoogleDriveOAuthService $drive)
-    {
-        // Verifica si el usuario es el propietario de la canción
-        if ((int) $cancion->user_id !== (int) Auth::id()) {
-            abort(403, 'Acción no autorizada.');
-        }
-
-        // Elimina los archivos locales
-        $songCoverPath = $cancion->cover_path ?? $cancion->portada ?? null;
-        $songAudioPath = $cancion->audio_path ?? $cancion->audio ?? null;
-
-        $this->deleteLocalIfRelative($songAudioPath);
-        $this->deleteLocalIfRelative($songCoverPath);
-
-        // Elimina las relaciones (likes, playlists)
-        if (method_exists($cancion, 'likedBy')) {
-            $cancion->likedBy()->detach();
-        }
-        if (method_exists($cancion, 'playlists')) {
-            $cancion->playlists()->detach();
-        }
-
-        // Elimina la canción
-        $cancion->delete();
-
-        // Respuesta JSON si es una solicitud AJAX
-        if ($request->wantsJson()) {
-            return response()->json(['ok' => true, 'message' => 'Canción eliminada correctamente ✅']);
-        }
-
-        return redirect()->back()->with('success', 'Canción eliminada correctamente ✅');
+        $cancion->load('user', 'album.user');
+        return view('canciones.show', compact('cancion'));
     }
 
     /**
      * Actualiza campos de la canción (título/portada).
+     * Además soporta propagación desde portada de álbum:
+     *  - cover_from_album=1 + cover_path (copiar ruta ya subida del álbum)
+     *  - o subir archivo 'cover'
      */
     public function update(Request $request, int $cancion)
     {
         $song = Cancion::findOrFail($cancion);
 
-        // Verifica que el usuario sea el propietario
+        // Dueño: por user_id directo o por dueño del álbum
         $ownerId = $song->user_id ?? optional(Album::find($song->album_id))->user_id;
-        if ((int) $ownerId !== (int) Auth::id()) {
+        if ((int)$ownerId !== (int)Auth::id()) {
             abort(403, 'Acción no autorizada.');
         }
 
@@ -86,13 +43,12 @@ class CancionController extends Controller
 
         $changed = [];
 
-        // Actualiza el título si es necesario
         if (array_key_exists('title', $validated)) {
             $song->title = $validated['title'];
             $changed['title'] = $song->title;
         }
 
-        // 1) Copiar ruta desde el álbum si se especifica cover_from_album
+        // 1) Copiar ruta desde el álbum si viene cover_from_album y cover_path
         if (!empty($validated['cover_from_album']) && !empty($validated['cover_path'])) {
             $song->cover_path = ltrim($validated['cover_path'], '/');
             $changed['cover_path'] = $song->cover_path;
@@ -104,7 +60,6 @@ class CancionController extends Controller
             $ext  = $img->getClientOriginalExtension();
             $path = $img->storeAs('songs/covers', $slug . '.' . $ext, 'public');
 
-            // Elimina la imagen anterior si existe
             $old = $song->cover_path ?? $song->portada ?? null;
             if ($old && !preg_match('~^https?://~i', $old)) {
                 Storage::disk('public')->delete(ltrim(preg_replace('#^/?public/#', '', $old), '/'));
@@ -128,7 +83,38 @@ class CancionController extends Controller
     }
 
     /**
-     * ❤️ Alternar like/unlike a una canción.
+     * Eliminar una canción (archivos locales + relaciones).
+     */
+    public function destroy(Cancion $cancion, Request $request)
+    {
+        if ((int) $cancion->user_id !== (int) Auth::id()) {
+            abort(403, 'Acción no autorizada.');
+        }
+
+        $songCoverPath = $cancion->cover_path ?? $cancion->portada ?? null;
+        $songAudioPath = $cancion->audio_path ?? $cancion->audio ?? null;
+
+        $this->deleteLocalIfRelative($songAudioPath);
+        $this->deleteLocalIfRelative($songCoverPath);
+
+        if (method_exists($cancion, 'likedBy')) {
+            $cancion->likedBy()->detach();
+        }
+        if (method_exists($cancion, 'playlists')) {
+            $cancion->playlists()->detach();
+        }
+
+        $cancion->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => 'Canción eliminada correctamente ✅']);
+        }
+
+        return redirect()->back()->with('success', 'Canción eliminada correctamente ✅');
+    }
+
+    /**
+     * ❤️ Alternar like/unlike a una canción. (normalmente usas LikeApiController)
      */
     public function toggleLike(Cancion $cancion)
     {
@@ -144,9 +130,14 @@ class CancionController extends Controller
         }
     }
 
-    /**
-     * Mostrar las canciones que un usuario ha marcado como "Me gusta".
-     */
+    public function liked(Cancion $cancion)
+    {
+        $user = Auth::user();
+        $liked = $cancion->likedBy()->where('users.id', $user->id)->exists();
+
+        return response()->json(['liked' => $liked]);
+    }
+
     public function like()
     {
         $user = Auth::user();
@@ -164,7 +155,6 @@ class CancionController extends Controller
             abort(403, 'Acción no autorizada.');
         }
 
-        // Inicia el trabajo para generar las letras
         $cancion->update([
             'lyrics'        => null,
             'lyrics_status' => 'pending',
@@ -179,6 +169,43 @@ class CancionController extends Controller
         ]);
     }
 
+    public function lyrics(Cancion $cancion)
+    {
+        $lyric = $cancion->lyric ?? null;
+
+        if ($lyric) {
+            $segments = [];
+            if ($lyric->json_segments) {
+                $raw = json_decode($lyric->json_segments, true);
+                foreach ($raw as $seg) {
+                    $segments[] = [
+                        'start' => $seg['start'] ?? 0,
+                        'end'   => $seg['end'] ?? 0,
+                        'text'  => $seg['text'] ?? '',
+                    ];
+                }
+            }
+
+            return response()->json([
+                'song_id'  => $cancion->id,
+                'lyrics'   => $lyric->content,
+                'segments' => $segments,
+                'synced'   => !empty($segments),
+                'status'   => 'ready',
+            ]);
+        }
+
+        GenerateLyricsJob::dispatch($cancion->id);
+
+        return response()->json([
+            'song_id'  => $cancion->id,
+            'lyrics'   => null,
+            'segments' => [],
+            'synced'   => false,
+            'status'   => 'pending',
+        ]);
+    }
+
     private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
@@ -187,6 +214,13 @@ class CancionController extends Controller
         try {
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
+                return;
+            }
+        } catch (\Throwable $e) {}
+
+        try {
+            if (Storage::exists($path)) {
+                Storage::delete($path);
             }
         } catch (\Throwable $e) {}
     }

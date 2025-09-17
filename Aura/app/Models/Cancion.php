@@ -180,31 +180,4 @@ class Cancion extends Model
     {
         return $query->where('status', $status);
     }
-
-    // Cancion.php
-
-public function getCleanTitleAttribute(): string
-{
-    $title = $this->title;
-
-    // 🔹 Opciones de limpieza
-    // Quitar "Official Video" o "Official Music Video"
-    $title = preg_replace('/\s*\(.*Official.*\)/i', '', $title);
-
-    // Quitar "[...]" (ejemplo: "[Official Music Video]")
-    $title = preg_replace('/\[.*?\]/', '', $title);
-
-    // Quitar espacios dobles
-    $title = preg_replace('/\s+/', ' ', $title);
-
-    return trim($title);
-}
-
-public function getNombreArtisticoAttribute(): string
-{
-    return $this->user->nombre_artistico
-        ?? $this->user->name
-        ?? 'Artista desconocido';
-}
-
 }
