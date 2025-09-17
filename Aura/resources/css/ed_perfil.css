@@ -1,3 +1,5 @@
+/* resources/css/ed_perfil.css */
+
 /* ================== THEME VARS ================== */
 :root{
   --aurp-bg:#0b0b10;
@@ -36,7 +38,7 @@ body{
 }
 h1,h2,h3,h4,h5{margin:0}
 a{color:inherit;text-decoration:none}
-img{max-width:100%;display:block}
+
 button{font:inherit}
 body.modal-open{overflow:hidden}
 .hidden{display:none!important}
@@ -465,6 +467,7 @@ body.modal-open{overflow:hidden}
   z-index: 2000;
 }
 
+
 .confirm-modal[aria-hidden="false"] {
   opacity: 1;
   visibility: visible;
@@ -565,8 +568,7 @@ body.modal-open{overflow:hidden}
 }
 
 
-/* Bloquea el scroll y hace blur del contenido detrás */
-body.blurred .main-content{ filter: blur(6px) }
+
 
 /* ===== FIX SCOPING / AISLAMIENTO ===== */
 #page-profile{
@@ -598,7 +600,7 @@ body.blurred .main-content{ filter: blur(6px) }
   .left-col{padding-right:0;margin-bottom:28px}
 }
 @media (max-width:768px){
-  .avatar-wrap.xl{width:160px;height:160px;bottom:-80px}
+  .avatar-wrap.xl{width:260px;height:260px;bottom:-80px}
   .profile-banner{height:340px}
   .hero-wrap{width:92%}
   .hero-head{top:28px}
@@ -624,3 +626,44 @@ body.blurred .main-content{ filter: blur(6px) }
 #page-profile .card.album-card .card-img{ aspect-ratio:1/1; }
 #page-profile .card.album-card .album-title{ font-size:14px; line-height:1.25; }
 #page-profile .card.album-card .album-sub{ font-size:12px; line-height:1.25; }
+
+
+
+
+
+
+
+
+
+/* ===== PLAYLIST PICKER ===== */
+.pl-body{display:grid;gap:12px}
+.pl-search{
+  display:flex;align-items:center;gap:8px;
+  background:#11111a;border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:10px 12px
+}
+.pl-search input{
+  flex:1;border:0;background:transparent;color:#fff;font:inherit;outline:none
+}
+.pl-list{
+  list-style:none;margin:0;padding:0;max-height:320px;overflow:auto;
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0f0f18
+}
+.pl-list li{border-bottom:1px solid rgba(255,255,255,.06)}
+.pl-list li:last-child{border-bottom:none}
+.pl-item{
+  width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:transparent;border:0;color:#eaeaff;cursor:pointer;text-align:left
+}
+.pl-item:hover{background:#17172a}
+.pl-empty{padding:12px;color:#c7b7ff}
+.pl-quick{
+  display:flex;align-items:center;gap:10px;justify-content:space-between
+}
+#plQuickForm{display:flex;gap:10px;align-items:center}
+#plQuickName{
+  flex:1;border:1px solid rgba(255,255,255,.12);background:#11111a;color:#fff;
+  border-radius:10px;padding:10px 12px;outline:none
+}
+
+

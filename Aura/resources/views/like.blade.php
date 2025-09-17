@@ -24,11 +24,18 @@
     @include('components.fondo')
 
     @php
+      use Illuminate\Support\Facades\Route as R;
+
       if (!isset($likedSongs) || is_null($likedSongs)) {
           $likedSongs = collect();
       } elseif (is_array($likedSongs)) {
           $likedSongs = collect($likedSongs);
       }
+
+      // Helpers de rutas para "quitar de me gusta"
+      $hasDestroy = R::has('likes.destroy');
+      $hasUnlike  = R::has('likes.unlike');
+      $hasToggle  = R::has('canciones.like'); // toggle JSON {liked:bool}
     @endphp
 
     <main class="main-content lk-page" data-page="likes">
@@ -63,7 +70,7 @@
             <i class="fa-solid fa-circle-check"></i>
             <span>{{ session('ok') }}</span>
           </div>
-        @endif
+        @endif>
 
         <!-- GRID -->
         <section class="lk-grid" id="lkGrid" data-count="{{ $likedSongs->count() }}">
@@ -72,43 +79,32 @@
               $title   = $song->title  ?? $song->titulo  ?? $song->name ?? 'Sin título';
               $artist  = optional($song->user)->nombre_artistico ?? optional($song->user)->nombre ?? 'Artista';
 
-              // COVER robusto
+              // COVER (local/externo)
               $coverRaw = $song->cover_path ?? $song->portada ?? $song->imagen ?? null;
-              $cover    = asset('img/default-cover.jpg');
-              if ($coverRaw) {
-                  $coverId = null;
-                  if (!\Illuminate\Support\Str::startsWith($coverRaw, ['http://','https://'])) {
-                      $coverId = $coverRaw;
-                  } elseif (\Illuminate\Support\Str::contains($coverRaw, 'drive.google')) {
-                      if (preg_match('~/d/([^/]+)~', $coverRaw, $m))         $coverId = $m[1];
-                      elseif (preg_match('~[?&]id=([^&]+)~', $coverRaw, $m)) $coverId = $m[1];
-                  }
-                  if ($coverId) {
-                      $cover = function_exists('drive_img_url')
-                          ? drive_img_url($coverId, 260) . '&v=' . time()
-                          : route('media.drive', ['id' => $coverId]);
-                  } else {
-                      $cover = $coverRaw;
-                  }
-              }
+              $cover    = img_url($coverRaw, 'img/default-cover.jpg');
 
-              // AUDIO robusto
+              // AUDIO (local/externo)
               $audioRaw = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
-              $audio    = null;
-              if ($audioRaw) {
-                  $audioId = null;
-                  if (!\Illuminate\Support\Str::startsWith($audioRaw, ['http://','https://'])) {
-                      $audioId = $audioRaw;
-                  } elseif (\Illuminate\Support\Str::contains($audioRaw, 'drive.google')) {
-                      if (preg_match('~/d/([^/]+)~', $audioRaw, $m))         $audioId = $m[1];
-                      elseif (preg_match('~[?&]id=([^&]+)~', $audioRaw, $m)) $audioId = $m[1];
-                  }
-                  $audio = $audioId ? route('media.drive', ['id' => $audioId]) : $audioRaw;
-              }
+              $audio    = $audioRaw ? audio_url($audioRaw) : '';
 
               $durSec    = is_numeric($song->duration ?? $song->duracion ?? null) ? (int)($song->duration ?? $song->duracion) : 0;
-              $durText   = $durSec ? gmdate('i:s', max(0,$durSec)) : '--:--';
+              $durText   = $durSec ? gmdate('i:s', max(0, $durSec)) : '--:--';
               $searchKey = mb_strtolower(($title ?? '') . ' ' . $artist, 'UTF-8');
+
+              // Resolver URL y método para "quitar de me gusta"
+              if ($hasDestroy) {
+                $unlikeUrl = route('likes.destroy', $song->id);
+                $unlikeMethod = 'DELETE';
+              } elseif ($hasUnlike) {
+                $unlikeUrl = route('likes.unlike', $song->id);
+                $unlikeMethod = 'POST';
+              } elseif ($hasToggle) {
+                $unlikeUrl = route('canciones.like', $song->id);
+                $unlikeMethod = 'POST';
+              } else {
+                $unlikeUrl = url('likes/'.$song->id);
+                $unlikeMethod = 'DELETE';
+              }
             @endphp
 
             <article
@@ -121,11 +117,14 @@
               data-artist="{{ $artist }}"
               data-cover="{{ $cover }}"
               data-audio="{{ $audio }}"
+              data-unlike-url="{{ $unlikeUrl }}"
+              data-unlike-method="{{ $unlikeMethod }}"
             >
               <a class="lk-tile__link" aria-label="Abrir {{ $title }}"></a>
 
               <div class="lk-cover">
-                <img src="{{ $cover }}" alt="Portada {{ $title }}" width="260" height="260" loading="lazy" decoding="async">
+                <img src="{{ $cover }}" alt="Portada {{ $title }}" width="260" height="260" loading="lazy" decoding="async"
+                     onerror="this.onerror=null;this.src='{{ asset('img/default-cover.jpg') }}';">
                 <button type="button" class="lk-play" aria-label="Reproducir {{ $title }}">
                   <i class="fa-solid fa-play"></i>
                 </button>
@@ -154,10 +153,20 @@
               </div>
 
               <!-- Fallback sin JS -->
+<<<<<<< HEAD
               <form class="lk-like-form" method="POST" action="{{ url('likes/'.$song->id) }}">
+  @csrf
+  @method('DELETE')  <!-- Asegúrate de que esto se está enviando como un método DELETE -->
+</form>
+
+=======
+              <form class="lk-like-form" method="POST" action="{{ $unlikeUrl }}">
                 @csrf
-                @method('DELETE')
+                @if($unlikeMethod === 'DELETE')
+                  @method('DELETE')
+                @endif
               </form>
+>>>>>>> recup-ayer
             </article>
           @empty
               <div class="lk-empty" style="grid-column:1/-1;">
@@ -262,6 +271,10 @@
     const total   = durNum ? new Date(durNum * 1000).toISOString().substring(14,19) : '--:--';
     const searchKey = (title + ' ' + artist).toLowerCase();
 
+    // Por defecto, intentar /likes/{id} con DELETE cuando venga de localStorage
+    const unlikeUrl = `/likes/${id}`;
+    const unlikeMethod = 'DELETE';
+
     const el = document.createElement('article');
     el.className = 'lk-tile';
     el.title = title;
@@ -272,6 +285,8 @@
     el.dataset.artist = artist;
     el.dataset.cover = cover;
     el.dataset.audio = audio;
+    el.dataset.unlikeUrl = unlikeUrl;
+    el.dataset.unlikeMethod = unlikeMethod;
 
     el.innerHTML = `
       <a class="lk-tile__link" aria-label="Abrir ${title}"></a>
@@ -300,7 +315,7 @@
         </div>
         <div class="lk-artist">${artist}</div>
       </div>
-      <form class="lk-like-form" method="POST" action="/likes/${id}">
+      <form class="lk-like-form" method="POST" action="${unlikeUrl}">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <input type="hidden" name="_method" value="DELETE">
       </form>
@@ -308,11 +323,16 @@
     return el;
   };
 
-  /* ===== Helpers: resaltar "reproduciendo" ===== */
+  /* ===== Helpers ===== */
   function markPlayingById(id){
     tiles().forEach(t => t.removeAttribute('data-playing'));
     const el = byId(id);
     if (el) el.setAttribute('data-playing','true');
+  }
+
+  // Bloquea reproducción si el click proviene del corazón, el kebab o el menú
+  function isPlayBlocked(target){
+    return !!target.closest('.lk-like, .lk-keb, .lk-menu');
   }
 
   /* ===== Reproducir en el reproductor lateral ===== */
@@ -350,58 +370,62 @@
       menu.classList.toggle('show', want);
       kebabBtn.setAttribute('aria-expanded', want ? 'true' : 'false');
     }
-    kebabBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggleMenu(); });
+    kebabBtn?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation(); // <- evita burbujeo a cover/link
+      toggleMenu();
+    });
     document.addEventListener('click', (e)=>{
       if (!menu.classList.contains('show')) return;
       if (!menu.contains(e.target) && e.target !== kebabBtn) toggleMenu(false);
-    });
+    }, { passive:true });
     document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') toggleMenu(false); });
 
     // Acciones del menú
     menu?.addEventListener('click', (e)=>{
+      e.stopPropagation(); // <- no burbujea a la tarjeta
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
       const act = btn.dataset.act;
-      const song = {
-        id: Number(tile.dataset.songId),
-        title: tile.dataset.title,
-        artist: tile.dataset.artist,
-        cover: tile.dataset.cover,
-        audio: tile.dataset.audio,
-        duration: Number(tile.dataset.duration) || 0
-      };
 
       if (act === 'queue'){
+        const song = {
+          id: Number(tile.dataset.songId),
+          title: tile.dataset.title,
+          artist: tile.dataset.artist,
+          cover: tile.dataset.cover,
+          audio: tile.dataset.audio,
+          duration: Number(tile.dataset.duration) || 0
+        };
         if (window.AuraQueue?.addToEnd) window.AuraQueue.addToEnd([song]);
       }
       if (act === 'playlist'){
-        // Reproducimos (para establecer currentSongId) y abrimos el modal del footer
         if (window.AuraPlayer?.play){
-          window.AuraPlayer.play({ id:song.id, src:song.audio, title:song.title, artist:song.artist, cover:song.cover });
+          window.AuraPlayer.play({
+            id: Number(tile.dataset.songId),
+            src: tile.dataset.audio,
+            title: tile.dataset.title,
+            artist: tile.dataset.artist,
+            cover: tile.dataset.cover
+          });
           setTimeout(()=> document.getElementById('playlistDropdown')?.click(), 120);
         }
       }
       if (act === 'unlike'){
-        openModal({ id:song.id, title:song.title, artist:song.artist, cover:song.cover });
+        openModal({
+          id:     tile.dataset.songId,
+          title:  tile.dataset.title,
+          artist: tile.dataset.artist,
+          cover:  tile.dataset.cover
+        });
       }
       toggleMenu(false);
     });
 
-    // Hover corazón: animación crack
-    btnHeart?.addEventListener('mouseenter', () => {
-      const i = btnHeart.querySelector('i');
-      i?.classList.replace('fa-heart', 'fa-heart-crack');
-      btnHeart.classList.add('is-danger');
-    });
-    btnHeart?.addEventListener('mouseleave', () => {
-      const i = btnHeart.querySelector('i');
-      i?.classList.replace('fa-heart-crack', 'fa-heart');
-      btnHeart.classList.remove('is-danger');
-    });
-
-    // Click corazón => abrir modal
+    // Corazón: NO reproducir y abrir modal
     btnHeart?.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation(); // <- evita click en cover/link
       openModal({
         id:     tile.dataset.songId,
         title:  tile.dataset.title,
@@ -410,10 +434,26 @@
       });
     });
 
-    // Reproducir al hacer click en botón, imagen o toda la tarjeta
-    btnPlay?.addEventListener('click', (e) => { e.preventDefault(); playInRightPlayer(tile); });
-    coverBox?.addEventListener('click', (e) => { e.preventDefault(); playInRightPlayer(tile); });
-    linkAll?.addEventListener('click', (e) => { e.preventDefault(); playInRightPlayer(tile); });
+    // Reproducir al hacer click en botón play
+    btnPlay?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      playInRightPlayer(tile);
+    });
+
+    // Click en la portada: SOLO si no fue en corazón/kebab/menú
+    coverBox?.addEventListener('click', (e) => {
+      if (isPlayBlocked(e.target)) return; // <- bloqueo
+      e.preventDefault();
+      playInRightPlayer(tile);
+    });
+
+    // Click en el link-overlay del artículo: SOLO si no fue en corazón/kebab/menú
+    linkAll?.addEventListener('click', (e) => {
+      if (isPlayBlocked(e.target)) return; // <- bloqueo
+      e.preventDefault();
+      playInRightPlayer(tile);
+    });
   };
 
   /* ===== Vacío / contador ===== */
@@ -510,9 +550,24 @@
 
     updateCount(); ensureEmptyMessage(); applySearch(); saveNow();
   }
-  document.addEventListener('aura:like-changed', handleLikeChanged);
-  if (bc) bc.onmessage = (ev)=> handleLikeChanged(ev);
+document.addEventListener('aura:like-changed', (event) => {
+  const { song, liked } = event.detail;
+  const songElement = document.querySelector(`.lk-tile[data-song-id="${song.id}"]`);
+  
+  if (songElement) {
+    const heartButton = songElement.querySelector('.lk-like');
+    if (liked) {
+      heartButton.classList.add('is-liked');
+    } else {
+      heartButton.classList.remove('is-liked');
+    }
+  }
 
+  // Actualizar el contador
+  const likeCount = document.getElementById('lkCount');
+  const currentCount = parseInt(likeCount.textContent, 10);
+  likeCount.textContent = liked ? currentCount + 1 : currentCount - 1;
+});
   /* ===== Bind inicial ===== */
   tiles().forEach(bindTile);
 
@@ -544,22 +599,51 @@
   ensureEmptyMessage(); updateCount();
 
   /* ===== Confirmar eliminación (Aceptar) ===== */
+  async function requestUnlike({ url, method, id }) {
+    const isDelete = method.toUpperCase() === 'DELETE';
+    const fd = new FormData();
+    fd.append('_token', CSRF);
+    if (isDelete) fd.append('_method','DELETE');
+
+    const res = await fetch(url, {
+      method: 'POST',
+      body: fd,
+      credentials:'same-origin',
+      headers:{ 'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json' }
+    });
+
+    if (res.redirected) { window.location.href = res.url; return { ok:true, removed:true }; }
+
+    let json = null;
+    try { json = await res.clone().json(); } catch {}
+
+    if (json && typeof json.liked !== 'undefined') {
+      return { ok:true, removed: json.liked === false };
+    }
+
+    if (res.ok) return { ok:true, removed:true };
+
+    return { ok:false, removed:false, status: res.status };
+  }
+
   modalOK?.addEventListener('click', async () => {
     const id = modalSongId;
     if (!id) return;
 
+    const tile = byId(id);
+    const primaryUrl    = tile?.dataset.unlikeUrl || `/likes/${id}`;
+    const primaryMethod = (tile?.dataset.unlikeMethod || 'DELETE').toUpperCase();
+
+    const toggleUrl = `/canciones/like/${id}`;
+
     try {
-      const fd = new FormData();
-      fd.append('_method','DELETE');
-      fd.append('_token', CSRF);
-
-      const r = await fetch(`/likes/${id}`, {
-        method:'POST', body: fd, credentials:'same-origin',
-        headers:{ 'X-Requested-With':'XMLHttpRequest' }
-      });
-
-      if (r.redirected) { window.location.href = r.url; return; }
-      if (!r.ok) throw new Error('Error al quitar Me gusta');
+      let result = await requestUnlike({ url: primaryUrl, method: primaryMethod, id });
+      if (!result.ok || !result.removed) {
+        result = await requestUnlike({ url: toggleUrl, method: 'POST', id });
+        if (!result.ok || !result.removed) {
+          throw new Error('No se pudo quitar de Me gusta.');
+        }
+      }
 
       byId(id)?.remove();
       updateCount(); ensureEmptyMessage(); saveNow();
@@ -575,6 +659,7 @@
       closeModal();
     }
   });
+
 })();
 </script>
 </body>

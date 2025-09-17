@@ -1,329 +1,525 @@
+// resources/js/ed_perfil.js
+
+/**
+ * resources/js/ed_perfil.js
+ *
+ * JS de perfil con DELEGACIÓN DE EVENTOS.
+ * - UI optimista para "Me gusta" (corazón instantáneo).
+ * - Menú de 3 puntos con 3 opciones y cierre fuera/ESC.
+ * - Modal de confirmar eliminación (álbum y canción).
+ * - Reproducción inmediata + precalentado (warm-up) de audios.
+ * - Carruseles de álbumes y lanzamientos.
+ */
+
 (() => {
-  const rootSel = '#page-profile';
-  const ri = window.requestIdleCallback || (cb => setTimeout(cb, 1));
-  const $ = (sel, sc=document) => sc.querySelector(sel);
-  const $$ = (sel, sc=document) => Array.from(sc.querySelectorAll(sel));
+  'use strict';
 
-  const getCSRF = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const getCSRF = () => $('meta[name="csrf-token"]')?.content || '';
 
-  // === NUEVO: sincroniza altura de canciones con el 2×2 de álbumes ===
-  function syncSongsHeight() {
-    const songsBox = $('#songsList');
-    const albumsViewport = $('#albumsViewport');
-    if (!songsBox || !albumsViewport) return;
+  /** Evita que el click en acciones dentro de la fila dispare la reproducción */
+  const isAction = (el) => !!el.closest('.song-actions, .menu-wrap, form, button, a, input, .trash-float, .trash-song');
 
-    const h = Math.max(0, Math.round(albumsViewport.getBoundingClientRect().height));
-    if (h > 0) {
-      const row = Math.floor(h / 6); // 6 filas
-      document.documentElement.style.setProperty('--aurp-songs-box-h', `${h}px`);
-      document.documentElement.style.setProperty('--aurp-song-row-h', `${row}px`);
-    }
+  /* =========================
+   *  MENÚ KEBAB (tres puntos)
+   * ========================= */
+  function closeAllMenus(exceptWrap = null) {
+    $$('.menu-wrap.open').forEach(w => { if (!exceptWrap || w !== exceptWrap) w.classList.remove('open'); });
+    $$('.more-btn[aria-expanded="true"]').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
   }
-  let syncTO = null;
-  const syncLater = () => { clearTimeout(syncTO); syncTO = setTimeout(syncSongsHeight, 60); };
 
-  function initProfile() {
-    const root = document.querySelector(rootSel);
-    if (!root) return;
-    document.body.classList.remove('blurred','modal-open');
-
-    // Hover anim en filas (conservado + suave)
-    $$('.song-row', root).forEach(row => {
-      row.addEventListener('mouseenter', function(){
-        this.style.transform = 'translateY(-8px) scale(1.02)';
-        this.style.boxShadow = '0 12px 24px rgba(0,0,0,.15)';
-        this.style.zIndex = '10';
-        this.style.transition = 'all .3s cubic-bezier(.4,0,.2,1)';
-      });
-      row.addEventListener('mouseleave', function(){
-        this.style.transform = 'translateY(0) scale(1)';
-        this.style.boxShadow = 'none';
-        this.style.zIndex = '1';
-      });
-    });
-
-    // Banner progressive
-    const b = root.querySelector('.profile-banner');
-    if (b?.dataset.hires){
-      const hi = new Image();
-      hi.src = b.dataset.hires; hi.decoding = 'async';
-      hi.onload = () => { b.style.backgroundImage = `url('${b.dataset.hires}')`; b.classList.add('loaded'); };
+  document.addEventListener('click', (e) => {
+    // Toggle del kebab
+    const moreBtn = e.target.closest('.more-btn');
+    if (moreBtn) {
+      const wrap = moreBtn.closest('.menu-wrap');
+      const willOpen = !wrap.classList.contains('open');
+      closeAllMenus();
+      wrap.classList.toggle('open', willOpen);
+      moreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      e.preventDefault();
+      e.stopPropagation();
+      return;
     }
 
-    // Reproducir al click en fila (evitando botones)
-    $$('.song-row', root).forEach(row => {
-      const play = () => row.querySelector('.cancion-item')?.click();
-      row.addEventListener('click', (e) => {
-        if (e.target.closest('.icon-chip') || e.target.closest('.kebab-menu')) return;
-        play();
-      }, { passive:true });
-    });
+    // Click fuera: cerrar menús
+    if (!e.target.closest('.menu-wrap')) closeAllMenus();
+  }, { passive: true });
 
-    // Menú 3 puntos
-    $$('.more-btn', root).forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const wrap = btn.closest('.menu-wrap');
-        const menu = wrap.querySelector('.kebab-menu');
-        menu.classList.toggle('open');
-        btn.setAttribute('aria-expanded', menu.classList.contains('open'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllMenus();
+  });
+
+  /* =========================
+   *  LIKE (UI optimista + fetch POST)
+   * ========================= */
+  document.addEventListener('submit', async (e) => {
+    const form = e.target.closest('form.inline-like');
+    if (!form) return;
+
+    e.preventDefault();
+    const btn  = form.querySelector('.like-btn');
+    const icon = form.querySelector('.like-btn i');
+    const wasLiked = btn.classList.contains('is-liked');
+
+    // OPTIMISTA: toggle instantáneo
+    btn.classList.toggle('is-liked', !wasLiked);
+    btn.setAttribute('aria-pressed', (!wasLiked).toString());
+    if (wasLiked) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+    else          { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': getCSRF(),
+          'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
       });
-    });
-    document.addEventListener('click', () => {
-      $$('.kebab-menu.open', root).forEach(m => m.classList.remove('open'));
-    }, { passive:true });
 
-    // === Carrusel Álbumes ===
-    (function albums(){
-      const track = $('#albumsTrack');
-      const viewport = $('#albumsViewport');
-      const prev = $('#albumsPrev');
-      const next = $('#albumsNext');
-      const label = $('#albumsPageLabel');
-      if(!track || !viewport) return;
-      let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      let data = {};
+      try { data = await res.json(); } catch {}
+      const finalLiked = !!data.liked;
 
-      const update = () => {
-        track.style.transform = `translateX(-${page * 100}%)`;
-        if (prev) prev.disabled = (page === 0);
-        if (next) next.disabled = (page >= pages - 1);
-        if (label) label.textContent = pages ? `Página ${page+1} de ${pages}` : '';
-        syncLater();
+      // Sincroniza con backend
+      btn.classList.toggle('is-liked', finalLiked);
+      btn.setAttribute('aria-pressed', String(finalLiked));
+      if (finalLiked) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+      else            { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+    } catch (err) {
+      // Revertir si hubo error
+      btn.classList.toggle('is-liked', wasLiked);
+      btn.setAttribute('aria-pressed', String(wasLiked));
+      if (wasLiked) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+      else          { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+      console.error('Like error:', err);
+    }
+  });
+
+  /* =========================
+   *  MODAL CONFIRMAR DELETE
+   * ========================= */
+  const getConfirmRefs = () => ({
+    confirmModal   : $('#confirmModal'),
+    confirmCover   : $('#confirmCover'),
+    confirmSubtitle: $('#confirmSubtitle'),
+    deleteForm     : $('#deleteForm'),
+    cancelDelete   : $('#cancelDelete'),
+  });
+
+  function openConfirm({ action, title, cover }) {
+    const { confirmModal, confirmCover, confirmSubtitle, deleteForm } = getConfirmRefs();
+    if (!confirmModal) return;
+    if (deleteForm) deleteForm.setAttribute('action', action || '#');
+    if (confirmCover) confirmCover.src = cover || '';
+    if (confirmSubtitle) confirmSubtitle.textContent = title ? `“${title}”` : '';
+    confirmModal.setAttribute('aria-hidden', 'false');
+    confirmModal.classList.add('open');
+  }
+
+  function closeConfirm() {
+    const { confirmModal } = getConfirmRefs();
+    if (!confirmModal) return;
+    confirmModal.setAttribute('aria-hidden', 'true');
+    confirmModal.classList.remove('open');
+  }
+
+  document.addEventListener('click', (e) => {
+    const { confirmModal, cancelDelete } = getConfirmRefs();
+
+    // Abrir modal de eliminar (botón fuera del menú o dentro del menú)
+    const delBtn = e.target.closest('.open-delete');
+    if (delBtn) {
+      e.preventDefault();
+      const payload = {
+        action: delBtn.dataset.action,
+        title : delBtn.dataset.title,
+        cover : delBtn.dataset.cover
       };
-      prev?.addEventListener('click', () => { if (page>0){ page--; update(); }});
-      next?.addEventListener('click', () => { if (page<pages-1){ page++; update(); }});
-      update();
+      openConfirm(payload);
+      return;
+    }
 
-      // Recalcular cuando cargan imágenes
-      $$('img', viewport).forEach(img => img.addEventListener('load', syncLater, {once:true}));
+    // Cerrar al hacer click fuera del diálogo
+    if (confirmModal && (confirmModal.classList.contains('open') || confirmModal.getAttribute('aria-hidden') === 'false')) {
+      if (e.target === confirmModal) { closeConfirm(); return; }
+    }
 
-      if (window.ResizeObserver){
-        const ro = new ResizeObserver(syncLater);
-        ro.observe(viewport);
-      }
-    })();
+    // Botón cancelar
+    if (cancelDelete && e.target === cancelDelete) {
+      e.preventDefault();
+      closeConfirm();
+    }
+  });
 
-    // === Carrusel Últimos lanzamientos ===
-    (function releases(){
-      const track = $('#releasesTrack');
-      if(!track) return;
-      const prev = $('#releasesPrev');
-      const next = $('#releasesNext');
-      const pager = $('#releasesPager');
-      let page = 0, pages = parseInt(track.dataset.pages || '0', 10);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeConfirm();
+  });
 
-      // Puntos
+  /* =========================
+   *  MODALES: BIO y EDITAR
+   * ========================= */
+  function openModal(modal) {
+    if (!modal) return;
+    modal.removeAttribute('inert');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('inert', '');
+  }
+
+  function bindProfileModals() {
+    const bioModal     = $('#bioModal');
+    const openBioBtn   = $('#openBio');
+    const closeBioBtn1 = $('#closeBio');
+    const closeBioBtn2 = $('#closeBioTop');
+
+    openBioBtn && openBioBtn.addEventListener('click', () => openModal(bioModal), { passive: true });
+    closeBioBtn1 && closeBioBtn1.addEventListener('click', () => closeModal(bioModal), { passive: true });
+    closeBioBtn2 && closeBioBtn2.addEventListener('click', () => closeModal(bioModal), { passive: true });
+    bioModal && bioModal.addEventListener('click', (e) => { if (e.target === bioModal) closeModal(bioModal); }, { passive: true });
+
+    const editModal     = $('#editModal');
+    const openEditBtn   = $('#editBtn');
+    const closeEditBtn1 = $('#closeEdit');
+    const closeEditBtn2 = $('#closeEditTop');
+
+    openEditBtn && openEditBtn.addEventListener('click', () => openModal(editModal), { passive: true });
+    closeEditBtn1 && closeEditBtn1.addEventListener('click', () => closeModal(editModal), { passive: true });
+    closeEditBtn2 && closeEditBtn2.addEventListener('click', () => closeModal(editModal), { passive: true });
+    editModal && editModal.addEventListener('click', (e) => { if (e.target === editModal) closeModal(editModal); }, { passive: true });
+  }
+
+  /* =========================
+   *  CARRUSEL ÁLBUMES 2×2
+   * ========================= */
+  function initAlbumsCarousel() {
+    const track = $('#albumsTrack');
+    if (!track) return;
+    const pages = parseInt(track.dataset.pages || '1', 10) || 1;
+    const prev  = $('#albumsPrev');
+    const next  = $('#albumsNext');
+    const label = $('#albumsPageLabel');
+    let page = 0;
+
+    function update(){
+      track.style.transform = `translateX(-${page * 100}%)`;
+      if (prev) prev.disabled = page <= 0;
+      if (next) next.disabled = page >= pages - 1;
+      if (label) label.textContent = pages > 1 ? `${page+1} / ${pages}` : '';
+    }
+    prev && prev.addEventListener('click', () => { if (page>0){ page--; update(); }});
+    next && next.addEventListener('click', () => { if (page<pages-1){ page++; update(); }});
+    update();
+  }
+
+  /* =========================
+   *  CARRUSEL LANZAMIENTOS
+   * ========================= */
+  function initReleasesCarousel() {
+    const track = $('#releasesTrack');
+    if (!track) return;
+    const pages = parseInt(track.dataset.pages || '1', 10) || 1;
+    const prev  = $('#releasesPrev');
+    const next  = $('#releasesNext');
+    const pager = $('#releasesPager');
+    let page = 0;
+
+    function paintPager(){
+      if (!pager) return;
       pager.innerHTML = '';
-      for (let i=0;i<pages;i++){
-        const d = document.createElement('div');
-        d.className = 'dot' + (i===0 ? ' active':'' );
-        d.role = 'button'; d.tabIndex = 0; d.ariaLabel = `Ir a página ${i+1}`;
-        d.addEventListener('click', ()=>{ page = i; update(); });
-        pager.appendChild(d);
-      }
-
-      function update(){
-        track.style.transform = `translateX(-${page * 100}%)`;
-        if (prev) prev.disabled = (page === 0);
-        if (next) next.disabled = (page >= pages - 1);
-        [...pager.children].forEach((el,idx)=> el.classList.toggle('active', idx===page));
-      }
-
-      prev?.addEventListener('click', ()=>{ if (page>0) { page--; update(); }});
-      next?.addEventListener('click', ()=>{ if (page<pages-1) { page++; update(); }});
-      update();
-    })();
-
-    // === Editar / tabs / previews ===
-    (function modals(){
-      const editModal = $('#editModal');
-      if(!editModal) return;
-      const openEdit  = $('#editBtn');
-      const closeEdit1= $('#closeEdit');
-      const closeEdit2= $('#closeEditTop');
-      const close = ()=> editModal?.setAttribute('aria-hidden','true');
-
-      const openModal = (tab='basic') => {
-        editModal?.setAttribute('aria-hidden','false');
-        $$('.tab-btn', editModal).forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
-        $$('.tab-pane', editModal).forEach(p=> p.classList.toggle('hidden', p.dataset.pane!==tab));
-      };
-      openEdit?.addEventListener('click', ()=> openModal('basic'));
-      closeEdit1?.addEventListener('click', close);
-      closeEdit2?.addEventListener('click', close);
-      editModal?.addEventListener('click', (e)=>{ if(e.target===editModal) close(); });
-
-      // Tabs
-      $$('.tab-btn', editModal).forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const tab = btn.dataset.tab;
-          $$('.tab-btn', editModal).forEach(b=> b.classList.toggle('active', b===btn));
-          $$('.tab-pane', editModal).forEach(p=> p.classList.toggle('hidden', p.dataset.pane!==tab));
-        });
-      });
-
-      // Previews
-      const avatarInput = $('#avatarInput');
-      const avatarPrev  = $('#avatarPreview');
-      const avatarLive  = $('#avatarPreviewLive');
-      const bannerInput = $('#bannerInput');
-      const bannerPrev  = $('#bannerPreview');
-
-      $('.avatar-edit')?.addEventListener('click', ()=> avatarInput?.click());
-      $('.banner-edit')?.addEventListener('click', ()=> bannerInput?.click());
-
-      avatarInput?.addEventListener('change', ()=>{
-        const f = avatarInput.files?.[0]; if(!f) return;
-        const url = URL.createObjectURL(f);
-        if (avatarPrev) { avatarPrev.src = url; avatarPrev.style.display='block'; }
-        if (avatarLive) { avatarLive.src = url; }
-      });
-      bannerInput?.addEventListener('change', ()=>{
-        const f = bannerInput.files?.[0]; if(!f) return;
-        const url = URL.createObjectURL(f);
-        const banner = $('.profile-banner');
-        if (bannerPrev) { bannerPrev.src = url; bannerPrev.style.display='block'; }
-        if (banner)     { banner.style.backgroundImage = `url('${url}')`; }
-      });
-    })();
-
-    // === Confirmar eliminar ===
-    (function confirmDelete(){
-      const cModal = $('#confirmModal'); if(!cModal) return;
-      const cCover = $('#confirmCover');
-      const cTitle = $('#confirmTitle');
-      const cSub   = $('#confirmSubtitle');
-      const dForm  = $('#deleteForm');
-      const dangerBtn = $('#confirmDeleteBtn');
-      const cancelBtn = $('#cancelDelete');
-      let lastFocused = null;
-
-      const focusableSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-      function trapFocus(container, e){
-        const f = [...container.querySelectorAll(focusableSel)].filter(el=>!el.disabled && el.offsetParent !== null);
-        if (!f.length) return; const first = f[0], last = f[f.length - 1];
-        if (e.key === 'Tab'){
-          if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
-          else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
-        }
-      }
-      function openConfirm(type, action, title, cover){
-        lastFocused = document.activeElement;
-        cCover.src = cover || '';
-        cTitle.textContent = '¿Deseas eliminar ' + (type === 'album' ? 'este álbum?' : 'esta canción?');
-        cSub.textContent   = title || '';
-        dForm.action       = action;
-        cModal.setAttribute('aria-hidden','false');
-        document.body.classList.add('blurred','modal-open');
-        dangerBtn.focus();
-
-        const onKey = (e)=>{
-          if (e.key === 'Escape'){ closeConfirm(); }
-          if (e.key === 'Enter' && cModal.getAttribute('aria-hidden') === 'false' && document.activeElement !== cancelBtn){
-            e.preventDefault(); dangerBtn.click();
-          }
-          trapFocus(cModal, e);
-        };
-        cModal._escHandler = onKey;
-        document.addEventListener('keydown', onKey);
-      }
-      function closeConfirm(){
-        cModal.setAttribute('aria-hidden','true');
-        document.body.classList.remove('blurred','modal-open');
-        if (cModal._escHandler){
-          document.removeEventListener('keydown', cModal._escHandler);
-          cModal._escHandler = null;
-        }
-        lastFocused?.focus?.();
-      }
-      $$('.open-delete', root).forEach(btn=>{
-        btn.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          openConfirm(btn.dataset.type, btn.dataset.action, btn.dataset.title, btn.dataset.cover);
-        });
-      });
-      cancelBtn?.addEventListener('click', closeConfirm);
-      cModal?.addEventListener('click', (e)=>{ if (e.target === cModal) closeConfirm(); });
-    })();
-
-    // === BIO modal ===
-    (function bio(){
-      const modal = $('#bioModal');
-      const open  = $('#openBio');
-      const closeTop = $('#closeBioTop');
-      const closeBtn = $('#closeBio');
-      const close = () => modal?.setAttribute('aria-hidden','true');
-
-      open?.addEventListener('click', ()=> modal?.setAttribute('aria-hidden','false'));
-      closeTop?.addEventListener('click', close);
-      closeBtn?.addEventListener('click', close);
-      modal?.addEventListener('click', (e)=>{ if(e.target===modal) close(); });
-      document.addEventListener('keydown', (e)=> {
-        if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') close();
-      }, { passive:true });
-    })();
-
-    // === Likes (intercepta para pintar al instante) ===
-    $$('.inline-like', root).forEach(form => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = form.querySelector('.like-btn');
-        const url = form.action;
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': getCSRF(), 'X-Requested-With':'XMLHttpRequest' }
-          });
-          if (res.ok) {
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            btn.setAttribute('aria-pressed', String(!pressed));
-            const i = btn.querySelector('i');
-            i.classList.toggle('fa-regular', pressed);
-            i.classList.toggle('fa-solid', !pressed);
-            btn.classList.toggle('is-liked', !pressed);
-          } else {
-            console.warn('Like request failed', await res.text());
-          }
-        } catch (err) { console.error(err); }
-      });
-    });
-
-    // === Agregar a playlist ===
-    function openAddToPlaylist(songId){
-      const ev = new CustomEvent('playlist:add', { detail: { songId } });
-      window.dispatchEvent(ev);
-      if (typeof window.showAddToPlaylist === 'function') {
-        window.showAddToPlaylist(songId);
+      for (let i=0; i<pages; i++){
+        const dot = document.createElement('button');
+        dot.className = 'pager-dot' + (i===page ? ' active' : '');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `Ir a página ${i+1}`);
+        dot.addEventListener('click', () => { page = i; update(); });
+        pager.appendChild(dot);
       }
     }
-    $$('.add-playlist-btn', root).forEach(btn => {
-      btn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const row = btn.closest('.song-row');
-        openAddToPlaylist(row?.dataset.songId);
-      });
-    });
-    $$('.kebab-menu .menu-item', root).forEach(item=>{
-      item.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const row = item.closest('.song-row');
-        const id  = row?.dataset.songId;
-        const act = item.dataset.action;
-        if (act === 'playlist') openAddToPlaylist(id);
-        if (act === 'like') row?.querySelector('.inline-like .like-btn')?.click();
-        if (act === 'queue') window.dispatchEvent(new CustomEvent('player:queue:add',{detail:{songId:id}}));
-        item.closest('.kebab-menu')?.classList.remove('open');
-      });
-    });
 
-    // Recalcular altura al final
-    ri(syncSongsHeight);
-    window.addEventListener('resize', syncLater, {passive:true});
-    $$('#albumsViewport img').forEach(img => img.addEventListener('load', syncLater, {once:true}));
+    function update(){
+      track.style.transform = `translateX(-${page * 100}%)`;
+      if (prev) prev.disabled = page <= 0;
+      if (next) next.disabled = page >= pages - 1;
+      paintPager();
+    }
+
+    prev && prev.addEventListener('click', () => { if (page>0){ page--; update(); }});
+    next && next.addEventListener('click', () => { if (page<pages-1){ page++; update(); }});
+
+    update();
   }
 
-  document.addEventListener('DOMContentLoaded', initProfile);
-  document.addEventListener('turbo:load', initProfile);
-  document.addEventListener('turbo:render', initProfile);
-  window.addEventListener('pageshow', (e)=>{ if(e.persisted) initProfile(); });
+  /* =========================
+   *  REPRODUCCIÓN + PRECALENTADO
+   * ========================= */
+  // Player del lateral si existe, si no, usa un <audio> en memoria.
+  const playerCard = $('#rightPlayer');
+  const audio = playerCard ? (playerCard.querySelector('audio') || new Audio()) : new Audio();
+  if (playerCard && !playerCard.querySelector('audio')) {
+    audio.preload = 'metadata';
+    playerCard.appendChild(audio);
+  }
+
+  function setPlayerUI({title, artist, cover}){
+    if (!playerCard) return;
+    const coverImg = playerCard.querySelector('.cover');
+    const nameEl   = playerCard.querySelector('.song-name');
+    const autorEl  = playerCard.querySelector('.song-autor');
+    coverImg && (coverImg.src = cover || coverImg.src);
+    nameEl  && (nameEl.textContent = title || 'Sin título');
+    autorEl && (autorEl.textContent = artist || 'Artista');
+  }
+
+  async function playSrc(src, meta){
+    if (!src) return;
+    try {
+      if (audio.src !== src) {
+        audio.preload = 'metadata';
+        audio.src = src;
+      }
+      setPlayerUI(meta || {});
+      await audio.play();
+    } catch(err){ console.error('Play error:', err); }
+  }
+
+  // Click en fila de canción → reproducir (evita si fue una acción)
+  document.addEventListener('click', (e) => {
+    const row = e.target.closest('.cancion-item');
+    if (!row || isAction(e.target)) return;
+    const src = row.getAttribute('data-src');
+    const title = row.getAttribute('data-title');
+    const artist = row.getAttribute('data-artist');
+    const cover = row.getAttribute('data-cover');
+    playSrc(src, {title, artist, cover});
+  });
+
+  // Reproducir desde lanzamientos (si es canción)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.play-release');
+    if (!btn) return;
+    const src = btn.getAttribute('data-src');
+    const title = btn.getAttribute('data-title') || (btn.closest('.release-card')?.querySelector('h4')?.textContent?.trim() || 'Sin título');
+    const artist = btn.getAttribute('data-artist') || ($('#artistName')?.textContent?.trim() || 'Artista');
+    const cover = btn.getAttribute('data-cover') || (btn.closest('.release-card')?.querySelector('img')?.src || '');
+    playSrc(src, {title, artist, cover});
+  });
+
+  // Precalentado (warm-up): primeras 3 canciones y hover
+  const warmed = new Set();
+  function warmAudio(src){
+    if (!src || warmed.has(src)) return;
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = src;
+    warmed.add(src);
+  }
+  function warmOnHover(){
+    $$('.cancion-item').slice(0,3).forEach(row => warmAudio(row.getAttribute('data-src')));
+    $$('.cancion-item').forEach(row => {
+      row.addEventListener('pointerenter', () => warmAudio(row.getAttribute('data-src')), { once:true, passive:true });
+    });
+    $$('.play-release').forEach(btn => {
+      btn.addEventListener('pointerenter', () => warmAudio(btn.getAttribute('data-src')), { once:true, passive:true });
+    });
+  }
+
+  /* =========================
+   *  PREFETCH de páginas destino
+   * ========================= */
+  function bindPrefetch(){
+    const hovered = new Set();
+    document.addEventListener('pointerenter', (e) => {
+      const a = e.target.closest('a[data-prefetch="true"]');
+      if (!a || hovered.has(a.href)) return;
+      hovered.add(a.href);
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = a.href;
+      document.head.appendChild(link);
+    }, {passive:true});
+  }
+
+  /* =========================
+   *  ARRANQUE
+   * ========================= */
+  function bootOncePerRender(){
+    bindProfileModals();
+    initAlbumsCarousel();
+    initReleasesCarousel();
+    warmOnHover();
+    bindPrefetch();
+  }
+
+  // Soporte Turbo/Hotwire y carga inicial
+  document.addEventListener('turbo:load', bootOncePerRender);
+  document.addEventListener('DOMContentLoaded', bootOncePerRender);
+})();
+
+
+
+
+/* =========================
+ *  PICKER DE PLAYLISTS
+ * ========================= */
+(function(){
+  const root = document.getElementById('page-profile');
+  if (!root) return;
+
+  const listUrl   = root.dataset.plList || '';
+  const quickUrl  = root.dataset.plQuick || '';
+  const addPat    = root.dataset.plAddPattern || '';
+  const isAuth    = (root.dataset.auth === '1');
+
+  // Refs
+  const modal     = document.getElementById('playlistModal');
+  const listEl    = document.getElementById('plList');
+  const searchEl  = document.getElementById('plSearch');
+  const quickForm = document.getElementById('plQuickForm');
+  const quickName = document.getElementById('plQuickName');
+  const plCloseT  = document.getElementById('plCloseTop');
+  const plCloseB  = document.getElementById('plCloseBottom');
+
+  let currentSongId = null;
+  let cached = [];
+
+  function escapeHtml(s){
+    return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function openPl(songId){
+    if (!isAuth) return; // botón ya está protegido por @auth, pero por si acaso
+    currentSongId = songId;
+    if (typeof openModal === 'function') openModal(modal);
+    else { modal?.setAttribute('aria-hidden','false'); modal?.removeAttribute('inert'); }
+    paintLoading();
+    fetchList();
+  }
+
+  function closePl(){
+    if (typeof closeModal === 'function') closeModal(modal);
+    else { modal?.setAttribute('aria-hidden','true'); modal?.setAttribute('inert',''); }
+  }
+
+  function paintLoading(){
+    listEl.innerHTML = `<li class="pl-empty">Cargando playlists...</li>`;
+  }
+
+  function paintEmpty(){
+    listEl.innerHTML = `<li class="pl-empty">Aún no tienes playlists. Crea una con el cuadro de abajo.</li>`;
+  }
+
+  function render(items){
+    if (!items?.length) { paintEmpty(); return; }
+    listEl.innerHTML = items.map(p => `
+      <li>
+        <button type="button" class="pl-item" data-id="${p.id}">
+          <i class="fa-solid fa-list"></i>
+          <span>${escapeHtml(p.nombre || p.name || 'Sin título')}</span>
+        </button>
+      </li>
+    `).join('');
+  }
+
+  async function fetchList(){
+    try{
+      const res = await fetch(listUrl, { headers: { 'Accept':'application/json' }, credentials:'same-origin' });
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      cached = await res.json();
+      render(cached);
+    }catch(e){
+      console.error(e);
+      listEl.innerHTML = `<li class="pl-empty">No se pudo cargar. Recarga la página.</li>`;
+    }
+  }
+
+  async function addToPlaylist(playlistId){
+    if (!currentSongId) return;
+    const url = addPat.replace('PL_ID', playlistId).replace('SONG_ID', currentSongId);
+    try{
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      // opcional: toast
+      closePl();
+    }catch(e){
+      console.error('addToPlaylist error:', e);
+      alert('No se pudo agregar a la playlist.');
+    }
+  }
+
+  // Delegación: abrir picker desde botón de cada canción
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.add-playlist-btn');
+    if (!btn) return;
+    const row = btn.closest('.song-row');
+    const sid = row?.dataset?.id;
+    if (!sid) return;
+    e.preventDefault();
+    openPl(sid);
+  });
+
+  // Click en una playlist
+  listEl?.addEventListener('click', (e) => {
+    const item = e.target.closest('.pl-item');
+    if (!item) return;
+    addToPlaylist(item.dataset.id);
+  });
+
+  // Búsqueda local
+  searchEl?.addEventListener('input', () => {
+    const q = searchEl.value.trim().toLowerCase();
+    if (!cached?.length) return;
+    const filtered = !q ? cached : cached.filter(p => (p.nombre || p.name || '').toLowerCase().includes(q));
+    render(filtered);
+  });
+
+  // Crear playlist rápida y agregar
+  quickForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nombre = (quickName?.value || '').trim();
+    if (!nombre) return;
+    try{
+      const res = await fetch(quickUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'Accept'      : 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ nombre })
+      });
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json(); // { id, nombre, message }
+      // mete al principio y actualiza cache
+      const newItem = { id: data.id, nombre: data.nombre };
+      cached = [newItem, ...cached];
+      render(cached);
+      quickName.value = '';
+      // auto-agregar
+      addToPlaylist(newItem.id);
+    }catch(err){
+      console.error('quick playlist error:', err);
+      alert('No se pudo crear la playlist.');
+    }
+  });
+
+  // Cierre modal
+  plCloseT?.addEventListener('click', closePl);
+  plCloseB?.addEventListener('click', closePl);
+  modal?.addEventListener('click', (e)=>{ if (e.target === modal) closePl(); });
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') closePl(); });
 })();

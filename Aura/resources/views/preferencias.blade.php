@@ -1,381 +1,490 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Preferencias — Aura</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preferencias — Aura</title>
 
-  <!-- Iconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Vite -->
-  @vite(['resources/css/preferencias.css', 'resources/js/preferencias.js'])
+    <!-- Vite -->
+    @vite(['resources/css/preferencias.css', 'resources/js/preferencias.js'])
 </head>
+
+<style>
+#app {
+    overflow: hidden;
+    /* bloquea el scroll dentro de ese contenedor */
+    height: 100vh;
+    /* asegura que ocupe toda la pantalla */
+}
+
+:root {
+    --panel: #121a24;
+    --ink: #d8eeff;
+    --muted: #9ec1df;
+    --line: #1c2a3b;
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, #0b0f14, #0e141c);
+    color: var(--ink);
+    font-family: system-ui, Segoe UI, Inter, Arial, sans-serif;
+}
+
+.card {
+    width: min(680px, 95vw);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, .35);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap
+}
+
+h1 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: .3px
+}
+
+.small {
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap
+}
+
+button,
+input[type="range"] {
+    background: #0f1622;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    border-color: #2c425c
+}
+
+.eq-panel {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px
+}
+
+.bands {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 12px;
+    align-items: end;
+}
+
+.band {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.band label {
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.band input[type="range"] {
+    writing-mode: bt-lr;
+    -webkit-appearance: slider-vertical;
+    width: 18px;
+    height: 180px;
+    background: transparent;
+    padding: 0;
+}
+
+.num {
+    font: 600 12px/1 system-ui;
+    color: #cfe9ff
+}
+
+.preamp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+}
+</style>
+
 <body>
 
-  {{-- ====== COMPONENTES GLOBALES ====== --}}
-  @include('components.sidebar')
-  @include('components.traductor')
-  @include('components.header')
+    {{-- ====== COMPONENTES GLOBALES ====== --}}
+    @include('components.sidebar')
+    @include('components.traductor')
+    @include('components.header')
     @include('components.fondo')
 
-  {{-- Partículas de fondo --}}
-  <div class="floating-particles" id="particles"></div>
+    {{-- Partículas de fondo --}}
+    <div class="floating-particles" id="particles"></div>
 
-  {{-- ====== CONTENIDO PRINCIPAL ====== --}}
-  <main class="main-content">
-    <div class="container">
+    {{-- ====== CONTENIDO PRINCIPAL ====== --}}
+    <main class="main-content">
+        <div class="container">
 
-      {{-- ====== HERO NUEVO ====== --}}
-      <section class="pref-hero" aria-label="Preferencias">
-        <div class="pref-hero__bg"></div>
+            {{-- ====== HERO NUEVO ====== --}}
+            <section class="pref-hero" aria-label="Preferencias">
+                <div class="pref-hero__bg"></div>
 
-        <div class="pref-hero__content">
-          <div class="pref-hero__icon">
-            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-          </div>
-          <div>
-            <h1>Preferencias</h1>
-            <p class="pref-hero__subtitle">Personaliza tu experiencia musical con artistas emergentes</p>
-          </div>
-        </div>
+                <div class="pref-hero__content">
+                    <div class="pref-hero__icon">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h1>Preferencias</h1>
+                        <p class="pref-hero__subtitle">Personaliza tu experiencia musical con artistas emergentes</p>
+                    </div>
+                </div>
 
-        <div class="pref-hero__chips">
-          <span class="pref-chip"><i class="fa-solid fa-globe"></i> Idioma: ES</span>
-          <span class="pref-chip"><i class="fa-solid fa-bolt"></i> Modo inmersivo</span>
-          <span class="pref-chip"><i class="fa-solid fa-wave-square"></i> EQ: Balanceado</span>
-        </div>
-      </section>
-      {{-- ====== /HERO NUEVO ====== --}}
+                <div class="pref-hero__chips">
+                    <span class="pref-chip"><i class="fa-solid fa-globe"></i> Idioma: ES</span>
+                    <span class="pref-chip"><i class="fa-solid fa-bolt"></i> Calidad de audio</span>
+                    <span class="pref-chip"><i class="fa-solid fa-wave-square"></i> EQ: Balanceado</span>
+                </div>
+            </section>
+            {{-- ====== /HERO NUEVO ====== --}}
 
-      {{-- ===== CUENTA ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-user"></i> Cuenta</h2>
+            
+                
 
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Editar métodos para iniciar sesión</div>
-            <div class="preference-description">Administra email, contraseña, autenticación de dos factores y métodos de acceso</div>
-          </div>
-          <button class="account-edit-btn" onclick="redirectToAccountSettings(event)">
-            <span class="btn-icon"><i class="fas fa-cog"></i></span>
-            <span class="btn-text">Configurar cuenta</span>
-            <span class="btn-arrow">→</span>
-          </button>
-        </div>
+                <script>
+                const audio = document.querySelector('audio'); // cambia el selector según tu reproductor
+                const volumeSlider = document.getElementById('volume');
+                const volumeValue = document.getElementById('volume-value');
 
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Idioma de la aplicación</div>
-            <div class="preference-description">Cambia entre inglés y español</div>
-          </div>
-          <div class="language-toggle" onclick="toggleLanguage(this)">
-            <div class="language-option active" data-lang="es">ES</div>
-            <div class="language-option" data-lang="en">EN</div>
-            <div class="language-slider"></div>
-          </div>
-        </div>
+                // Función que ajusta el volumen
+                function updateVolume(val) {
+                    const percent = parseInt(val, 10);
+                    volumeValue.textContent = percent + '%';
 
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Nivel de zoom</div>
-            <div class="preference-description">Ajusta el tamaño de la interfaz</div>
-          </div>
-          <div class="zoom-container">
-            <div class="zoom-preview" id="zoom-preview">
-              <div class="zoom-figure" id="zoom-figure"><i class="fas fa-music"></i></div>
+                    // Normalizar a rango 0–1
+                    if (audio) {
+                        audio.volume = percent / 100;
+                    }
+
+                    // Guardar preferencia en localStorage
+                    localStorage.setItem('defaultVolume', percent);
+                }
+
+                // Al cargar la página, restaurar el volumen guardado
+                window.addEventListener('DOMContentLoaded', () => {
+                    const saved = localStorage.getItem('defaultVolume');
+                    const start = saved ? parseInt(saved, 10) : 100;
+
+                    volumeSlider.value = start;
+                    volumeValue.textContent = start + '%';
+
+                    if (audio) {
+                        audio.volume = start / 100;
+                    }
+                });
+                </script>
+
             </div>
-            <input type="range" min="50" max="150" value="100" class="slider" id="zoom" oninput="updateZoom(this.value)">
-            <span class="volume-display" id="zoom-value">100%</span>
-          </div>
+
+            {{-- ===== REPRODUCCIÓN ===== --}}
+            <div class="preferences-section">
+                <h2 class="section-title"><i class="fas fa-play-circle"></i> Reproducción</h2>
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Reproducción automática</div>
+                        <div class="preference-description">Continúa reproduciendo música similar cuando termine una
+                            canción</div>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Modo aleatorio</div>
+                        <div class="preference-description">Mezcla canciones considerando tu estado de ánimo</div>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Calidad de audio</div>
+                        <div class="preference-description">Mayor calidad consume más datos</div>
+                    </div>
+                    <div class="dropdown">
+                        <select class="dropdown-select">
+                            <option value="low">Baja (96 kbps)</option>
+                            <option value="normal" selected>Normal (160 kbps)</option>
+                            <option value="high">Alta (320 kbps)</option>
+                            <option value="lossless">Sin pérdida</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+          {{-- ===== ECUALIZADOR ===== --}}
+<form method="POST" action="{{ route('eq.save') }}">
+  @csrf
+
+  {{-- ===== ECUALIZADOR ===== --}}
+  <div class="preferences-section">
+    <h2 class="section-title"><i class="fas fa-sliders-h"></i> Ecualizador</h2>
+
+    <div class="equalizer-container" id="bands">
+  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+    <div class="eq-band">
+      <div class="eq-slider-container">
+        <input 
+          type="range" 
+          min="-12" max="12" step="0.5"
+          value="{{ optional($eq)->{'band_'.$freq} ?? 0 }}"
+          name="eq[{{ $freq }}]"
+          class="eq-slider"
+          data-freq="{{ $freq }}"
+          orient="vertical">
+        <div class="eq-value" id="eq-{{ $freq }}">
+          {{ optional($eq)->{'band_'.$freq} ? ((optional($eq)->{'band_'.$freq} >= 0 ? '+' : '').optional($eq)->{'band_'.$freq}) : '0' }}dB
         </div>
       </div>
-
-      {{-- ===== REPRODUCCIÓN ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-play-circle"></i> Reproducción</h2>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Reproducción automática</div>
-            <div class="preference-description">Continúa reproduciendo música similar cuando termine una canción</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Nivel de exploración</div>
-            <div class="preference-description">Qué tan aventurero quieres ser con nuevos géneros</div>
-          </div>
-          <div style="display:flex; align-items:center;">
-            <input type="range" min="1" max="10" value="7" class="slider" id="exploration" oninput="updateValue('exploration-value', getExplorationLevel(this.value))">
-            <span class="volume-display" id="exploration-value">Alto</span>
-          </div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Modo aleatorio inteligente</div>
-            <div class="preference-description">Mezcla canciones considerando tu estado de ánimo</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Crossfade</div>
-            <div class="preference-description">Transición suave entre canciones</div>
-          </div>
-          <div style="display:flex; align-items:center;">
-            <input type="range" min="0" max="12" value="3" class="slider" id="crossfade" oninput="updateValue('crossfade-value', this.value + 's')">
-            <span class="volume-display" id="crossfade-value">3s</span>
-          </div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Calidad de audio</div>
-            <div class="preference-description">Mayor calidad consume más datos</div>
-          </div>
-          <div class="dropdown">
-            <select class="dropdown-select">
-              <option value="low">Baja (96 kbps)</option>
-              <option value="normal" selected>Normal (160 kbps)</option>
-              <option value="high">Alta (320 kbps)</option>
-              <option value="lossless">Sin pérdida</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {{-- ===== EXPERIENCIA ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-headphones"></i> Experiencia</h2>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Modo inmersivo</div>
-            <div class="preference-description">Efectos visuales durante la reproducción</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Letras en tiempo real</div>
-            <div class="preference-description">Muestra las letras sincronizadas con la música</div>
-          </div>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Tema de la aplicación</div>
-            <div class="preference-description">Personaliza la apariencia visual</div>
-          </div>
-          <div class="dropdown">
-            <select class="dropdown-select">
-              <option value="cosmic" selected>Cósmico (actual)</option>
-              <option value="neon">Neón vibrante</option>
-              <option value="minimal">Minimalista</option>
-              <option value="retro">Retro synthwave</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {{-- ===== ECUALIZADOR ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-sliders-h"></i> Ecualizador</h2>
-
-        <div class="preference-item full-width">
-          <div>
-            <div class="preference-label">Valores predefinidos de frecuencia (Hz)</div>
-            <div class="preference-description">Ajusta las bandas de frecuencia para tu experiencia auditiva perfecta</div>
-          </div>
-        </div>
-
-        <div class="equalizer-container">
-          <div class="eq-band" data-freq="60">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="0" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-60">0dB</div>
-            </div>
-            <div class="eq-label">60Hz</div>
-          </div>
-
-          <div class="eq-band" data-freq="170">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="2" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-170">+2dB</div>
-            </div>
-            <div class="eq-label">170Hz</div>
-          </div>
-
-          <div class="eq-band" data-freq="310">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="-1" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-310">-1dB</div>
-            </div>
-            <div class="eq-label">310Hz</div>
-          </div>
-
-          <div class="eq-band" data-freq="600">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="1" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-600">+1dB</div>
-            </div>
-            <div class="eq-label">600Hz</div>
-          </div>
-
-          <div class="eq-band" data-freq="1k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="3" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-1k">+3dB</div>
-            </div>
-            <div class="eq-label">1kHz</div>
-          </div>
-
-          <div class="eq-band" data-freq="3k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="2" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-3k">+2dB</div>
-            </div>
-            <div class="eq-label">3kHz</div>
-          </div>
-
-          <div class="eq-band" data-freq="6k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="1" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-6k">+1dB</div>
-            </div>
-            <div class="eq-label">6kHz</div>
-          </div>
-
-          <div class="eq-band" data-freq="12k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="0" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-12k">0dB</div>
-            </div>
-            <div class="eq-label">12kHz</div>
-          </div>
-
-          <div class="eq-band" data-freq="14k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="-2" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-14k">-2dB</div>
-            </div>
-            <div class="eq-label">14kHz</div>
-          </div>
-
-          <div class="eq-band" data-freq="16k">
-            <div class="eq-slider-container">
-              <input type="range" min="-12" max="12" value="1" class="eq-slider" orient="vertical" oninput="updateEQ(this)">
-              <div class="eq-value" id="eq-16k">+1dB</div>
-            </div>
-            <div class="eq-label">16kHz</div>
-          </div>
-        </div>
-
-        <div class="eq-presets">
-          <button class="preset-btn active" onclick="applyPreset('balanced')">Balanceado</button>
-          <button class="preset-btn" onclick="applyPreset('bass')">Graves</button>
-          <button class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
-          <button class="preset-btn" onclick="applyPreset('electronic')">Electrónica</button>
-          <button class="preset-btn" onclick="applyPreset('rock')">Rock</button>
-        </div>
-      </div>
-
-      {{-- ===== DESCUBRIMIENTO ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-rocket"></i> Descubrimiento</h2>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Artistas emergentes destacados</div>
-            <div class="preference-description">Recibe notificaciones de nuevos talentos</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Mix semanal personalizado</div>
-            <div class="preference-description">Playlist automática basada en tus gustos</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Radar de géneros nuevos</div>
-            <div class="preference-description">Explora géneros emergentes y fusiones</div>
-          </div>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Colaboraciones recomendadas</div>
-            <div class="preference-description">Descubre colaboraciones entre artistas emergentes</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-      </div>
-
-      {{-- ===== SOCIAL ===== --}}
-      <div class="preferences-section">
-        <h2 class="section-title"><i class="fas fa-mobile-alt"></i> Social</h2>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Perfil público</div>
-            <div class="preference-description">Permite que otros usuarios encuentren tu perfil</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Compartir actividad</div>
-            <div class="preference-description">Permite que otros vean lo que escuchas</div>
-          </div>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Recomendaciones de amigos</div>
-            <div class="preference-description">Recibe sugerencias basadas en amigos</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Notificaciones sociales</div>
-            <div class="preference-description">Avisos cuando amigos siguen artistas o comparten música</div>
-          </div>
-          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-        </div>
-
-        <div class="preference-item">
-          <div>
-            <div class="preference-label">Sesiones colaborativas</div>
-            <div class="preference-description">Permite crear playlists en tiempo real con amigos</div>
-          </div>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
-        </div>
-      </div>
-
-      <button class="save-button" onclick="savePreferences()">
-        <i class="fas fa-save"></i> Guardar Todas las Preferencias
-      </button>
+      <div class="eq-label">{{ $freq >= 1000 ? ($freq/1000).'k' : $freq }}Hz</div>
     </div>
-  </main>
+  @endforeach
+</div>
 
-  {{-- ====== FOOTER / PLAYER DERECHO ====== --}}
-  @include('components.footer')
+<div class="preamp" style="margin-top:16px; display:flex; align-items:center; justify-content:space-between;">
+  <div class="row" style="gap:8px">
+    <span class="small">Preamp</span>
+    <span id="preampVal" class="num">{{ optional($eq)->preamp ?? 0 }} dB</span>
+  </div>
+  <div class="row small">
+    <span class="small">Volumen</span>
+    <input id="preamp" name="preamp" type="range" min="-18" max="18" step="0.5"
+           value="{{ optional($eq)->preamp ?? 0 }}" />
+  </div>
+</div>
+
+
+    <div class="eq-presets" style="margin-top:12px;">
+      <button type="button" class="preset-btn active" onclick="applyPreset('balanced')">Balanceado</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('bass')">Graves</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('electronic')">Electrónica</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('rock')">Rock</button>
+      <button id="resetBtn" type="button">🔄 Reset</button>
+    </div>
+  </div>
+
+
+
+
+<script>
+(() => {
+  const FREQS = [60,170,310,600,1000,3000,6000,12000,14000,16000];
+  const dbToGain = db => Math.pow(10, db/20);
+
+  const sliders = document.querySelectorAll('.eq-slider');
+  const preamp = document.getElementById('preamp');
+  const preampVal = document.getElementById('preampVal');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let ac, filters=[], gPreamp, srcNode;
+
+  function ensureCtx(){
+    if (ac) return;
+    ac = new (window.AudioContext||window.webkitAudioContext)();
+
+    // Crear filtros
+    filters = FREQS.map(freq=>{
+      const f = ac.createBiquadFilter();
+      f.type = 'peaking';
+      f.frequency.value = freq;
+      f.Q.value = 1.0;
+      f.gain.value = 0;
+      return f;
+    });
+
+    // Preamp
+    gPreamp = ac.createGain();
+    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
+
+    // Conectar filtros -> preamp -> destino
+    for (let i=0; i<filters.length-1; i++) filters[i].connect(filters[i+1]);
+    filters[filters.length-1].connect(gPreamp);
+    gPreamp.connect(ac.destination);
+
+    // Si existe el <audio id="player"> lo conectamos
+    const audio = document.getElementById('player');
+    if (audio) {
+      srcNode = ac.createMediaElementSource(audio);
+      srcNode.connect(filters[0]);
+    }
+  }
+
+  // 🚀 Aplica los valores iniciales que vienen desde Blade
+  function applyInitialValues(){
+    ensureCtx();
+    sliders.forEach((sl, idx)=>{
+      const db = parseFloat(sl.value);
+      filters[idx].gain.value = db;
+      document.getElementById('eq-'+FREQS[idx]).textContent = (db>=0? '+'+db: db)+'dB';
+    });
+    const dbPreamp = parseFloat(preamp.value);
+    gPreamp.gain.value = dbToGain(dbPreamp);
+    preampVal.textContent = dbPreamp+" dB";
+  }
+
+  // Al cargar la página: aplicar todo lo guardado
+  document.addEventListener('DOMContentLoaded', applyInitialValues);
+
+  // === Listeners normales ===
+  sliders.forEach((sl, idx)=>{
+    sl.addEventListener('input', ()=>{
+      ensureCtx();
+      const db = parseFloat(sl.value);
+      filters[idx].gain.value = db;
+      document.getElementById('eq-'+FREQS[idx]).textContent = (db>=0? '+'+db: db)+'dB';
+    });
+  });
+
+  preamp.addEventListener('input', ()=>{
+    ensureCtx();
+    const db = parseFloat(preamp.value);
+    gPreamp.gain.value = dbToGain(db);
+    preampVal.textContent = db+' dB';
+  });
+
+  resetBtn?.addEventListener('click', ()=>{
+    sliders.forEach((sl, idx)=>{
+      sl.value=0;
+      filters[idx].gain.value=0;
+      document.getElementById('eq-'+FREQS[idx]).textContent='0dB';
+    });
+    preamp.value=0;
+    preamp.dispatchEvent(new Event('input'));
+  });
+
+  // Presets
+  window.applyPreset = function(name){
+    const presets={
+      balanced:[0,2,-1,1,3,2,1,0,-2,1],
+      bass:[5,4,3,2,0,-2,-3,-4,-5,-5],
+      vocal:[-2,-1,0,2,4,3,1,0,-1,-2],
+      electronic:[4,3,2,1,0,1,2,3,4,5],
+      rock:[3,2,1,0,-1,0,1,2,3,4]
+    };
+    const values=presets[name]||presets['balanced'];
+    sliders.forEach((sl, idx)=>{
+      sl.value=values[idx];
+      filters[idx].gain.value=values[idx];
+      document.getElementById('eq-'+FREQS[idx]).textContent=(values[idx]>=0? '+'+values[idx]:values[idx])+'dB';
+    });
+  };
+
+  // Exponer para reconectar desde fuera si cambias de canción
+  window.bindEqualizerTo=function(audioEl){
+    if (!audioEl) return;
+    ensureCtx();
+    const media=ac.createMediaElementSource(audioEl);
+    media.connect(filters[0]);
+    srcNode=media;
+  };
+})();
+</script>
+
+
+
+            
+
+
+            {{-- ===== DESCUBRIMIENTO ===== --}}
+            <div class="preferences-section">
+                <h2 class="section-title"><i class="fas fa-rocket"></i> Descubrimiento</h2>
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Artistas emergentes destacados</div>
+                        <div class="preference-description">Recibe notificaciones de nuevos talentos</div>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Mix semanal personalizado</div>
+                        <div class="preference-description">Playlist automática basada en tus gustos</div>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Radar de géneros nuevos</div>
+                        <div class="preference-description">Explora géneros emergentes y fusiones</div>
+                    </div>
+                    <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                <div class="preference-item">
+                    <div>
+                        <div class="preference-label">Colaboraciones recomendadas</div>
+                        <div class="preference-description">Descubre colaboraciones entre artistas emergentes</div>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+            </div>
+
+
+            <center>
+               
+                <button type="submit"  class="save-button" class="btn btn-primary">Guardar configuración</button>
+
+            </center>
+</form>
+        </div>
+    </main>
+
+    {{-- ====== FOOTER / PLAYER DERECHO ====== --}}
+    @include('components.footer')
 </body>
+
 </html>
+
+ 
