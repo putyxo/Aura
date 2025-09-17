@@ -19,7 +19,7 @@
             <div class="aurionas-container">
                 <nav class="aurionas-nav">
                     <div class="aurionas-logo">
-                        <img src="img/logo 2.png" alt="AURA Logo" class="nav-logo-image">
+                        <img src="img/Aura_LOGO.png" alt="AURA Logo" class="nav-logo-image">
                         <span class="logo-text"></span>
                     </div>
                     
