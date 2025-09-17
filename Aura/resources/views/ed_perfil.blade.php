@@ -932,6 +932,28 @@
     document.head.appendChild(link);
   }, {passive:true});
 
+
+    /* ===== Añadir a cola (igual que en likes.blade.php) ===== */
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="queue"]');
+    if (!btn) return;
+    const row = btn.closest('.song-row');
+    if (!row) return;
+
+    const song = {
+      id: Number(row.dataset.id),
+      title: row.dataset.title,
+      artist: row.dataset.artist,
+      cover: row.dataset.cover,
+      audio: row.dataset.src,
+      duration: Number(row.dataset.duration) || 0
+    };
+
+    if (window.AuraQueue?.addToEnd) {
+      window.AuraQueue.addToEnd([song]);
+    }
+  });
+
   /* ===== Carruseles ===== */
   function initCarousel(trackSel, prevSel, nextSel, labelSel, pagerSel){
     const track = $(trackSel); if (!track) return;
