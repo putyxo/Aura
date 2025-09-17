@@ -1,5 +1,0 @@
-- [x] Add CSS rules in login.css for .toggle-password button
-- [x] Edit register-artista.blade.php to add toggle buttons for password fields
-- [x] Add JavaScript in register-artista.blade.php to handle toggle functionality
-- [x] Apply same changes to register.blade.php
-- [x] Test the functionality (changes implemented without breaking existing code)

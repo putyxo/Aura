@@ -13,9 +13,9 @@ class SearchController extends Controller
     public function buscar(Request $request)
     {
         try {
-            $query = trim($request->input('q'));
+            $query = trim((string) $request->input('q', ''));
 
-            if (!$query) {
+            if ($query === '') {
                 return response()->json([]);
             }
 
@@ -27,13 +27,22 @@ class SearchController extends Controller
                 ->limit(5)
                 ->get()
                 ->map(function ($u) {
+                    $avatar = $u->avatar;
+
+                    if (!$avatar) {
+                        $avatarUrl = asset('img/default-user.png');
+                    } elseif (Str::startsWith($avatar, ['http://', 'https://'])) {
+                        $avatarUrl = $avatar;
+                    } else {
+                        // Ruta relativa guardada en storage/app/public/...
+                        $avatarUrl = asset('storage/' . ltrim($avatar, '/'));
+                    }
+
                     return [
                         'tipo'   => 'usuario',
                         'id'     => $u->id,
-                        'nombre' => $u->nombre_artistico ?? $u->nombre,
-                        'avatar' => $u->avatar
-                            ? drive_img_url($u->avatar, 120)
-                            : asset('img/default-user.png'),
+                        'nombre' => $u->nombre_artistico ?: $u->nombre,
+                        'avatar' => $avatarUrl,
                         'url'    => url('/perfil/' . $u->id),
                     ];
                 });
@@ -41,39 +50,43 @@ class SearchController extends Controller
             // === Canciones ===
             $canciones = Cancion::query()
                 ->where('title', 'LIKE', "%{$query}%")
-                ->select('id', 'title', 'cover_path', 'audio_path', 'user_id')
+                ->orWhere('nombre', 'LIKE', "%{$query}%")
+                ->select('id', 'title', 'nombre', 'cover_path', 'audio_path', 'user_id')
+                ->with(['user:id,nombre,nombre_artistico'])
                 ->limit(5)
                 ->get()
                 ->map(function ($c) {
-                    // Portada
-                    $cover = $c->cover_path
-                        ? drive_img_url($c->cover_path, 120)
-                        : asset('img/default-cancion.png');
+                    // Cover
+                    if (!empty($c->cover_url)) {
+                        $cover = $c->cover_url; // accessor si existe
+                    } elseif (!empty($c->cover_path)) {
+                        $cover = Str::startsWith($c->cover_path, ['http://', 'https://'])
+                            ? $c->cover_path
+                            : asset('storage/' . ltrim($c->cover_path, '/'));
+                    } else {
+                        $cover = asset('img/default-cancion.png');
+                    }
 
                     // Audio
-                    $audioUrl = null;
-                    if ($c->audio_path) {
-                        if (Str::contains($c->audio_path, 'drive.google')) {
-                            if (preg_match('~/d/([^/]+)~', $c->audio_path, $m)) {
-                                $id = $m[1];
-                            } elseif (preg_match('~[?&]id=([^&]+)~', $c->audio_path, $m)) {
-                                $id = $m[1];
-                            } else {
-                                $id = null;
-                            }
-                            $audioUrl = $id ? route('media.drive', ['id' => $id]) : $c->audio_path;
-                        } else {
-                            $audioUrl = $c->audio_path;
-                        }
+                    if (!empty($c->audio_url)) {
+                        $audioUrl = $c->audio_url; // accessor si existe
+                    } elseif (!empty($c->audio_path)) {
+                        $audioUrl = Str::startsWith($c->audio_path, ['http://', 'https://'])
+                            ? $c->audio_path
+                            : asset('storage/' . ltrim($c->audio_path, '/'));
+                    } else {
+                        $audioUrl = null;
                     }
 
                     return [
                         'tipo'   => 'cancion',
                         'id'     => $c->id,
-                        'nombre' => $c->title,
+                        'nombre' => $c->title ?: ($c->nombre ?? 'Sin título'),
                         'avatar' => $cover,
                         'audio'  => $audioUrl,
-                        'artist' => $c->user->nombre_artistico ?? $c->user->nombre ?? 'Desconocido',
+                        'artist' => optional($c->user)->nombre_artistico
+                                    ?: optional($c->user)->nombre
+                                    ?: 'Desconocido',
                         'url'    => url('/cancion/' . $c->id),
                     ];
                 });
@@ -81,27 +94,35 @@ class SearchController extends Controller
             // === Álbumes ===
             $albumes = Album::query()
                 ->where('title', 'LIKE', "%{$query}%")
-                ->select('id', 'title', 'cover_path', 'user_id')
+                ->orWhere('titulo', 'LIKE', "%{$query}%")
+                ->select('id', 'title', 'titulo', 'cover_path', 'user_id')
                 ->limit(5)
                 ->get()
                 ->map(function ($a) {
-                    $cover = $a->cover_path
-                        ? drive_img_url($a->cover_path, 120)
-                        : asset('img/default-album.png');
+                    // Cover
+                    if (!empty($a->cover_url)) {
+                        $cover = $a->cover_url; // accessor si existe
+                    } elseif (!empty($a->cover_path)) {
+                        $cover = Str::startsWith($a->cover_path, ['http://', 'https://'])
+                            ? $a->cover_path
+                            : asset('storage/' . ltrim($a->cover_path, '/'));
+                    } else {
+                        $cover = asset('img/default-album.png');
+                    }
 
                     return [
                         'tipo'   => 'album',
                         'id'     => $a->id,
-                        'nombre' => $a->title,
+                        'nombre' => $a->title ?: ($a->titulo ?? 'Sin título'),
                         'avatar' => $cover,
                         'url'    => url('/album/' . $a->id),
                     ];
                 });
 
             // === Unir resultados ===
-            return response()->json(
-                $usuarios->merge($canciones)->merge($albumes)->take(12)->values()
-            );
+            $results = $usuarios->merge($canciones)->merge($albumes)->take(12)->values();
+
+            return response()->json($results);
 
         } catch (\Throwable $e) {
             return response()->json([

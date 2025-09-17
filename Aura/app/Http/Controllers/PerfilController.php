@@ -8,20 +8,14 @@ use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use App\Services\GoogleDriveOAuthService;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class PerfilController extends Controller
 {
-    protected GoogleDriveOAuthService $drive;
-
-    public function __construct(GoogleDriveOAuthService $drive)
-    {
-        $this->drive = $drive;
-    }
-
-    public function show($id)
+    public function show($id): View
     {
         $user = User::findOrFail($id);
 
@@ -58,7 +52,7 @@ class PerfilController extends Controller
         return view('ed_perfil', compact('user', 'canciones', 'albumes', 'lanzamientos'));
     }
 
-    public function releasesAll(Request $request, $userId)
+    public function releasesAll(Request $request, $userId): View
     {
         $user = User::findOrFail($userId);
 
@@ -106,9 +100,8 @@ class PerfilController extends Controller
 
     /**
      * Página "Álbumes" (menu_album) del usuario autenticado.
-     * Envía $user, $albumes y $followersCount a la vista para evitar errores.
      */
-    public function albumsMenu(Request $request)
+    public function albumsMenu(Request $request): View
     {
         $user = $request->user(); // autenticado
         $albumes = $user
@@ -126,20 +119,23 @@ class PerfilController extends Controller
         ]);
     }
 
-    public function miPerfil()
+    public function miPerfil(): View
     {
         return $this->show(Auth::id());
     }
 
-    public function update(Request $request)
+    /**
+     * Actualiza datos del perfil y sube avatar/banner LOCALMENTE.
+     */
+    public function update(Request $request): RedirectResponse
     {
         $user = Auth::user();
 
         $request->validate([
             'nuevo_nombre_artistico' => 'nullable|string|max:255',
             'bio'    => 'nullable|string|max:1000',
-            'avatar' => 'nullable|image|max:5120',
-            'banner' => 'nullable|image|max:8192',
+            'avatar' => 'nullable|image|max:5120',  // 5MB
+            'banner' => 'nullable|image|max:8192',  // 8MB
         ]);
 
         if ($request->filled('nuevo_nombre_artistico')) {
@@ -149,33 +145,29 @@ class PerfilController extends Controller
             $user->biografia = $request->bio;
         }
 
-        $folderId = env('GOOGLE_DRIVE_UPLOAD_FOLDER_ID');
-
+        // Avatar
         if ($request->hasFile('avatar')) {
-            $file  = $request->file('avatar');
-            $local = $file->getPathname();
-            $name  = uniqid('avatar_') . '.' . $file->getClientOriginalExtension();
-            $mime  = $file->getMimeType();
-            $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-            $user->avatar = $uploaded['id'];
+            $relative = $request->file('avatar')->store('avatars', 'public'); // storage/app/public/avatars/...
+            // Limpia el anterior si era ruta relativa
+            $this->deleteLocalIfRelative($user->avatar ?? null);
+            $user->avatar = $relative; // guarda la ruta relativa
         }
 
+        // Banner
         if ($request->hasFile('banner')) {
-            $file  = $request->file('banner');
-            $local = $file->getPathname();
-            $name  = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
-            $mime  = $file->getMimeType();
-            $uploaded = $this->drive->uploadPublic($local, $name, $mime, $folderId);
-            $user->banner = $uploaded['id'];
+            $relative = $request->file('banner')->store('banners', 'public'); // storage/app/public/banners/...
+            $this->deleteLocalIfRelative($user->banner ?? null);
+            $user->banner = $relative;
         }
 
         $user->save();
 
-        return redirect()->route('perfil.show', $user->id)
+        return redirect()
+            ->route('perfil.show', $user->id)
             ->with('success', __('account.profile_updated'));
     }
 
-    public function follow($userId)
+    public function follow($userId): RedirectResponse
     {
         $user = Auth::user();
         if ($user->isFollowing($userId)) {
@@ -185,7 +177,7 @@ class PerfilController extends Controller
         return redirect()->back()->with('success', __('account.now_following'));
     }
 
-    public function unfollow($userId)
+    public function unfollow($userId): RedirectResponse
     {
         $user = Auth::user();
         if (!$user->isFollowing($userId)) {
@@ -195,14 +187,18 @@ class PerfilController extends Controller
         return redirect()->back()->with('success', __('account.unfollowed'));
     }
 
-    public function followArtistList()
+    public function followArtistList(): View
     {
         $user = Auth::user();
         $artistasSeguidos = $user->followings;
         return view('follow_artist', compact('artistasSeguidos'));
     }
 
-    public function toggleRole(Request $request)
+    /**
+     * Cambiar rol entre usuario/artista.
+     * Si regresa a "usuario", elimina sus canciones/álbumes y limpia archivos locales.
+     */
+    public function toggleRole(Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -223,8 +219,18 @@ class PerfilController extends Controller
                 return back()->with('warning', __('account.role_user_confirm'));
             }
 
-            \App\Models\Cancion::where('user_id', $user->id)->delete();
-            \App\Models\Album::where('user_id', $user->id)->delete();
+            // Elimina canciones con sus archivos
+            Cancion::where('user_id', $user->id)->get()->each(function (Cancion $s) {
+                $this->deleteLocalIfRelative($s->audio_path ?? $s->audio ?? null);
+                $this->deleteLocalIfRelative($s->cover_path ?? $s->portada ?? null);
+                $s->delete();
+            });
+
+            // Elimina álbumes y sus portadas
+            Album::where('user_id', $user->id)->get()->each(function (Album $a) {
+                $this->deleteLocalIfRelative($a->cover_path ?? $a->portada ?? null);
+                $a->delete();
+            });
 
             $user->es_artista = 0;
             $user->nombre_artistico = null;
@@ -236,28 +242,53 @@ class PerfilController extends Controller
         return back()->with('info', __('account.no_changes'));
     }
 
-public function setLanguage(Request $request)
-{
-    // Asegurarnos que venga algo válido (solo 'es' o 'en')
-    $lang = $request->input('lang');
+    public function setLanguage(Request $request): RedirectResponse
+    {
+        // Solo 'es' o 'en'
+        $lang = $request->input('lang');
+        if (!in_array($lang, ['es', 'en'])) {
+            $lang = 'en';
+        }
 
-    if (!in_array($lang, ['es', 'en'])) {
-        $lang = 'en'; // por defecto inglés
+        if (auth()->check()) {
+            $user = auth()->user();
+            $user->idioma = $lang;
+            $user->save();
+        } else {
+            session(['locale' => $lang]);
+        }
+
+        App::setLocale($lang);
+
+        return back()->with('status', __('account.language_changed'));
     }
 
-    // Si está logueado, guardamos en la BD
-    if (auth()->check()) {
-        $user = auth()->user();
-        $user->idioma = $lang;
-        $user->save();
-    } else {
-        // Si no, lo guardamos en la sesión
-        session(['locale' => $lang]);
+    /* ================== Helpers privados ================== */
+
+    /**
+     * Elimina un archivo del disco 'public' si la ruta es relativa (no URL http/https).
+     */
+    private function deleteLocalIfRelative(?string $path): void
+    {
+        if (!$path) return;
+
+        // Si es URL absoluta, no borrar
+        if (preg_match('~^https?://~i', $path)) {
+            return;
+        }
+
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+                return;
+            }
+        } catch (\Throwable $e) { /* noop */ }
+
+        // Fallback al disco por defecto si hiciera falta
+        try {
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+            }
+        } catch (\Throwable $e) { /* noop */ }
     }
-
-    // Aplicar inmediatamente al request actual
-    App::setLocale($lang);
-
-    return back()->with('status', __('account.language_changed'));
-}
 }
