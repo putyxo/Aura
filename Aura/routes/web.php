@@ -198,7 +198,7 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     | Dashboard (verificación de email si usas Breeze/Jetstream)
     |--------------------------------------------------------------------------
     */
-    Route::get('/dashboard', fn () => view('dashboard'))->middleware(['verified'])->name('dashboard');
+    Route::get('/dashboard', fn () => view('menu'))->middleware(['verified'])->name('menu');
 
     /*
     |--------------------------------------------------------------------------
