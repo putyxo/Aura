@@ -142,19 +142,86 @@
     </div>
   </div>
 
-  <!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
-  <div id="global-eq" style="display:none">
-    @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
-      <input 
-        type="range" 
-        min="-12" max="12" step="0.5"
-        value="{{ optional(auth()->user()->equalizer)->{'band_'.$freq} ?? 0 }}"
-        data-freq="{{ $freq }}"
-        class="eq-slider-global"
-      >
-    @endforeach
+<!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
+<div id="global-eq" style="display:none">
+  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+    <input 
+      type="range" 
+      min="-12" max="12" step="0.5"
+      value="{{ optional(auth()->user()->equalizer)->{'band_'.$freq} ?? 0 }}"
+      data-freq="{{ $freq }}"
+      class="eq-slider-global"
+    >
+  @endforeach
 
-    <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
-           value="{{ optional(auth()->user()->equalizer)->preamp ?? 0 }}">
-  </div>
+  <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
+         value="{{ optional(auth()->user()->equalizer)->preamp ?? 0 }}">
+</div>
+
+<script>
+(() => {
+  const FREQS = [60,170,310,600,1000,3000,6000,12000,14000,16000];
+  const dbToGain = db => Math.pow(10, db/20);
+
+  const sliders = document.querySelectorAll('.eq-slider-global');
+  const preamp = document.getElementById('global-preamp');
+
+  let ac, filters=[], gPreamp, srcNode;
+
+  function ensureCtx(){
+    if (ac) return;
+    ac = new (window.AudioContext||window.webkitAudioContext)();
+
+    filters = FREQS.map(freq=>{
+      const f = ac.createBiquadFilter();
+      f.type = 'peaking';
+      f.frequency.value = freq;
+      f.Q.value = 1.0;
+      f.gain.value = 0;
+      return f;
+    });
+
+    gPreamp = ac.createGain();
+    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
+
+    for (let i=0;i<filters.length-1;i++) filters[i].connect(filters[i+1]);
+    filters[filters.length-1].connect(gPreamp);
+    gPreamp.connect(ac.destination);
+
+    // Conectar al player global (si existe)
+    const audio = document.querySelector('#player audio, audio#player');
+    if (audio) {
+      try {
+        srcNode = ac.createMediaElementSource(audio);
+        srcNode.connect(filters[0]);
+      } catch(e) {
+        console.warn("EQ ya conectado");
+      }
+    }
+  }
+
+  // Aplicar valores iniciales guardados
+  function applyInitialValues(){
+    ensureCtx();
+    sliders.forEach((sl, idx)=>{
+      const db = parseFloat(sl.value);
+      filters[idx].gain.value = db;
+    });
+    const dbPreamp = parseFloat(preamp.value);
+    gPreamp.gain.value = dbToGain(dbPreamp);
+  }
+
+  document.addEventListener('DOMContentLoaded', applyInitialValues);
+
+  // API pública global para reconectar cuando cambies canción
+  window.bindEqualizerTo=function(audioEl){
+    if (!audioEl) return;
+    ensureCtx();
+    const media = ac.createMediaElementSource(audioEl);
+    media.connect(filters[0]);
+    srcNode = media;
+  };
+})();
+</script>
+
 </header>

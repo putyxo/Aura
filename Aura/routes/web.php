@@ -18,16 +18,18 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\LikeApiController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\LyricsController;
-
+use App\Http\Controllers\EqualizerController;
+use App\Http\Controllers\PreferenciasController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Models\Cancion;
 use App\Models\Album;
+use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 // ===== Página principal =====
-Route::get('/', fn () => view('welcome'))->name('welcome');
+Route::get('/', fn () => view('menu'))->name('menu');
 
 /*
 |---------------------------------------------------------------------------
@@ -59,6 +61,9 @@ Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked']
 */
 Route::get('/albums/{id}', [AlbumController::class, 'show'])->name('album.show');
 Route::get('/album/{id}',  [AlbumController::class, 'show'])->name('album.show.legacy');
+
+
+
 
 /*
 |---------------------------------------------------------------------------
@@ -137,16 +142,56 @@ Route::middleware('auth')->group(function () {
     Route::get('/cambiar-usuario', fn () => view('cambiar-usuario'))->name('cambiar-usuario');
     Route::get('/recientes', fn () => view('recientes'))->name('recientes');
 
-    Route::get('/admin', fn () => view('admin'))->name('admin');
-    Route::get('/estadisticas', fn () => view('estadisticas'))->name('estadisticas');
-    Route::get('/artistasadmin', fn () => view('artistasadmin'))->name('artistasadmin');
-
     // Menú de álbumes (acepta ?album=ID para ver álbum de OTRO artista en modo lectura)
     Route::get('/menu_album', [PerfilController::class, 'albumsMenu'])->name('menu_album');
 
     // Cambiar tipo de cuenta (usuario ↔ artista)
     Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
         ->name('perfil.toggleRole');
+
+
+         // ===== Admin =====
+   function checkAdminAccess() {
+    if (!Auth::check()) {
+        return false;
+    }
+
+    $user = Auth::user();
+    return $user->email === 'juanzpaescobar@gmail.com' && Hash::check('Junaco2156+', $user->password);
+}
+
+// ===== Rutas restringidas =====
+
+Route::get('/admin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
+    }
+    return app(\App\Http\Controllers\CancionController::class)->adminIndex();
+})->name('admin');
+
+Route::get('/albumadmin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
+    }
+    $albumes = \App\Models\Album::with(['user', 'songs'])->get();
+    return view('admin.albumadmin', compact('albumes'));
+})->name('albumadmin');
+
+Route::get('/usuarioadmin', function () {
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
+    }
+    $usuarios = \App\Models\User::all();
+    return view('admin.usuarioadmin', compact('usuarios'));
+})->name('usuarioadmin');
+
+Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+
+
+
 
     /*
     |---------------------------------------------------------------------------
@@ -193,7 +238,7 @@ Route::middleware('auth')->group(function () {
     | Dashboard (Breeze/Jetstream - requiere email verificado)
     |---------------------------------------------------------------------------
     */
-    Route::get('/dashboard', fn () => view('dashboard'))->middleware(['verified'])->name('dashboard');
+    Route::get('/dashboard', fn () => view('menu'))->middleware(['verified'])->name('menu');
 
     /*
     |---------------------------------------------------------------------------
@@ -287,3 +332,18 @@ Route::get('/auth-check', function () {
         'user'      => auth()->user(),
     ];
 })->name('auth-check');
+
+
+/*
+|---------------------------------------------------------------------------
+| Equalizador
+|---------------------------------------------------------------------------
+*/
+Route::post('/equalizer/save', [EqualizerController::class, 'save'])
+    ->name('eq.save')
+    ->middleware('auth');
+
+
+    Route::get('/preferencias', [PreferenciasController::class, 'index'])
+    ->name('preferencias')
+    ->middleware('auth');

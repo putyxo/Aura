@@ -32,10 +32,10 @@ class Album extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function songs()
-    {
-        return $this->hasMany(Cancion::class, 'album_id');
-    }
+     public function songs()
+{
+    return $this->hasMany(\App\Models\Cancion::class, 'album_id');
+}
 
     /* ========= Accessors ========= */
 

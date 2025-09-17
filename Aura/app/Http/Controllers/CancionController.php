@@ -224,4 +224,23 @@ class CancionController extends Controller
             }
         } catch (\Throwable $e) {}
     }
+
+    
+    public function adminIndex()
+{
+    // Solo admins
+    if (!checkAdminAccess()) {
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
+    }
+
+    // Traer canciones con su usuario
+    $canciones = \App\Models\Cancion::with('user')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // Pasarlas a la vista admin
+    return view('admin.admin', compact('canciones'));
+}
+
 }

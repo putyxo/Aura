@@ -13,6 +13,8 @@
     @vite(['resources/css/preferencias.css', 'resources/js/preferencias.js'])
 </head>
 
+
+
 <style>
 #app {
     overflow: hidden;
@@ -140,7 +142,6 @@ button:hover {
     padding-top: 8px;
 }
 </style>
-
 <body>
 
     {{-- ====== COMPONENTES GLOBALES ====== --}}
@@ -351,11 +352,11 @@ button:hover {
     gPreamp.connect(ac.destination);
 
     // Si existe el <audio id="player"> lo conectamos
-    const audio = document.getElementById('player');
-    if (audio) {
-      srcNode = ac.createMediaElementSource(audio);
-      srcNode.connect(filters[0]);
-    }
+    const audio = document.getElementById('auraAudio');
+if (audio) {
+  window.bindEqualizerTo(audio); 
+  document.dispatchEvent(new Event('aura:eq-ready'));
+}
   }
 
   // 🚀 Aplica los valores iniciales que vienen desde Blade
@@ -427,6 +428,24 @@ button:hover {
     srcNode=media;
   };
 })();
+
+function saveEqRealtime() {
+  const form = document.querySelector('form');
+  if (!form) return;
+  const data = new FormData(form);
+
+  fetch("{{ route('eq.save') }}", {
+    method: "POST",
+    headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+    body: data
+  }).catch(console.error);
+}
+
+sliders.forEach(sl => {
+  sl.addEventListener('input', saveEqRealtime);
+});
+preamp.addEventListener('input', saveEqRealtime);
+
 </script>
 
 

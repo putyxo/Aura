@@ -91,9 +91,10 @@ class User extends Authenticatable
     }
 
     public function equalizer()
-    {
-        return $this->hasOne(UserEqualizer::class);
-    }
+{
+    return $this->hasOne(\App\Models\UserEqualizer::class, 'user_id');
+}
+
 
     /* ==============================
        ACCESSORS AVATAR / BANNER / PORTADA
