@@ -115,25 +115,30 @@ Route::middleware('auth')->group(function () {
 }
 
 // ===== Rutas restringidas =====
+
 Route::get('/admin', function () {
     if (!checkAdminAccess()) {
-        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
     }
-    return view('admin.admin');
+    return app(\App\Http\Controllers\CancionController::class)->adminIndex();
 })->name('admin');
 
 Route::get('/albumadmin', function () {
     if (!checkAdminAccess()) {
-        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
     }
-    return view('admin.albumadmin');
+    $albumes = \App\Models\Album::with(['user', 'songs'])->get();
+    return view('admin.albumadmin', compact('albumes'));
 })->name('albumadmin');
 
 Route::get('/usuarioadmin', function () {
     if (!checkAdminAccess()) {
-        return redirect()->route('login')->withErrors(['email' => 'Acceso restringido.']);
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Acceso restringido.']);
     }
-    $usuarios = User::all();
+    $usuarios = \App\Models\User::all();
     return view('admin.usuarioadmin', compact('usuarios'));
 })->name('usuarioadmin');
 

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
-class ProfileController extends Controller
+class AlbumController  extends Controller
 {
     /**
      * Mostrar el formulario del perfil del usuario.
