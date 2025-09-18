@@ -182,22 +182,6 @@ window.__AURA_PROBE_DURATION__ = (function(){
     return played;
   }
 
-
-   /* === Hook para el Ecualizador === */
-  if (window.bindEqualizerTo) {
-    window.bindEqualizerTo(audio);              // se conecta si el EQ ya está cargado
-  } else {
-    window.__AURA_EQ_WAIT__ = audio;            // si el EQ carga después, lo recogerá
-    document.addEventListener('aura:eq-ready', ()=> {
-      if (window.bindEqualizerTo && window.__AURA_EQ_WAIT__) {
-        window.bindEqualizerTo(window.__AURA_EQ_WAIT__);
-        window.__AURA_EQ_WAIT__ = null;
-      }
-    }, { once:true });
-  }
-  /* === /Hook para el Ecualizador === */
-
-
   // ====== UI refs ======
   const playBtn  = el.querySelector('.play-btn');
   const prevBtn  = el.querySelector('.prev');

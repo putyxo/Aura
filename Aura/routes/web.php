@@ -32,9 +32,9 @@ use Illuminate\Support\Facades\Session;
 Route::get('/', fn () => view('menu'))->name('menu');
 
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Rutas públicas (sin auth)
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 // 🔎 Endpoint JSON de búsqueda (público)
@@ -45,9 +45,9 @@ Route::get('/perfil/{userId}/lanzamientos', [PerfilController::class, 'releasesA
     ->name('perfil.releasesAll');
 
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Estado público de "like" por canción (consultado por el reproductor)
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::get('/canciones/{cancion}/liked', [LikeApiController::class, 'liked'])
     ->name('canciones.liked');
@@ -55,20 +55,17 @@ Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked']
     ->name('api.canciones.like.state');
 
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | VER ÁLBUM (PÚBLICO: el dueño puede editar en la UI; visitantes solo ven)
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::get('/albums/{id}', [AlbumController::class, 'show'])->name('album.show');
 Route::get('/album/{id}',  [AlbumController::class, 'show'])->name('album.show.legacy');
 
-
-
-
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Rutas protegidas (requieren login)
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
 
@@ -82,9 +79,9 @@ Route::middleware('auth')->group(function () {
         ->name('perfil.language');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | ME GUSTA — ÁLBUMES (UI)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Frontend principal en /likes/albums.
     */
     Route::get('/likes/albums', [LikeController::class, 'albumsPage'])->name('likes.albums');
@@ -96,9 +93,9 @@ Route::middleware('auth')->group(function () {
         ->name('likes.albums.destroy');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Me Gusta por canción (JSON: usado por el footer)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::post('/canciones/{cancion}/like', [LikeApiController::class, 'toggle'])
         ->name('canciones.like');
@@ -115,26 +112,31 @@ Route::middleware('auth')->group(function () {
     Route::get('/canciones/{cancion}/lyrics', [LyricsController::class, 'show']);
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Playlists (endpoints del modal/JS + aliases API)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     // Aliases “API” legacy
     Route::get('/api/my-playlists',        [PlaylistController::class, 'myPlaylists']);
     Route::post('/api/playlists/create',   [PlaylistController::class, 'quickStore']);
-    Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong']);
+    Route::post('/playlists/{playlist}/add-song/{cancion}', [PlaylistController::class, 'addSong'])
+        ->name('playlists.add-song');
+
+    // ✅ NUEVO: quitar canción de playlist (DELETE)
+    Route::delete('/playlists/{playlist}/remove-song/{cancion}', [PlaylistController::class, 'removeSong'])
+        ->name('playlists.remove-song');
 
     // Endpoints con nombre (usados en data-attributes del Blade)
     Route::get('/playlists/mine', [PlaylistController::class, 'myPlaylists'])->name('playlists.mine');
     Route::post('/playlists/quick', [PlaylistController::class, 'quickStore'])->name('playlists.quickStore');
-    Route::post('/playlists/{playlist}/add/{cancion}', [PlaylistController::class, 'addSong'])->name('playlists.addSong');
 
-    // CRUD RESTful de playlists
+    // CRUD RESTful de playlists (index/show/create/store/edit/update/destroy)
     Route::resource('playlists', PlaylistController::class);
 
     // ===== Vistas principales (Blade suelto)
     Route::get('/menu', fn () => view('menu'))->name('menu');
     Route::get('/menu_artista', fn () => view('menu_artista'))->name('menu_artista');
+    // ⚠️ Esta ruta suelta de vista no pasa $playlist, se mantiene por compat. Evita usarla directamente.
     Route::get('/playlist_card', fn () => view('playlist_card'))->name('playlist_card');
     Route::get('/preferencias', fn () => view('preferencias'))->name('preferencias');
     Route::get('/editar-perfil', fn () => view('editar-perfil'))->name('editar-perfil');
@@ -149,54 +151,49 @@ Route::middleware('auth')->group(function () {
     Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
         ->name('perfil.toggleRole');
 
+    // ===== Admin =====
+    function checkAdminAccess() {
+        if (!Auth::check()) {
+            return false;
+        }
 
-         // ===== Admin =====
-   function checkAdminAccess() {
-    if (!Auth::check()) {
-        return false;
+        $user = Auth::user();
+        return $user->email === 'juanzpaescobar@gmail.com' && Hash::check('Junaco2156+', $user->password);
     }
 
-    $user = Auth::user();
-    return $user->email === 'juanzpaescobar@gmail.com' && Hash::check('Junaco2156+', $user->password);
-}
+    // ===== Rutas restringidas =====
+    Route::get('/admin', function () {
+        if (!checkAdminAccess()) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Acceso restringido.']);
+        }
+        return app(\App\Http\Controllers\CancionController::class)->adminIndex();
+    })->name('admin');
 
-// ===== Rutas restringidas =====
+    Route::get('/albumadmin', function () {
+        if (!checkAdminAccess()) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Acceso restringido.']);
+        }
+        $albumes = \App\Models\Album::with(['user', 'songs'])->get();
+        return view('admin.albumadmin', compact('albumes'));
+    })->name('albumadmin');
 
-Route::get('/admin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    return app(\App\Http\Controllers\CancionController::class)->adminIndex();
-})->name('admin');
+    Route::get('/usuarioadmin', function () {
+        if (!checkAdminAccess()) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Acceso restringido.']);
+        }
+        $usuarios = \App\Models\User::all();
+        return view('admin.usuarioadmin', compact('usuarios'));
+    })->name('usuarioadmin');
 
-Route::get('/albumadmin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    $albumes = \App\Models\Album::with(['user', 'songs'])->get();
-    return view('admin.albumadmin', compact('albumes'));
-})->name('albumadmin');
-
-Route::get('/usuarioadmin', function () {
-    if (!checkAdminAccess()) {
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Acceso restringido.']);
-    }
-    $usuarios = \App\Models\User::all();
-    return view('admin.usuarioadmin', compact('usuarios'));
-})->name('usuarioadmin');
-
-Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
-
-
-
+    Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Álbumes (actualización / eliminación)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     // Actualizar (título/portada) — acepta PATCH o POST con _method=PATCH
     Route::match(['patch', 'post'], '/albums/{id}', [AlbumController::class, 'update'])
@@ -215,9 +212,9 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     })->name('album.index');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Perfil (artistas/usuarios)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/perfil/{id}', [PerfilController::class, 'show'])->name('perfil.show');
     Route::post('/perfil/update', [PerfilController::class, 'update'])->name('perfil.update');
@@ -227,41 +224,41 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
     Route::get('/follow_artist', [PerfilController::class, 'followArtistList'])->name('follow_artist');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Búsqueda (protegida si la usas dentro del panel)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/buscar', [SearchController::class, 'buscar'])->name('buscar');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Dashboard (Breeze/Jetstream - requiere email verificado)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/dashboard', fn () => view('menu'))->middleware(['verified'])->name('menu');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Profile (Breeze/Jetstream)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Música (subidas)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/musica/subir', [UploadMusicController::class, 'create'])->name('musica.subir');
     Route::post('/musica/subir-cancion', [UploadMusicController::class, 'storeSong'])->name('songs.store');
     Route::post('/musica/subir-albums', [UploadMusicController::class, 'storeAlbum'])->name('albums.store');
 
     /*
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Búsqueda (vistas varias)
-    |---------------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
     Route::get('/busqueda_album', [MiControlador::class, 'mostrarVista'])->name('busqueda_album');
     Route::get('/busqueda_individual', [MiControlador::class, 'mostrarVistaIndividual'])->name('busqueda_individual');
@@ -276,9 +273,9 @@ Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usu
 });
 
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Utilidades y varias
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 // ===== Debug =====
@@ -333,17 +330,15 @@ Route::get('/auth-check', function () {
     ];
 })->name('auth-check');
 
-
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Equalizador
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::post('/equalizer/save', [EqualizerController::class, 'save'])
     ->name('eq.save')
     ->middleware('auth');
 
-
-    Route::get('/preferencias', [PreferenciasController::class, 'index'])
+Route::get('/preferencias', [PreferenciasController::class, 'index'])
     ->name('preferencias')
     ->middleware('auth');

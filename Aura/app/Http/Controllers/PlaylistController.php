@@ -20,9 +20,11 @@ class PlaylistController extends Controller
     public function index(): View
     {
         $playlists = Playlist::where('user_id', Auth::id())
+            ->withCount('songs')
             ->orderByDesc('created_at')
             ->get();
 
+        // Vista "playlist.blade.php" que lista las playlists (usa route('playlists.show', $id))
         return view('playlist', compact('playlists'));
     }
 
@@ -32,6 +34,12 @@ class PlaylistController extends Controller
     public function show(Playlist $playlist): View
     {
         $this->authorizeOwner($playlist);
+
+        // Asegura que vengan las canciones (con portada si la tienen)
+        $playlist->load(['songs' => function ($q) {
+            $q->orderBy('pivot_created_at', 'desc')->with('user');
+        }]);
+
         return view('playlist_card', compact('playlist'));
     }
 
@@ -41,9 +49,9 @@ class PlaylistController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nombre'      => ['required','string','max:120'],
-            'descripcion' => ['nullable','string','max:1000'],
-            'portada'     => ['nullable','image','max:5120'], // 5MB
+            'nombre'      => ['required', 'string', 'max:120'],
+            'descripcion' => ['nullable', 'string', 'max:1000'],
+            'portada'     => ['nullable', 'image', 'max:5120'], // 5MB
         ]);
 
         $coverUrl = null;
@@ -58,10 +66,11 @@ class PlaylistController extends Controller
             'user_id'     => Auth::id(),
             'nombre'      => $data['nombre'],
             'descripcion' => $data['descripcion'] ?? null,
-            'cover_url'   => $coverUrl, // tu tabla usa cover_url
+            'cover_url'   => $coverUrl, // la tabla usa cover_url
         ]);
 
-        return redirect()->route('playlist')->with('ok', 'Playlist creada correctamente.');
+        // ✅ Redirige al index RESTful
+        return redirect()->route('playlists.index')->with('ok', 'Playlist creada correctamente.');
     }
 
     /**
@@ -72,9 +81,9 @@ class PlaylistController extends Controller
         $this->authorizeOwner($playlist);
 
         $data = $request->validate([
-            'nombre'      => ['required','string','max:120'],
-            'descripcion' => ['nullable','string','max:1000'],
-            'portada'     => ['nullable','image','max:5120'],
+            'nombre'      => ['required', 'string', 'max:120'],
+            'descripcion' => ['nullable', 'string', 'max:1000'],
+            'portada'     => ['nullable', 'image', 'max:5120'],
         ]);
 
         // Si cambia portada, borra la anterior (si era local) y sube la nueva
@@ -109,7 +118,8 @@ class PlaylistController extends Controller
 
         $playlist->delete();
 
-        return redirect()->route('playlist')->with('ok', 'Playlist eliminada.');
+        // ✅ Redirige al index RESTful
+        return redirect()->route('playlists.index')->with('ok', 'Playlist eliminada.');
     }
 
     /**
@@ -118,7 +128,7 @@ class PlaylistController extends Controller
     public function myPlaylists(): JsonResponse
     {
         $playlists = Playlist::where('user_id', Auth::id())
-            ->select(['id','nombre','cover_url','created_at'])
+            ->select(['id', 'nombre', 'cover_url', 'created_at'])
             ->withCount('songs')
             ->orderByDesc('created_at')
             ->get()
@@ -150,8 +160,8 @@ class PlaylistController extends Controller
         $playlist->songs()->syncWithoutDetaching([$cancion->id]);
 
         return response()->json([
-            'message' => 'Canción agregada a la playlist',
             'ok'      => true,
+            'message' => 'Canción agregada a la playlist',
         ]);
     }
 
@@ -164,7 +174,10 @@ class PlaylistController extends Controller
 
         $playlist->songs()->detach($cancion->id);
 
-        return response()->json(['message' => 'Canción removida de la playlist']);
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Canción removida de la playlist',
+        ]);
     }
 
     /**
@@ -173,7 +186,7 @@ class PlaylistController extends Controller
     public function quickStore(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'nombre' => ['required','string','max:120'],
+            'nombre' => ['required', 'string', 'max:120'],
         ]);
 
         $playlist = Playlist::create([
@@ -182,6 +195,7 @@ class PlaylistController extends Controller
         ]);
 
         return response()->json([
+            'ok'          => true,
             'id'          => $playlist->id,
             'nombre'      => $playlist->nombre,
             'cover_url'   => $playlist->cover_url,

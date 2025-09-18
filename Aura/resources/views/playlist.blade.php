@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Vite -->
+  <!-- Vite (sigue pudiendo cargar tu JS/CSS habitual) -->
   @vite(['resources/css/playlist.css','resources/js/playlist.js'])
 </head>
 <body>
@@ -24,16 +24,15 @@
     @include('components.fondo')
 
     @php
-      $bulkDeleteUrl = url('/playlists/bulk-delete');   // POST {ids:[]}
+      // Estas URLs son informativas para el front.
       $updateBaseUrl = url('/playlists');               // PUT /playlists/{id}
-      $showBaseUrl   = url('/playlists');               // /playlists/{id}
+      $showBaseUrl   = url('/playlists');               // GET /playlists/{id}
     @endphp
 
     <!-- ROOT AISLADO -->
     <main id="axplRoot"
           class="axpl axpl-main main-content"
           data-axpl-max-mb="5"
-          data-bulk-delete-url="{{ $bulkDeleteUrl }}"
           data-update-base-url="{{ $updateBaseUrl }}"
           data-show-base-url="{{ $showBaseUrl }}"
           data-user-id="{{ auth()->id() ?? 'guest' }}"
@@ -119,6 +118,7 @@
               data-name="{{ \Illuminate\Support\Str::lower($pl->nombre) }}"
               data-count="{{ $pl->canciones_count ?? 0 }}"
               data-id="{{ $pl->id }}"
+              data-del="{{ route('playlists.destroy', $pl->id) }}"
             >
               <a href="{{ route('playlists.show', $pl->id) }}" class="axpl-tile-link" aria-label="Abrir {{ $pl->nombre }}"></a>
 
@@ -131,6 +131,7 @@
                   <div class="axpl-cover-placeholder">{{ __('playlist.no_cover') }}</div>
                 @endif
 
+                <!-- Editar -->
                 <button type="button"
                         class="axpl-pencil"
                         data-id="{{ $pl->id }}"
@@ -140,6 +141,17 @@
                   <i class="fa-solid fa-pen"></i>
                 </button>
 
+                <!-- Eliminar (nuevo) -->
+                <button type="button"
+                        class="axpl-trash"
+                        title="Eliminar {{ $pl->nombre }}"
+                        data-id="{{ $pl->id }}"
+                        data-name="{{ $pl->nombre }}"
+                        data-delete-url="{{ route('playlists.destroy', $pl->id) }}">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+
+                <!-- Reproducir rápido -->
                 <button type="button" class="axpl-play-btn" data-action="quick-play" aria-label="Reproducir {{ $pl->nombre }}">
                   <i class="fa-solid fa-play"></i>
                 </button>
@@ -239,20 +251,16 @@
     const r = el.getBoundingClientRect();
     return Math.abs(r.left) < 2 ? r.width : 0;
   }
-
   function widthIfDockedRight(el){
     if(!el) return 0;
     const r = el.getBoundingClientRect();
     return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
-    // si no está pegado al borde derecho => 0
   }
-
   function heightIfDockedTop(el){
     if(!el) return 0;
     const r = el.getBoundingClientRect();
     return r.top <= 0 ? r.height : 0;
   }
-
   function heightIfDockedBottom(el){
     if(!el) return 0;
     const r = el.getBoundingClientRect();
@@ -281,5 +289,142 @@
   measure();
 })();
 </script>
+
+<!-- JS de eliminación (individual y múltiple) -->
+<script>
+(() => {
+  const $  = (s,c=document)=>c.querySelector(s);
+  const $$ = (s,c=document)=>Array.from(c.querySelectorAll(s));
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const root = $('#axplRoot');
+  const grid = $('#axplGrid');
+  const toast = $('#axplToast');
+  const selectBtn = $('#axplSelectMode');
+  const delSelectedBtn = $('#axplDeleteSelected');
+  const selIndicator = $('#axplSelectIndicator');
+  const selCountEl = $('#axplSelCount');
+
+  function showToast(msg, type='ok'){
+    if(!toast) return;
+    toast.className = 'axpl-toast axpl-toast-' + (type==='err'?'err':type==='info'?'info':'ok');
+    toast.innerHTML = (type==='err' ? '<i class="fa-solid fa-circle-xmark"></i> ' :
+                       type==='info'? '<i class="fa-solid fa-circle-info"></i> ' :
+                                      '<i class="fa-solid fa-circle-check"></i> ') + `<span>${msg}</span>`;
+    toast.hidden = false;
+    requestAnimationFrame(()=> toast.classList.add('is-shown'));
+    setTimeout(()=> toast.classList.remove('is-shown'), 2600);
+    setTimeout(()=> toast.hidden = true, 3000);
+  }
+
+  // === Eliminar UNA playlist (botón papelera en cada tile)
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.axpl-trash');
+    if(!btn) return;
+    e.preventDefault();
+
+    const name = btn.dataset.name || 'esta playlist';
+    const url  = btn.dataset.deleteUrl;
+    const tile = btn.closest('.axpl-tile');
+    if(!url || !tile) return;
+
+    if(!confirm(`¿Eliminar “${name}”?`)) return;
+
+    try{
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': CSRF,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: new URLSearchParams({ _method: 'DELETE' })
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      tile.style.opacity = .55; tile.style.pointerEvents = 'none';
+      setTimeout(()=> tile.remove(), 150);
+      showToast('Playlist eliminada', 'ok');
+      updateSelectionUI();
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo eliminar la playlist', 'err');
+    }
+  });
+
+  // === Modo selección (para eliminar varias)
+  function toggleSelectMode(on){
+    const willOn = (typeof on === 'boolean') ? on : !root.classList.contains('axpl-select-mode');
+    root.classList.toggle('axpl-select-mode', willOn);
+    selectBtn?.setAttribute('aria-pressed', willOn ? 'true' : 'false');
+    if(!willOn){
+      $$('.axpl-tile.is-selected').forEach(t => t.classList.remove('is-selected'));
+    }
+    updateSelectionUI();
+  }
+  selectBtn?.addEventListener('click', ()=> toggleSelectMode());
+
+  // Click en tile para seleccionar/deseleccionar
+  grid?.addEventListener('click', (e)=>{
+    if(!root.classList.contains('axpl-select-mode')) return;
+    const tile = e.target.closest('.axpl-tile');
+    if(!tile || tile.id === 'axplOpenModal2') return;
+    // Evitar que botones internos cambien la selección
+    if(e.target.closest('.axpl-pencil, .axpl-trash, .axpl-play-btn, .axpl-tile-link')) return;
+    tile.classList.toggle('is-selected');
+    updateSelectionUI();
+  });
+
+  function updateSelectionUI(){
+    const n = $$('.axpl-tile.is-selected').length;
+    if(selIndicator){
+      selIndicator.hidden = n === 0;
+      if(selCountEl) selCountEl.textContent = n;
+    }
+    if(delSelectedBtn) delSelectedBtn.disabled = n === 0;
+  }
+
+  // Eliminar SELECCIONADAS (una por una con DELETE)
+  delSelectedBtn?.addEventListener('click', async ()=>{
+    const tiles = $$('.axpl-tile.is-selected');
+    if(!tiles.length) return;
+
+    if(!confirm(`¿Eliminar ${tiles.length} playlist(s)?`)) return;
+
+    delSelectedBtn.disabled = true;
+    let ok = 0, fail = 0;
+
+    for(const tile of tiles){
+      const url = tile.getAttribute('data-del');
+      if(!url) { fail++; continue; }
+      try{
+        const res = await fetch(url, {
+          method:'POST',
+          headers:{
+            'X-CSRF-TOKEN':CSRF,
+            'X-Requested-With':'XMLHttpRequest',
+            'Accept':'application/json',
+            'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'
+          },
+          body: new URLSearchParams({ _method:'DELETE' })
+        });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        ok++;
+        tile.style.opacity = .55; tile.style.pointerEvents = 'none';
+        setTimeout(()=> tile.remove(), 120);
+      }catch(err){
+        console.error(err);
+        fail++;
+      }
+    }
+
+    toggleSelectMode(false);
+    if(fail===0) showToast(`Eliminadas ${ok} playlist(s)`, 'ok');
+    else if(ok>0) showToast(`Eliminadas ${ok}. Fallaron ${fail}.`, 'info');
+    else showToast('No se pudieron eliminar las playlists', 'err');
+  });
+
+})();
+</script>
 </body>
 </html>
+|

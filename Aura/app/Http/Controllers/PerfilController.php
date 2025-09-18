@@ -98,9 +98,7 @@ class PerfilController extends Controller
         ]);
     }
 
-    /**
-     * Página "Álbumes" (menu_album) del usuario autenticado.
-     */
+    /** Página "Álbumes" (menu_album) del usuario autenticado */
     public function albumsMenu(Request $request): View
     {
         $user = $request->user(); // autenticado
@@ -124,9 +122,7 @@ class PerfilController extends Controller
         return $this->show(Auth::id());
     }
 
-    /**
-     * Actualiza datos del perfil y sube avatar/banner LOCALMENTE.
-     */
+    /** Actualiza datos del perfil y sube avatar/banner LOCALMENTE */
     public function update(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -147,15 +143,14 @@ class PerfilController extends Controller
 
         // Avatar
         if ($request->hasFile('avatar')) {
-            $relative = $request->file('avatar')->store('avatars', 'public'); // storage/app/public/avatars/...
-            // Limpia el anterior si era ruta relativa
+            $relative = $request->file('avatar')->store('avatars', 'public');
             $this->deleteLocalIfRelative($user->avatar ?? null);
-            $user->avatar = $relative; // guarda la ruta relativa
+            $user->avatar = $relative;
         }
 
         // Banner
         if ($request->hasFile('banner')) {
-            $relative = $request->file('banner')->store('banners', 'public'); // storage/app/public/banners/...
+            $relative = $request->file('banner')->store('banners', 'public');
             $this->deleteLocalIfRelative($user->banner ?? null);
             $user->banner = $relative;
         }
@@ -194,10 +189,7 @@ class PerfilController extends Controller
         return view('follow_artist', compact('artistasSeguidos'));
     }
 
-    /**
-     * Cambiar rol entre usuario/artista.
-     * Si regresa a "usuario", elimina sus canciones/álbumes y limpia archivos locales.
-     */
+    /** Cambiar rol entre usuario/artista */
     public function toggleRole(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -244,7 +236,6 @@ class PerfilController extends Controller
 
     public function setLanguage(Request $request): RedirectResponse
     {
-        // Solo 'es' o 'en'
         $lang = $request->input('lang');
         if (!in_array($lang, ['es', 'en'])) {
             $lang = 'en';
@@ -264,15 +255,10 @@ class PerfilController extends Controller
     }
 
     /* ================== Helpers privados ================== */
-
-    /**
-     * Elimina un archivo del disco 'public' si la ruta es relativa (no URL http/https).
-     */
     private function deleteLocalIfRelative(?string $path): void
     {
         if (!$path) return;
 
-        // Si es URL absoluta, no borrar
         if (preg_match('~^https?://~i', $path)) {
             return;
         }
@@ -284,7 +270,6 @@ class PerfilController extends Controller
             }
         } catch (\Throwable $e) { /* noop */ }
 
-        // Fallback al disco por defecto si hiciera falta
         try {
             if (Storage::exists($path)) {
                 Storage::delete($path);

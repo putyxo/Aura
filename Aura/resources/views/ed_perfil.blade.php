@@ -380,139 +380,6 @@
           </div>
         </div>
       </section>
-
-      <!-- ===== ÚLTIMOS LANZAMIENTOS ===== -->
-      @php
-        $releasesAllUrl = R::has('perfil.releasesAll')
-            ? route('perfil.releasesAll', $user->id)
-            : url('/perfil/'.$user->id.'/lanzamientos');
-
-        $normalizedReleases = collect($lanzamientos)->map(function($it){
-          $tipo   = $it['tipo']   ?? $it->tipo   ?? 'album';
-          $titulo = $it['titulo'] ?? $it->titulo ?? $it->title ?? null;
-
-          $cover     = $it['cover']  ?? $it->cover  ?? $it->portada ?? $it->cover_path ?? null;
-          $coverUrl  = $it['cover_url'] ?? ($it->cover_url ?? null);
-
-          $audioPath = $it['audio'] ?? $it->audio ?? $it->audio_path ?? null;
-          $audioUrl  = $it['audio_url'] ?? (
-                        $audioPath
-                          ? (Str::startsWith($audioPath, ['http://','https://','/storage/'])
-                              ? $audioPath
-                              : asset('storage/'.ltrim($audioPath,'/')))
-                          : null
-                      );
-
-          $anio   = $it['anio']   ?? $it->anio   ?? (isset($it->created_at) ? optional($it->created_at)->format('Y') : '');
-          $ver    = optional($it['updated_at'] ?? ($it->updated_at ?? null))->timestamp ?? 0;
-          $titulo = $titulo ?: 'Sin título';
-
-          return [
-            'id'         => $it['id'] ?? ($it->id ?? null),
-            'tipo'       => $tipo,
-            'titulo'     => $titulo,
-            'cover'      => $cover,
-            'cover_url'  => $coverUrl,
-            'anio'       => $anio,
-            'ver'        => $ver,
-            'audio_url'  => $audioUrl,
-          ];
-        })
-        ->filter(fn($x) => !empty($x['titulo']))
-        ->values();
-
-        $relPages = $normalizedReleases->chunk(8);
-      @endphp
-
-      <section class="releases-section no-clip" id="releasesSection">
-        <div class="releases-head">
-          <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Últimos lanzamientos</h2>
-          <a href="{{ $releasesAllUrl }}" class="pf-link">Ver todo</a>
-        </div>
-
-        <div class="releases-wrap no-clip">
-          <button class="releases-arrow left" id="releasesPrev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="releases-viewport">
-            <div class="releases-track" id="releasesTrack" data-pages="{{ $relPages->count() }}">
-              @foreach($relPages as $rPage)
-                <div class="releases-page">
-                  <div class="releases-grid-4x2">
-                    @foreach($rPage as $item)
-                      @php
-                        if (!empty($item['cover_url'])) {
-                          $rCoverBase = $item['cover_url'];
-                        } elseif (!empty($item['cover'])) {
-                          $rCoverBase = Str::startsWith($item['cover'], ['http://','https://'])
-                            ? $item['cover']
-                            : asset('storage/' . ltrim($item['cover'], '/'));
-                        } else {
-                          $rCoverBase = asset('img/default-album.png');
-                        }
-                        $rCover = $rCoverBase.'?v='.$item['ver'];
-
-                        $isSong = ($item['tipo'] !== 'album');
-
-                        if (!$isSong) {
-                            $relHref = !empty($item['id'])
-                                ? (R::has('album.show')
-                                    ? route('album.show', ['id' => $item['id']])
-                                    : url('/albums/'.$item['id']))
-                                : null;
-
-                            $relDelete = (!empty($item['id']) && R::has('profile.albums.destroy'))
-                                ? route('profile.albums.destroy', ['id' => $item['id']])
-                                : '#';
-                        } else {
-                            $relHref = null;
-                            $relDelete = (!empty($item['id']) && R::has('cancion.destroy'))
-                                ? route('cancion.destroy', ['cancion' => $item['id']])
-                                : '#';
-                        }
-                      @endphp
-
-                      <div class="card release-card{{ $isOwner ? ' has-trash' : '' }}" data-type="{{ $isSong ? 'song' : 'album' }}" data-id="{{ $item['id'] ?? '' }}">
-                        <div class="card-img">
-                          <img src="{{ $rCover }}" alt="Portada" width="240" height="240" loading="lazy" decoding="async">
-                          <span class="type-badge">{{ $isSong ? 'Canción' : 'Álbum' }}</span>
-                        </div>
-                        <h4 title="{{ $item['titulo'] }}">{{ $item['titulo'] }}</h4>
-                        <p>{{ $item['anio'] }}</p>
-
-                        @if($isOwner && $relDelete !== '#')
-                          <button class="trash-float open-delete"
-                                  title="Eliminar"
-                                  data-type="{{ $isSong ? 'song' : 'album' }}"
-                                  data-action="{{ $relDelete }}"
-                                  data-title="{{ $item['titulo'] }}"
-                                  data-cover="{{ $rCover }}">
-                            <i class="fa-solid fa-trash"></i>
-                          </button>
-                        @endif
-
-                        @if(!$isSong && !empty($relHref))
-                          <a class="card-link" href="{{ $relHref }}" aria-label="Abrir álbum" data-prefetch="true"></a>
-                        @else
-                          <button type="button"
-                                  class="card-link play-release"
-                                  aria-label="Reproducir"
-                                  data-id="{{ $item['id'] ?? '' }}"
-                                  data-src="{{ $item['audio_url'] ?? '' }}"
-                                  data-title="{{ $item['titulo'] }}"
-                                  data-artist="{{ $user->nombre_artistico ?? $user->nombre ?? 'Artista' }}"
-                                  data-cover="{{ $rCover }}"></button>
-                        @endif
-                      </div>
-                    @endforeach
-                  </div>
-                </div>
-              @endforeach
-            </div>
-          </div>
-          <button class="releases-arrow right" id="releasesNext" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-
-        <div class="releases-pager" id="releasesPager"></div>
-      </section>
     @endif
   </main>
 
@@ -654,7 +521,7 @@
   <div class="modal-content bio">
     <div class="modal-header">
       <h3><i class="fa-solid fa-circle-info"></i> Sobre {{ $user->nombre_artistico ?? $user->nombre ?? 'el artista' }}</h3>
-      <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeBioTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+    <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" id="closeBioTop" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="bio-grid">
       <div class="bio-media">
@@ -908,7 +775,7 @@
     });
   });
 
-  // Lanzamientos → reproducir
+  // Lanzamientos → reproducir (seguro aunque no exista el bloque)
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.play-release');
     if (!btn) return;
@@ -933,7 +800,7 @@
   }, {passive:true});
 
 
-    /* ===== Añadir a cola (igual que en likes.blade.php) ===== */
+  /* ===== Añadir a cola (igual que en likes.blade.php) ===== */
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="queue"]');
     if (!btn) return;
@@ -986,7 +853,7 @@
   }
 
   initCarousel('#albumsTrack', '#albumsPrev', '#albumsNext', '#albumsPageLabel', null);
-  initCarousel('#releasesTrack', '#releasesPrev', '#releasesNext', null, '#releasesPager');
+  // initCarousel('#releasesTrack', '#releasesPrev', '#releasesNext', null, '#releasesPager'); // (bloque removido arriba; esta línea puede quedar comentada)
 
 })();
 </script>
