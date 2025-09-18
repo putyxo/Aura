@@ -288,7 +288,7 @@ button:hover {
                     </div>
                     <div class="row small">
                         <span class="small">Volumen</span>
-                        <input id="preamp" name="preamp" type="range" min="-18" max="18" step="0.5"
+                        <input id="preamp" name="preamp" type="range" min="-18" max="18" step="-18"
                             value="{{ optional($eq)->preamp ?? 0 }}" />
                     </div>
                 </div>
@@ -443,7 +443,7 @@ button:hover {
                         filters[idx].gain.value = 0;
                         document.getElementById('eq-' + FREQS[idx]).textContent = '0dB';
                     });
-                    preamp.value = 0;
+                    preamp.value = -18;
                     preamp.dispatchEvent(new Event('input'));
                 });
 
@@ -517,3 +517,127 @@ window.bindEqualizerTo = function(audioEl) {
     }
 };
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const sliders = document.querySelectorAll(".eq-slider");
+  const preamp  = document.getElementById("preamp");
+  const preampVal = document.getElementById("preampVal");
+
+  // Sliders de bandas
+  sliders.forEach(sl => {
+    sl.addEventListener("input", () => {
+      const freq = sl.dataset.freq;
+      const db   = parseFloat(sl.value);
+      // Actualizar texto del valor
+      const label = document.getElementById("eq-" + freq);
+      if (label) label.textContent = (db >= 0 ? "+" + db : db) + "dB";
+      // Enviar evento al EQ global
+      document.dispatchEvent(new CustomEvent("eq:apply", { detail: { freq, db } }));
+    });
+  });
+
+  // Preamp
+  preamp.addEventListener("input", () => {
+    const db = parseFloat(preamp.value);
+    preampVal.textContent = db + " dB";
+    document.dispatchEvent(new CustomEvent("eq:preamp", { detail: { db } }));
+  });
+});
+</script>
+<script>
+(() => {
+  // Frecuencias y helpers
+  const FREQS = [60,170,310,600,1000,3000,6000,12000,14000,16000];
+  const dbToGain = db => Math.pow(10, db/20);
+
+  let ac = null, streamNode = null, filters = [], preampNode = null, teardown = null;
+
+  // Crea un EQ local usando captureStream (no toca tu EQ global)
+  function initLiveEq() {
+    if (ac) return; // ya inicializado
+    const audio = document.getElementById('auraAudio');
+    if (!audio) { console.warn('No se encontró #auraAudio'); return; }
+
+    const stream = audio.captureStream?.() || audio.mozCaptureStream?.();
+    if (!stream) {
+      console.warn('captureStream() no soportado en este navegador.');
+      return;
+    }
+
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    streamNode = ac.createMediaStreamSource(stream);
+
+    // Cadena de filtros (paralela a la global)
+    filters = FREQS.map(freq => {
+      const f = ac.createBiquadFilter();
+      f.type = 'peaking';
+      f.frequency.value = freq;
+      f.Q.value = 1.0;
+      f.gain.value = 0;
+      return f;
+    });
+
+    preampNode = ac.createGain();
+    const preampEl = document.getElementById('preamp');
+    const preDb = parseFloat(preampEl?.value || '0');
+    preampNode.gain.value = dbToGain(preDb);
+
+    // Conexiones: stream -> filtros -> preamp -> destino
+    streamNode.connect(filters[0]);
+    for (let i = 0; i < filters.length - 1; i++) filters[i].connect(filters[i+1]);
+    filters[filters.length - 1].connect(preampNode);
+    preampNode.connect(ac.destination);
+
+    // Evitar doble audio: silenciamos el <audio> físico mientras estés en esta vista
+    const prevMuted = audio.muted;
+    audio.muted = true;
+
+    // Limpieza al salir de la página
+    teardown = () => {
+      try { preampNode.disconnect(); } catch {}
+      try { filters.forEach(n => { try { n.disconnect(); } catch {} }); } catch {}
+      try { streamNode.disconnect(); } catch {}
+      try { ac.close(); } catch {}
+      ac = null; streamNode = null; filters = []; preampNode = null;
+      audio.muted = prevMuted;
+    };
+
+    window.addEventListener('beforeunload', teardown);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && teardown) teardown();
+    });
+  }
+
+  // Enlaza los sliders para que suenen en vivo
+  function bindUI() {
+    const sliders = document.querySelectorAll('.eq-slider');
+    const preamp  = document.getElementById('preamp');
+    const preampVal = document.getElementById('preampVal');
+
+    sliders.forEach((sl, idx) => {
+      sl.addEventListener('input', () => {
+        if (!ac) initLiveEq();
+        const db = parseFloat(sl.value);
+        if (filters[idx]) filters[idx].gain.value = db;
+
+        const freq = sl.dataset.freq;
+        const label = document.getElementById('eq-' + freq);
+        if (label) label.textContent = (db >= 0 ? '+' + db : db) + 'dB';
+      });
+    });
+
+    preamp?.addEventListener('input', () => {
+      if (!ac) initLiveEq();
+      const db = parseFloat(preamp.value);
+      if (preampNode) preampNode.gain.value = dbToGain(db);
+      if (preampVal) preampVal.textContent = db + ' dB';
+    });
+  }
+
+  // No arrancamos el AudioContext hasta que muevas algo (para no gastar recursos si no hace falta)
+  document.addEventListener('DOMContentLoaded', bindUI);
+})();
+</script>
+
+

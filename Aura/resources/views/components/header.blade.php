@@ -56,49 +56,69 @@
       <!-- Usuario -->
       <div class="ah-user">
         <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
-          @php
-            // <-- Cambio de fallback a perfil_npc.png
-            $avatarUrl = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
-            $ver = auth()->user()->updated_at?->getTimestamp() ?? time();
-            $avatarChip = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . $ver;
-          @endphp
-          <img class="ah-chip-avatar"
-               src="{{ $avatarChip }}"
-               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
-               onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
-          <span class="ah-chip-name">
-            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-          </span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </button>
+  @php
+      $user = auth()->user();
+      if ($user) {
+          // fallback a perfil_npc.png si no tiene avatar
+          $avatarUrl = img_url($user->avatar ?? 'img/perfil_npc.png', 'img/perfil_npc.png');
+          $ver = $user->updated_at?->getTimestamp() ?? time();
+          $avatarChip = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . $ver;
+      } else {
+          $avatarChip = asset('img/perfil_npc.png');
+      }
+  @endphp
+
+  <img class="ah-chip-avatar"
+       src="{{ $avatarChip }}"
+       alt="{{ $user->nombre_artistico ?? $user->nombre ?? 'Invitado' }}"
+       onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
+
+  <span class="ah-chip-name">
+      {{ $user?->es_artista ? ($user->nombre_artistico ?? $user->nombre) : ($user->nombre ?? 'Invitado') }}
+  </span>
+  <i class="fa-solid fa-chevron-down"></i>
+</button>
+
 
         <div class="ah-dropdown" id="ahUserDropdown" aria-hidden="true" role="menu">
           <div class="ah-profile-header">
-            <div class="ah-profile-info">
-              @php
-                // <-- Cambio de fallback a perfil_npc.png
-                $avatarDrop = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
-                $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
-              @endphp
-              <img class="ah-profile-avatar"
-                   src="{{ $avatarDrop }}"
-                   alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
-                   onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
-              <div class="ah-profile-text">
-                <div class="ah-profile-name">
-                  {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-                </div>
-                @if(auth()->user()->email)
-                  <div class="ah-profile-email">{{ auth()->user()->email }}</div>
-                @endif
-              </div>
-            </div>
-          </div>
+  <div class="ah-profile-info">
+    @php
+      $user = auth()->user();
+      if ($user) {
+          $avatarDrop = img_url($user->avatar ?? 'img/perfil_npc.png', 'img/perfil_npc.png');
+          $ver = $user->updated_at?->getTimestamp() ?? time();
+          $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
+      } else {
+          $avatarDrop = asset('img/perfil_npc.png');
+      }
+    @endphp
+
+    <img class="ah-profile-avatar"
+         src="{{ $avatarDrop }}"
+         alt="{{ $user->nombre_artistico ?? $user->nombre ?? 'Invitado' }}"
+         onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
+
+    <div class="ah-profile-text">
+      <div class="ah-profile-name">
+        {{ $user?->es_artista ? ($user->nombre_artistico ?? $user->nombre) : ($user->nombre ?? 'Invitado') }}
+      </div>
+
+      @if($user?->email)
+        <div class="ah-profile-email">{{ $user->email }}</div>
+      @endif
+    </div>
+  </div>
+</div>
+
 
           <div class="ah-menu-options">
-            <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
-              <i class="fas fa-user"></i><span>Ver mi perfil</span>
-            </a>
+            @auth
+  <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
+    <i class="fas fa-user"></i><span>Ver mi perfil</span>
+  </a>
+@endauth
+
             <a href="{{ route('cuenta', auth()->id()) }}" class="ah-menu-item">
               <i class="fas fa-cog"></i><span>Mi cuenta</span>
             </a>
@@ -144,18 +164,23 @@
 
 <!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
 <div id="global-eq" style="display:none">
-  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
-    <input 
-      type="range" 
-      min="-12" max="12" step="0.5"
-      value="{{ optional(auth()->user()->equalizer)->{'band_'.$freq} ?? 0 }}"
-      data-freq="{{ $freq }}"
-      class="eq-slider-global"
-    >
-  @endforeach
+ @php
+  $eq = optional(auth()->user()?->equalizer);
+@endphp
 
-  <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
-         value="{{ optional(auth()->user()->equalizer)->preamp ?? 0 }}">
+@foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+  <input 
+    type="range" 
+    min="-12" max="12" step="0.5"
+    value="{{ $eq->{'band_'.$freq} ?? 0 }}"
+    data-freq="{{ $freq }}"
+    class="eq-slider-global"
+  >
+@endforeach
+
+<input id="global-preamp" type="range" min="-18" max="18" step="0.5"
+       value="{{ $eq->preamp ?? 0 }}">
+
 </div>
 
 <script>
