@@ -38,7 +38,22 @@ class CreateUsersTable extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
+          DB::table('users')->insert([
+            'nombre'           => 'Administrador',
+            'email'            => 'admin@ejemplo.com',
+            'password'         => Hash::make('Admin123'),
+            'avatar' => 'img/perfil_npc.png',
+            'verificado'       => true,
+            'es_artista' => '1',
+            'nombre_artistico' => 'Admin',
+            'is_active'        => true,
+            'email_verified_at'=> now(),
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
     }
+
+    
 
     public function down(): void
     {

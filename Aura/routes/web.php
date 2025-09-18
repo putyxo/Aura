@@ -31,6 +31,21 @@ use Illuminate\Support\Facades\Session;
 // ===== Página principal =====
 Route::get('/', fn () => view('menu'))->name('menu');
 
+
+
+// ===== Funcion principal para acceso a Admin=====
+   function checkAdminAccess() {
+    if (!Auth::check()) {
+        return false;
+    }
+
+    $user = Auth::user();
+    return $user->email === 'admin@ejemplo.com' && Hash::check('Admin123', $user->password);
+}
+
+
+
+
 /*
 |---------------------------------------------------------------------------
 | Rutas públicas (sin auth)
@@ -149,16 +164,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/perfil/toggle-role', [PerfilController::class, 'toggleRole'])
         ->name('perfil.toggleRole');
 
-
-         // ===== Admin =====
-   function checkAdminAccess() {
-    if (!Auth::check()) {
-        return false;
-    }
-
-    $user = Auth::user();
-    return $user->email === 'juanzpaescobar@gmail.com' && Hash::check('Junaco2156+', $user->password);
-}
 
 // ===== Rutas restringidas =====
 

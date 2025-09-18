@@ -1,3 +1,4 @@
+
 {{-- resources/views/components/footer.blade.php --}}
 <div id="rightPlayer" class="player-card" data-turbo-permanent>
   <div class="current-song">
@@ -5,7 +6,10 @@
       <img class="cover"
            src="{{ asset('img/default-cancion.png') }}"
            onerror="this.onerror=null;this.src='{{ asset('img/default-cancion.png') }}';"
-           alt="cover por defecto">
+           alt="@foreach(range(1,16) as $i)
+    &nbsp;
+@endforeach
+">
     </div>
 
     <span class="song-name">Selecciona una canción</span>
@@ -71,7 +75,6 @@
   <audio id="auraAudio" preload="metadata" playsinline crossorigin="anonymous" hidden></audio>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js" defer></script>
 
 <!-- Probe de duración (usado por la cola) -->
 <script>
@@ -1106,3 +1109,35 @@ function syncKaraoke(){
 }
 </style>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutForm = document.querySelector('form[action="{{ route('logout') }}"]');
+  
+  if (logoutForm) {
+    logoutForm.addEventListener("submit", () => {
+      const audio = document.getElementById("auraAudio");
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
+
+      // Limpiar solo en logout
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith("player_state_") || k.startsWith("aura_queue")) {
+          localStorage.removeItem(k);
+        }
+      });
+      sessionStorage.clear();
+
+      // Resetear UI del player
+      const title = document.querySelector("#rightPlayer .song-name");
+      const artist = document.querySelector("#rightPlayer .song-autor");
+      const cover = document.querySelector("#rightPlayer .cover");
+      if (title) title.textContent = "Selecciona una canción";
+      if (artist) artist.textContent = "Artista";
+      if (cover) cover.src = "{{ asset('img/default-cancion.png') }}";
+    });
+  }
+});
+</script>

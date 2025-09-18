@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
@@ -12,8 +12,6 @@
     <!-- Vite -->
     @vite(['resources/css/preferencias.css', 'resources/js/preferencias.js'])
 </head>
-
-
 
 <style>
 #app {
@@ -142,12 +140,13 @@ button:hover {
     padding-top: 8px;
 }
 </style>
+
 <body>
 
     {{-- ====== COMPONENTES GLOBALES ====== --}}
-    @include('components.sidebar')
-    @include('components.traductor')
+    @include('components.sidebar') {{-- Sidebar fijo a la izquierda --}}
     @include('components.header')
+    @include('components.traductor')
     @include('components.fondo')
 
     {{-- Partículas de fondo --}}
@@ -178,280 +177,133 @@ button:hover {
                 </div>
             </section>
             {{-- ====== /HERO NUEVO ====== --}}
+            <script>
+            const audio = document.querySelector('audio'); // cambia el selector según tu reproductor
+            const volumeSlider = document.getElementById('volume');
+            const volumeValue = document.getElementById('volume-value');
 
-            
-                
+            // Función que ajusta el volumen
+            function updateVolume(val) {
+                const percent = parseInt(val, 10);
+                volumeValue.textContent = percent + '%';
 
-                <script>
-                const audio = document.querySelector('audio'); // cambia el selector según tu reproductor
-                const volumeSlider = document.getElementById('volume');
-                const volumeValue = document.getElementById('volume-value');
-
-                // Función que ajusta el volumen
-                function updateVolume(val) {
-                    const percent = parseInt(val, 10);
-                    volumeValue.textContent = percent + '%';
-
-                    // Normalizar a rango 0–1
-                    if (audio) {
-                        audio.volume = percent / 100;
-                    }
-
-                    // Guardar preferencia en localStorage
-                    localStorage.setItem('defaultVolume', percent);
+                // Normalizar a rango 0–1
+                if (audio) {
+                    audio.volume = percent / 100;
                 }
 
-                // Al cargar la página, restaurar el volumen guardado
-                window.addEventListener('DOMContentLoaded', () => {
-                    const saved = localStorage.getItem('defaultVolume');
-                    const start = saved ? parseInt(saved, 10) : 100;
+                // Guardar preferencia en localStorage
+                localStorage.setItem('defaultVolume', percent);
+            }
 
-                    volumeSlider.value = start;
-                    volumeValue.textContent = start + '%';
+            // Al cargar la página, restaurar el volumen guardado
+            window.addEventListener('DOMContentLoaded', () => {
+                const saved = localStorage.getItem('defaultVolume');
+                const start = saved ? parseInt(saved, 10) : 100;
 
-                    if (audio) {
-                        audio.volume = start / 100;
-                    }
-                });
-                </script>
+                volumeSlider.value = start;
+                volumeValue.textContent = start + '%';
 
-            </div>
+                if (audio) {
+                    audio.volume = start / 100;
+                }
+            });
+            </script>
 
-            {{-- ===== REPRODUCCIÓN ===== --}}
-            <div class="preferences-section">
-                <h2 class="section-title"><i class="fas fa-play-circle"></i> Reproducción</h2>
-
-                <div class="preference-item">
-                    <div>
-                        <div class="preference-label">Reproducción automática</div>
-                        <div class="preference-description">Continúa reproduciendo música similar cuando termine una
-                            canción</div>
-                    </div>
-                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-                </div>
-
-                
-
-                <div class="preference-item">
-                    <div>
-                        <div class="preference-label">Modo aleatorio</div>
-                        <div class="preference-description">Mezcla canciones considerando tu estado de ánimo</div>
-                    </div>
-                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
-                </div>
-
-                
-
-                <div class="preference-item">
-                    <div>
-                        <div class="preference-label">Calidad de audio</div>
-                        <div class="preference-description">Mayor calidad consume más datos</div>
-                    </div>
-                    <div class="dropdown">
-                        <select class="dropdown-select">
-                            <option value="low">Baja (96 kbps)</option>
-                            <option value="normal" selected>Normal (160 kbps)</option>
-                            <option value="high">Alta (320 kbps)</option>
-                            <option value="lossless">Sin pérdida</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-
-
-
-          {{-- ===== ECUALIZADOR ===== --}}
-<form method="POST" action="{{ route('eq.save') }}">
-  @csrf
-
-  {{-- ===== ECUALIZADOR ===== --}}
-  <div class="preferences-section">
-    <h2 class="section-title"><i class="fas fa-sliders-h"></i> Ecualizador</h2>
-
-    <div class="equalizer-container" id="bands">
-  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
-    <div class="eq-band">
-      <div class="eq-slider-container">
-        <input 
-          type="range" 
-          min="-12" max="12" step="0.5"
-          value="{{ optional($eq)->{'band_'.$freq} ?? 0 }}"
-          name="eq[{{ $freq }}]"
-          class="eq-slider"
-          data-freq="{{ $freq }}"
-          orient="vertical">
-        <div class="eq-value" id="eq-{{ $freq }}">
-          {{ optional($eq)->{'band_'.$freq} ? ((optional($eq)->{'band_'.$freq} >= 0 ? '+' : '').optional($eq)->{'band_'.$freq}) : '0' }}dB
         </div>
-      </div>
-      <div class="eq-label">{{ $freq >= 1000 ? ($freq/1000).'k' : $freq }}Hz</div>
-    </div>
-  @endforeach
-</div>
 
-<div class="preamp" style="margin-top:16px; display:flex; align-items:center; justify-content:space-between;">
-  <div class="row" style="gap:8px">
-    <span class="small">Preamp</span>
-    <span id="preampVal" class="num">{{ optional($eq)->preamp ?? 0 }} dB</span>
-  </div>
-  <div class="row small">
-    <span class="small">Volumen</span>
-    <input id="preamp" name="preamp" type="range" min="-18" max="18" step="0.5"
-           value="{{ optional($eq)->preamp ?? 0 }}" />
-  </div>
-</div>
+        {{-- ===== REPRODUCCIÓN ===== --}}
+        <div class="preferences-section">
+            <h2 class="section-title"><i class="fas fa-play-circle"></i> Reproducción</h2>
 
-
-    <div class="eq-presets" style="margin-top:12px;">
-      <button type="button" class="preset-btn active" onclick="applyPreset('balanced')">Balanceado</button>
-      <button type="button" class="preset-btn" onclick="applyPreset('bass')">Graves</button>
-      <button type="button" class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
-      <button type="button" class="preset-btn" onclick="applyPreset('electronic')">Electrónica</button>
-      <button type="button" class="preset-btn" onclick="applyPreset('rock')">Rock</button>
-      <button id="resetBtn" type="button">🔄 Reset</button>
-    </div>
-  </div>
+            <div class="preference-item">
+                <div>
+                    <div class="preference-label">Reproducción automática</div>
+                    <div class="preference-description">Continúa reproduciendo música similar cuando termine una
+                        canción</div>
+                </div>
+                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+            </div>
 
 
 
-
-<script>
-(() => {
-  const FREQS = [60,170,310,600,1000,3000,6000,12000,14000,16000];
-  const dbToGain = db => Math.pow(10, db/20);
-
-  const sliders = document.querySelectorAll('.eq-slider');
-  const preamp = document.getElementById('preamp');
-  const preampVal = document.getElementById('preampVal');
-  const resetBtn = document.getElementById('resetBtn');
-
-  let ac, filters=[], gPreamp, srcNode;
-
-  function ensureCtx(){
-    if (ac) return;
-    ac = new (window.AudioContext||window.webkitAudioContext)();
-
-    // Crear filtros
-    filters = FREQS.map(freq=>{
-      const f = ac.createBiquadFilter();
-      f.type = 'peaking';
-      f.frequency.value = freq;
-      f.Q.value = 1.0;
-      f.gain.value = 0;
-      return f;
-    });
-
-    // Preamp
-    gPreamp = ac.createGain();
-    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
-
-    // Conectar filtros -> preamp -> destino
-    for (let i=0; i<filters.length-1; i++) filters[i].connect(filters[i+1]);
-    filters[filters.length-1].connect(gPreamp);
-    gPreamp.connect(ac.destination);
-
-    // Si existe el <audio id="player"> lo conectamos
-    const audio = document.getElementById('auraAudio');
-if (audio) {
-  window.bindEqualizerTo(audio); 
-  document.dispatchEvent(new Event('aura:eq-ready'));
-}
-  }
-
-  // 🚀 Aplica los valores iniciales que vienen desde Blade
-  function applyInitialValues(){
-    ensureCtx();
-    sliders.forEach((sl, idx)=>{
-      const db = parseFloat(sl.value);
-      filters[idx].gain.value = db;
-      document.getElementById('eq-'+FREQS[idx]).textContent = (db>=0? '+'+db: db)+'dB';
-    });
-    const dbPreamp = parseFloat(preamp.value);
-    gPreamp.gain.value = dbToGain(dbPreamp);
-    preampVal.textContent = dbPreamp+" dB";
-  }
-
-  // Al cargar la página: aplicar todo lo guardado
-  document.addEventListener('DOMContentLoaded', applyInitialValues);
-
-  // === Listeners normales ===
-  sliders.forEach((sl, idx)=>{
-    sl.addEventListener('input', ()=>{
-      ensureCtx();
-      const db = parseFloat(sl.value);
-      filters[idx].gain.value = db;
-      document.getElementById('eq-'+FREQS[idx]).textContent = (db>=0? '+'+db: db)+'dB';
-    });
-  });
-
-  preamp.addEventListener('input', ()=>{
-    ensureCtx();
-    const db = parseFloat(preamp.value);
-    gPreamp.gain.value = dbToGain(db);
-    preampVal.textContent = db+' dB';
-  });
-
-  resetBtn?.addEventListener('click', ()=>{
-    sliders.forEach((sl, idx)=>{
-      sl.value=0;
-      filters[idx].gain.value=0;
-      document.getElementById('eq-'+FREQS[idx]).textContent='0dB';
-    });
-    preamp.value=0;
-    preamp.dispatchEvent(new Event('input'));
-  });
-
-  // Presets
-  window.applyPreset = function(name){
-    const presets={
-      balanced:[0,2,-1,1,3,2,1,0,-2,1],
-      bass:[5,4,3,2,0,-2,-3,-4,-5,-5],
-      vocal:[-2,-1,0,2,4,3,1,0,-1,-2],
-      electronic:[4,3,2,1,0,1,2,3,4,5],
-      rock:[3,2,1,0,-1,0,1,2,3,4]
-    };
-    const values=presets[name]||presets['balanced'];
-    sliders.forEach((sl, idx)=>{
-      sl.value=values[idx];
-      filters[idx].gain.value=values[idx];
-      document.getElementById('eq-'+FREQS[idx]).textContent=(values[idx]>=0? '+'+values[idx]:values[idx])+'dB';
-    });
-  };
-
-  // Exponer para reconectar desde fuera si cambias de canción
-  window.bindEqualizerTo=function(audioEl){
-    if (!audioEl) return;
-    ensureCtx();
-    const media=ac.createMediaElementSource(audioEl);
-    media.connect(filters[0]);
-    srcNode=media;
-  };
-})();
-
-function saveEqRealtime() {
-  const form = document.querySelector('form');
-  if (!form) return;
-  const data = new FormData(form);
-
-  fetch("{{ route('eq.save') }}", {
-    method: "POST",
-    headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-    body: data
-  }).catch(console.error);
-}
-
-sliders.forEach(sl => {
-  sl.addEventListener('input', saveEqRealtime);
-});
-preamp.addEventListener('input', saveEqRealtime);
-
-</script>
+            <div class="preference-item">
+                <div>
+                    <div class="preference-label">Modo aleatorio</div>
+                    <div class="preference-description">Mezcla canciones considerando tu estado de ánimo</div>
+                </div>
+                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+            </div>
 
 
 
-            
+            <div class="preference-item">
+                <div>
+                    <div class="preference-label">Calidad de audio</div>
+                    <div class="preference-description">Mayor calidad consume más datos</div>
+                </div>
+                <div class="dropdown">
+                    <select class="dropdown-select">
+                        <option value="low">Baja (96 kbps)</option>
+                        <option value="normal" selected>Normal (160 kbps)</option>
+                        <option value="high">Alta (320 kbps)</option>
+                        <option value="lossless">Sin pérdida</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
+
+
+
+        {{-- ===== ECUALIZADOR ===== --}}
+        <form method="POST" action="{{ route('eq.save') }}">
+            @csrf
+
+            {{-- ===== ECUALIZADOR ===== --}}
+            <div class="preferences-section">
+                <h2 class="section-title"><i class="fas fa-sliders-h"></i> Ecualizador</h2>
+
+                <div class="equalizer-container" id="bands">
+                    @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+                    <div class="eq-band">
+                        <div class="eq-slider-container">
+                            <input type="range" min="-12" max="12" step="0.5"
+                                value="{{ optional($eq)->{'band_'.$freq} ?? 0 }}" name="eq[{{ $freq }}]"
+                                class="eq-slider" data-freq="{{ $freq }}" orient="vertical">
+                            <div class="eq-value" id="eq-{{ $freq }}">
+                                {{ optional($eq)->{'band_'.$freq} ? ((optional($eq)->{'band_'.$freq} >= 0 ? '+' : '').optional($eq)->{'band_'.$freq}) : '0' }}dB
+                            </div>
+                        </div>
+                        <div class="eq-label">{{ $freq >= 1000 ? ($freq/1000).'k' : $freq }}Hz</div>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="preamp"
+                    style="margin-top:16px; display:flex; align-items:center; justify-content:space-between;">
+                    <div class="row" style="gap:8px">
+                        <span class="small">Preamp</span>
+                        <span id="preampVal" class="num">{{ optional($eq)->preamp ?? 0 }} dB</span>
+                    </div>
+                    <div class="row small">
+                        <span class="small">Volumen</span>
+                        <input id="preamp" name="preamp" type="range" min="-18" max="18" step="0.5"
+                            value="{{ optional($eq)->preamp ?? 0 }}" />
+                    </div>
+                </div>
+
+
+                <div class="eq-presets" style="margin-top:12px;">
+                    <button type="button" class="preset-btn active"
+                        onclick="applyPreset('balanced')">Balanceado</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('bass')">Graves</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('electronic')">Electrónica</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('rock')">Rock</button>
+                    <button id="resetBtn" type="button">🔄 Reset</button>
+                </div>
+            </div>
 
             {{-- ===== DESCUBRIMIENTO ===== --}}
             <div class="preferences-section">
@@ -492,18 +344,176 @@ preamp.addEventListener('input', saveEqRealtime);
 
 
             <center>
-               
-                <button type="submit"  class="save-button" class="btn btn-primary">Guardar configuración</button>
+
+                <button type="submit" class="save-button" class="btn btn-primary">Guardar configuración</button>
 
             </center>
-</form>
+        </form>
         </div>
     </main>
-
-    {{-- ====== FOOTER / PLAYER DERECHO ====== --}}
+     {{-- ====== FOOTER / PLAYER DERECHO ====== --}}
     @include('components.footer')
+
 </body>
 
 </html>
 
- 
+ <script>
+            (() => {
+                const FREQS = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
+                const dbToGain = db => Math.pow(10, db / 20);
+
+                const sliders = document.querySelectorAll('.eq-slider');
+                const preamp = document.getElementById('preamp');
+                const preampVal = document.getElementById('preampVal');
+                const resetBtn = document.getElementById('resetBtn');
+
+                let ac, filters = [],
+                    gPreamp, srcNode;
+
+                function ensureCtx() {
+                    if (ac) return;
+                    ac = new(window.AudioContext || window.webkitAudioContext)();
+
+                    // Crear filtros
+                    filters = FREQS.map(freq => {
+                        const f = ac.createBiquadFilter();
+                        f.type = 'peaking';
+                        f.frequency.value = freq;
+                        f.Q.value = 1.0;
+                        f.gain.value = 0;
+                        return f;
+                    });
+
+                    // Preamp
+                    gPreamp = ac.createGain();
+                    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
+
+                    // Conectar filtros -> preamp -> destino
+                    for (let i = 0; i < filters.length - 1; i++) filters[i].connect(filters[i + 1]);
+                    filters[filters.length - 1].connect(gPreamp);
+                    gPreamp.connect(ac.destination);
+
+                    // Si existe el <audio id="player"> lo conectamos
+                    const audio = document.getElementById('auraAudio');
+                    if (audio) {
+                        window.bindEqualizerTo(audio);
+                        document.dispatchEvent(new Event('aura:eq-ready'));
+                    }
+                }
+
+                // 🚀 Aplica los valores iniciales que vienen desde Blade
+                function applyInitialValues() {
+                    ensureCtx();
+                    sliders.forEach((sl, idx) => {
+                        const db = parseFloat(sl.value);
+                        filters[idx].gain.value = db;
+                        document.getElementById('eq-' + FREQS[idx]).textContent = (db >= 0 ? '+' + db :
+                            db) + 'dB';
+                    });
+                    const dbPreamp = parseFloat(preamp.value);
+                    gPreamp.gain.value = dbToGain(dbPreamp);
+                    preampVal.textContent = dbPreamp + " dB";
+                }
+
+                // Al cargar la página: aplicar todo lo guardado
+                document.addEventListener('DOMContentLoaded', applyInitialValues);
+
+                // === Listeners normales ===
+                sliders.forEach((sl, idx) => {
+                    sl.addEventListener('input', () => {
+                        ensureCtx();
+                        const db = parseFloat(sl.value);
+                        filters[idx].gain.value = db;
+                        document.getElementById('eq-' + FREQS[idx]).textContent = (db >= 0 ? '+' +
+                            db : db) + 'dB';
+                    });
+                });
+
+                preamp.addEventListener('input', () => {
+                    ensureCtx();
+                    const db = parseFloat(preamp.value);
+                    gPreamp.gain.value = dbToGain(db);
+                    preampVal.textContent = db + ' dB';
+                });
+
+                resetBtn?.addEventListener('click', () => {
+                    sliders.forEach((sl, idx) => {
+                        sl.value = 0;
+                        filters[idx].gain.value = 0;
+                        document.getElementById('eq-' + FREQS[idx]).textContent = '0dB';
+                    });
+                    preamp.value = 0;
+                    preamp.dispatchEvent(new Event('input'));
+                });
+
+                // Presets
+                window.applyPreset = function(name) {
+                    const presets = {
+                        balanced: [0, 2, -1, 1, 3, 2, 1, 0, -2, 1],
+                        bass: [5, 4, 3, 2, 0, -2, -3, -4, -5, -5],
+                        vocal: [-2, -1, 0, 2, 4, 3, 1, 0, -1, -2],
+                        electronic: [4, 3, 2, 1, 0, 1, 2, 3, 4, 5],
+                        rock: [3, 2, 1, 0, -1, 0, 1, 2, 3, 4]
+                    };
+                    const values = presets[name] || presets['balanced'];
+                    sliders.forEach((sl, idx) => {
+                        sl.value = values[idx];
+                        filters[idx].gain.value = values[idx];
+                        document.getElementById('eq-' + FREQS[idx]).textContent = (values[idx] >= 0 ?
+                            '+' + values[idx] : values[idx]) + 'dB';
+                    });
+                };
+
+                // Exponer para reconectar desde fuera si cambias de canción
+                window.bindEqualizerTo = function(audioEl) {
+                    if (!audioEl) return;
+                    ensureCtx();
+                    const media = ac.createMediaElementSource(audioEl);
+                    media.connect(filters[0]);
+                    srcNode = media;
+                };
+            })();
+
+            function saveEqRealtime() {
+                const form = document.querySelector('form');
+                if (!form) return;
+                const data = new FormData(form);
+
+                fetch("{{ route('eq.save') }}", {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    },
+                    body: data
+                }).catch(console.error);
+            }
+
+            sliders.forEach(sl => {
+                sl.addEventListener('input', saveEqRealtime);
+            });
+            preamp.addEventListener('input', saveEqRealtime);
+
+            // Crear un analyser para monitorear en tiempo real
+const analyser = ac.createAnalyser();
+analyser.fftSize = 2048;
+
+// Conectar filtros -> preamp -> analyser -> destino
+for (let i = 0; i < filters.length - 1; i++) filters[i].connect(filters[i + 1]);
+filters[filters.length - 1].connect(gPreamp);
+gPreamp.connect(analyser);
+analyser.connect(ac.destination);
+
+window.bindEqualizerTo = function(audioEl) {
+    if (!audioEl) return;
+    ensureCtx();
+    try {
+        if (!srcNode) {
+            srcNode = ac.createMediaElementSource(audioEl);
+            srcNode.connect(filters[0]); // conecta al inicio de la cadena
+        }
+    } catch(e) {
+        console.warn("El audio ya estaba conectado al EQ");
+    }
+};
+</script>
