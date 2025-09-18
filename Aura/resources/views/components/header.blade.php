@@ -55,108 +55,125 @@
 
       <!-- Usuario -->
       <div class="ah-user">
-        <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
+        @auth
           @php
-            // <-- Cambio de fallback a perfil_npc.png
-            $avatarUrl = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
-            $ver = auth()->user()->updated_at?->getTimestamp() ?? time();
+            $user = auth()->user();
+            $avatarUrl = img_url($user->avatar ?? null, 'img/perfil_npc.png');
+            $ver = $user->updated_at?->getTimestamp() ?? time();
             $avatarChip = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . $ver;
           @endphp
-          <img class="ah-chip-avatar"
-               src="{{ $avatarChip }}"
-               alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
-               onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
-          <span class="ah-chip-name">
-            {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
-          </span>
-          <i class="fa-solid fa-chevron-down"></i>
-        </button>
+          <button class="ah-user-chip" id="ahUserBtn" type="button" aria-expanded="false" aria-controls="ahUserDropdown">
+            <img class="ah-chip-avatar"
+                 src="{{ $avatarChip }}"
+                 alt="{{ $user->nombre_artistico ?? $user->nombre ?? 'Usuario' }}"
+                 onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
+            <span class="ah-chip-name">
+              {{ $user->es_artista ? ($user->nombre_artistico ?? 'Artista') : ($user->nombre ?? 'Usuario') }}
+            </span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
 
-        <div class="ah-dropdown" id="ahUserDropdown" aria-hidden="true" role="menu">
-          <div class="ah-profile-header">
-            <div class="ah-profile-info">
-              @php
-                // <-- Cambio de fallback a perfil_npc.png
-                $avatarDrop = img_url(auth()->user()->avatar, 'img/perfil_npc.png');
-                $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
-              @endphp
-              <img class="ah-profile-avatar"
-                   src="{{ $avatarDrop }}"
-                   alt="{{ auth()->user()->nombre_artistico ?? auth()->user()->nombre }}"
-                   onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
-              <div class="ah-profile-text">
-                <div class="ah-profile-name">
-                  {{ auth()->user()->es_artista ? auth()->user()->nombre_artistico : auth()->user()->nombre }}
+          <div class="ah-dropdown" id="ahUserDropdown" aria-hidden="true" role="menu">
+            <div class="ah-profile-header">
+              <div class="ah-profile-info">
+                @php
+                  $avatarDrop = img_url($user->avatar ?? null, 'img/perfil_npc.png');
+                  $avatarDrop .= (str_contains($avatarDrop, '?') ? '&' : '?') . 'v=' . $ver;
+                @endphp
+                <img class="ah-profile-avatar"
+                     src="{{ $avatarDrop }}"
+                     alt="{{ $user->nombre_artistico ?? $user->nombre ?? 'Usuario' }}"
+                     onerror="this.onerror=null;this.src='{{ asset('img/perfil_npc.png') }}';">
+                <div class="ah-profile-text">
+                  <div class="ah-profile-name">
+                    {{ $user->es_artista ? ($user->nombre_artistico ?? 'Artista') : ($user->nombre ?? 'Usuario') }}
+                  </div>
+                  @if($user->email)
+                    <div class="ah-profile-email">{{ $user->email }}</div>
+                  @endif
                 </div>
-                @if(auth()->user()->email)
-                  <div class="ah-profile-email">{{ auth()->user()->email }}</div>
-                @endif
               </div>
             </div>
-          </div>
 
-          <div class="ah-menu-options">
-            <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
-              <i class="fas fa-user"></i><span>Ver mi perfil</span>
-            </a>
-            <a href="{{ route('cuenta', auth()->id()) }}" class="ah-menu-item">
-              <i class="fas fa-cog"></i><span>Mi cuenta</span>
-            </a>
-             <a href="{{ route('preferencias', auth()->id()) }}" class="ah-menu-item">
-               <i class="fas fa-sliders-h"></i><span>Preferencias</span>
-            </a>
+            <div class="ah-menu-options">
+              <a href="{{ route('perfil.show', auth()->id()) }}" class="ah-menu-item">
+                <i class="fas fa-user"></i><span>Ver mi perfil</span>
+              </a>
+              <a href="{{ route('cuenta', auth()->id()) }}" class="ah-menu-item">
+                <i class="fas fa-cog"></i><span>Mi cuenta</span>
+              </a>
+              <a href="{{ route('preferencias', auth()->id()) }}" class="ah-menu-item">
+                <i class="fas fa-sliders-h"></i><span>Preferencias</span>
+              </a>
 
-            @auth
-              @if(auth()->user()->es_artista)
+              @if($user->es_artista)
                 <a href="{{ route('musica.subir') }}" class="ah-menu-item">
                   <i class="fas fa-upload"></i><span>Subir música</span>
                 </a>
               @endif
-            @endauth
 
-            <!-- Idioma (switch ES/EN) -->
-            <div class="ah-menu-item ah-lang-item">
-              <i class="fas fa-globe"></i><span>Idioma</span>
-              <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="Cambiar idioma">
-                <span class="ah-toggle-track">
-                  <span class="ah-toggle-label ah-l-es">ES</span>
-                  <span class="ah-toggle-label ah-l-en">EN</span>
-                  <span class="ah-toggle-knob"></span>
-                </span>
-              </button>
+              <!-- Idioma (switch ES/EN) -->
+              <div class="ah-menu-item ah-lang-item">
+                <i class="fas fa-globe"></i><span>Idioma</span>
+                <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="Cambiar idioma">
+                  <span class="ah-toggle-track">
+                    <span class="ah-toggle-label ah-l-es">ES</span>
+                    <span class="ah-toggle-label ah-l-en">EN</span>
+                    <span class="ah-toggle-knob"></span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="ah-menu-sep"></div>
+
+            <div class="ah-menu-logout">
+              <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="ah-menu-item ah-logout-btn">
+                  <i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span>
+                </button>
+              </form>
             </div>
           </div>
+        @endauth
 
-          <div class="ah-menu-sep"></div>
-
-          <div class="ah-menu-logout">
-            <form method="POST" action="{{ route('logout') }}">
-              @csrf
-              <button type="submit" class="ah-menu-item ah-logout-btn">
-                <i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span>
-              </button>
-            </form>
+        @guest
+          <button class="ah-user-chip" type="button" disabled>
+            <img class="ah-chip-avatar"
+                 src="{{ asset('img/perfil_npc.png') }}"
+                 alt="Invitado">
+            <span class="ah-chip-name">Invitado</span>
+          </button>
+          <div class="ah-guest-actions">
+            <a class="ah-btn" href="{{ route('login') }}" title="Iniciar sesión" aria-label="Iniciar sesión">
+              <i class="fa-solid fa-right-to-bracket"></i>
+            </a>
+            <a class="ah-btn" href="{{ route('register') }}" title="Crear cuenta" aria-label="Crear cuenta">
+              <i class="fa-regular fa-id-card"></i>
+            </a>
           </div>
-        </div>
+        @endguest
       </div>
     </div>
   </div>
 
-<!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
-<div id="global-eq" style="display:none">
-  @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
-    <input 
-      type="range" 
-      min="-12" max="12" step="0.5"
-      value="{{ optional(auth()->user()->equalizer)->{'band_'.$freq} ?? 0 }}"
-      data-freq="{{ $freq }}"
-      class="eq-slider-global"
-    >
-  @endforeach
+  <!-- ====== Ecualizador invisible (cargado en todas las páginas) ====== -->
+  <div id="global-eq" style="display:none">
+    @foreach([60,170,310,600,1000,3000,6000,12000,14000,16000] as $freq)
+      <input
+        type="range"
+        min="-12" max="12" step="0.5"
+        value="{{ optional(optional(auth()->user())->equalizer)->{'band_'.$freq} ?? 0 }}"
+        data-freq="{{ $freq }}"
+        class="eq-slider-global"
+      >
+    @endforeach
 
-  <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
-         value="{{ optional(auth()->user()->equalizer)->preamp ?? 0 }}">
-</div>
+    <input id="global-preamp" type="range" min="-18" max="18" step="0.5"
+           value="{{ optional(optional(auth()->user())->equalizer)->preamp ?? 0 }}">
+  </div>
+</header>
 
 <script>
 (() => {
@@ -166,13 +183,13 @@
   const sliders = document.querySelectorAll('.eq-slider-global');
   const preamp = document.getElementById('global-preamp');
 
-  let ac, filters=[], gPreamp, srcNode;
+  let ac, filters = [], gPreamp, srcNode;
 
   function ensureCtx(){
     if (ac) return;
-    ac = new (window.AudioContext||window.webkitAudioContext)();
+    ac = new (window.AudioContext || window.webkitAudioContext)();
 
-    filters = FREQS.map(freq=>{
+    filters = FREQS.map(freq => {
       const f = ac.createBiquadFilter();
       f.type = 'peaking';
       f.frequency.value = freq;
@@ -182,10 +199,10 @@
     });
 
     gPreamp = ac.createGain();
-    gPreamp.gain.value = dbToGain(parseFloat(preamp.value || '0'));
+    gPreamp.gain.value = dbToGain(parseFloat(preamp?.value || '0'));
 
-    for (let i=0;i<filters.length-1;i++) filters[i].connect(filters[i+1]);
-    filters[filters.length-1].connect(gPreamp);
+    for (let i = 0; i < filters.length - 1; i++) filters[i].connect(filters[i + 1]);
+    filters[filters.length - 1].connect(gPreamp);
     gPreamp.connect(ac.destination);
 
     // Conectar al player global (si existe)
@@ -194,34 +211,35 @@
       try {
         srcNode = ac.createMediaElementSource(audio);
         srcNode.connect(filters[0]);
-      } catch(e) {
+      } catch (e) {
         console.warn("EQ ya conectado");
       }
     }
   }
 
-  // Aplicar valores iniciales guardados
   function applyInitialValues(){
     ensureCtx();
-    sliders.forEach((sl, idx)=>{
+    sliders.forEach((sl, idx) => {
       const db = parseFloat(sl.value);
       filters[idx].gain.value = db;
     });
-    const dbPreamp = parseFloat(preamp.value);
+    const dbPreamp = parseFloat(preamp?.value || '0');
     gPreamp.gain.value = dbToGain(dbPreamp);
   }
 
   document.addEventListener('DOMContentLoaded', applyInitialValues);
 
   // API pública global para reconectar cuando cambies canción
-  window.bindEqualizerTo=function(audioEl){
+  window.bindEqualizerTo = function(audioEl){
     if (!audioEl) return;
     ensureCtx();
-    const media = ac.createMediaElementSource(audioEl);
-    media.connect(filters[0]);
-    srcNode = media;
+    try {
+      const media = ac.createMediaElementSource(audioEl);
+      media.connect(filters[0]);
+      srcNode = media;
+    } catch (e) {
+      console.warn("EQ: la fuente ya estaba conectada o no es válida");
+    }
   };
 })();
 </script>
-
-</header>
