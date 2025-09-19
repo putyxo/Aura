@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-class PerfilController extends Controller
+class ProfileController extends Controller
 {
     public function show($id): View
     {
@@ -283,4 +283,28 @@ class PerfilController extends Controller
             }
         } catch (\Throwable $e) {}
     }
+
+      public function destroyAlbum($id): RedirectResponse
+{
+    // Busca el álbum
+    $album = Album::with('songs')->findOrFail($id);
+
+    // Verifica que sea del usuario autenticado
+    if ($album->user_id !== Auth::id()) {
+        abort(403, 'No autorizado.');
+    }
+
+    // Elimina las canciones asociadas y sus archivos
+    foreach ($album->songs as $song) {
+        $this->deleteLocalIfRelative($song->audio_path ?? $song->audio ?? null);
+        $this->deleteLocalIfRelative($song->cover_path ?? $song->portada ?? null);
+        $song->delete();
+    }
+
+    // Elimina el álbum (el hook en Album ya borra su portada local)
+    $album->delete();
+
+    return redirect()
+        ->route('perfil.show', Auth::id());
+}
 }

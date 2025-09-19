@@ -7,12 +7,7 @@
   <div class="ah-inner">
     <!-- === Navegación (izquierda del buscador) === -->
     <div class="ah-nav">
-      <button class="ah-nav-btn" id="ahBackBtn" title="Atrás" aria-label="Atrás">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <button class="ah-nav-btn" id="ahForwardBtn" title="Adelante" aria-label="Adelante">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
+      
     </div>
 
     <!-- === Buscador (centro) === -->
@@ -33,25 +28,9 @@
     <!-- === Acciones + Usuario (derecha) === -->
     <div class="ah-right">
       <!-- Notificaciones -->
-      <div class="ah-pop ah-notif">
-        <button class="ah-btn" id="ahNotifBtn" type="button" aria-expanded="false" aria-controls="ahNotifPanel" title="Notificaciones">
-          <i class="fa-regular fa-bell"></i>
-        </button>
-        <div class="ah-popover" id="ahNotifPanel" role="dialog" aria-hidden="true">
-          <div class="ah-popover-head"><span>Notificaciones</span></div>
-          <div class="ah-popover-body">
-            <div class="ah-empty">
-              <i class="fa-regular fa-bell-slash"></i>
-              <p>Aún no tienes notificaciones</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Configuración -->
-      <button class="ah-btn" type="button" title="Ajustes" aria-label="Ajustes">
-        <i class="fa-solid fa-gear"></i>
-      </button>
+
+    
 
       <!-- Usuario -->
       <div class="ah-user">
@@ -113,16 +92,7 @@
               @endif
 
               <!-- Idioma (switch ES/EN) -->
-              <div class="ah-menu-item ah-lang-item">
-                <i class="fas fa-globe"></i><span>Idioma</span>
-                <button class="ah-toggle" id="ahLangSwitch" role="switch" aria-checked="false" data-lang="es" title="Cambiar idioma">
-                  <span class="ah-toggle-track">
-                    <span class="ah-toggle-label ah-l-es">ES</span>
-                    <span class="ah-toggle-label ah-l-en">EN</span>
-                    <span class="ah-toggle-knob"></span>
-                  </span>
-                </button>
-              </div>
+             
             </div>
 
             <div class="ah-menu-sep"></div>

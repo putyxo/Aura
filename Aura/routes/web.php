@@ -347,3 +347,7 @@ Route::get('/preferencias', [PreferenciasController::class, 'index'])
     Route::get('/audios/{filename}', [AudioStreamController::class, 'stream'])
     ->where('filename', '.*')
     ->name('audios.stream');
+
+    // Soporte
+Route::post('/support/send', [SupportController::class, 'send'])
+    ->name('support.send');
