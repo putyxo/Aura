@@ -134,38 +134,6 @@
       </div>
       @endif
 
-      @if($railArtists->isNotEmpty())
-      <div class="x-carousel artist-rail">
-        <button class="x-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
-        <div class="x-viewport">
-          <div class="x-track">
-            @foreach($railArtists as $a)
-              @php
-                $rawBanner = $a->banner ?? $a->banner_path ?? null;
-                $rawAvatar = $a->avatar ?? $a->avatar_path ?? null;
-                $hasBanner = (bool) $rawBanner;
-                $hasAvatar = (bool) $rawAvatar;
-
-                $banner = img_or_default($rawBanner, 'img/default-banner.jpg');
-                $avatar = img_or_default($rawAvatar, 'img/perfil_npc.png');
-                $name   = $a->nombre_artistico ?? $a->name ?? 'Artista';
-                $href   = $routePerfilShow ? route($routePerfilShow, $a->id) : '#';
-              @endphp
-              <a class="x-card" href="{{ $href }}" style="background-image:url('{{ $banner }}')">
-                <div class="x-glass"></div>
-                <img class="x-avatar" src="{{ $avatar }}" alt="{{ $name }}">
-                <div class="x-name" title="{{ $name }}">{{ $name }}</div>
-                <div class="x-cta">Ver perfil</div>
-                @unless($hasBanner)
-                  <span class="small-ribbon">Sin banner</span>
-                @endunless
-              </a>
-            @endforeach
-          </div>
-        </div>
-        <button class="x-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-      @endif
     </section>
 
     <!-- =============== CONTENIDO PRINCIPAL =============== -->

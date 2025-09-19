@@ -61,7 +61,7 @@ class RegisteredArtController extends Controller
             'generos'           => $request->generos ? json_encode($request->generos) : null,
         ]);
 
-        $user->notify(new RegistroExitoso);
+
 
         return redirect(route('login', absolute: false));
     }
