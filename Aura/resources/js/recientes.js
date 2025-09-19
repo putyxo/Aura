@@ -1,3 +1,5 @@
+export default function initRecientes() {
+  console.log("Inicializando scripts de Recientes..");
 (function() {
   const userId = window.userId;
   const HISTORY_KEY = 'song_history_' + userId;
@@ -138,3 +140,62 @@
     renderHistory();
   });
 })();
+
+const userId = document.body.dataset.userId || 'guest';
+const defaultCover = document.body.dataset.defaultCover || '';
+
+(() => {
+  const root = document.querySelector('#axrcRoot.axrc');
+
+  function setVar(name, px){
+    const v = (Math.max(0, Math.round(px || 0))) + 'px';
+    document.documentElement.style.setProperty(name, v);
+    root?.style.setProperty(name, v);
+  }
+
+  function widthIfDockedLeft(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(r.left) < 2 ? r.width : 0;
+  }
+
+  function widthIfDockedRight(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
+  }
+
+  function heightIfDockedTop(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return r.top <= 0 ? r.height : 0;
+  }
+
+  function heightIfDockedBottom(el){
+    if(!el) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.abs(window.innerHeight - r.bottom) < 2 ? r.height : 0;
+  }
+
+  function measure(){
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('[class*="side"]');
+    const player  = document.querySelector('.player, .right-player') || document.querySelector('[class*="player"]');
+    const header  = document.querySelector('.header') || document.querySelector('header');
+    const footer  = document.querySelector('.footer') || document.querySelector('footer');
+
+    setVar('--safe-left',   widthIfDockedLeft(sidebar));
+    setVar('--safe-right',  widthIfDockedRight(player));
+    setVar('--safe-top',    heightIfDockedTop(header));
+    setVar('--safe-bottom', heightIfDockedBottom(footer));
+  }
+
+  const ro = new ResizeObserver(measure);
+  ['.sidebar','[class*="side"]','.player','.right-player','[class*="player"]','.header','header','.footer','footer']
+    .forEach(sel => document.querySelectorAll(sel).forEach(el => ro.observe(el)));
+
+  window.addEventListener('resize', measure);
+  window.addEventListener('orientationchange', measure);
+  document.addEventListener('DOMContentLoaded', measure);
+  measure();
+})();
+}

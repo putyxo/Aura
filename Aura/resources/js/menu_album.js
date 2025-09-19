@@ -1,10 +1,9 @@
-// resources/js/menu_album.js
-/* Todo namespaced a clases 'ma-*' y scopeado a .ma-page */
+export default function initMenuAlbum() {
+console.log("Inicializando scripts de Menu Album...");
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-document.addEventListener('DOMContentLoaded', () => {
   const main    = $('.ma-page');
   const isOwner = (main?.dataset.owner === '1');
 
@@ -280,4 +279,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
+ }

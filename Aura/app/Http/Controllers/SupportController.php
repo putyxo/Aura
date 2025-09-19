@@ -17,7 +17,7 @@ class SupportController extends Controller
 
         $user = auth()->user();
 
-        $to = config('mail.support_address', 'soporte@tuempresa.com');
+        $to = config('mail.support_address');
 
         // Usar el Mailable en lugar de Mail::raw
         Mail::to($to)->send(new SupportMail(

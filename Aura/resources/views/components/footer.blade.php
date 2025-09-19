@@ -70,8 +70,53 @@
   <!-- === Elemento de audio físico === -->
   <audio id="auraAudio" preload="metadata" playsinline crossorigin="anonymous" hidden></audio>
 </div>
+<script>
+  const currentUser = @json(Auth::id());
+  const lastUser    = localStorage.getItem('last_user_id');
+
+  // Si había usuario y ahora ya no, entonces cerró sesión
+  if (lastUser && !currentUser) {
+    // 🧹 Borrar TODO el localStorage
+    localStorage.clear();
+
+    // 🧹 Reset visual del reproductor
+    const audio = document.getElementById('auraAudio');
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute('src');
+    }
+
+    // Reset datos de UI
+    const cover = document.querySelector('#rightPlayer .cover');
+    if (cover) cover.src = "{{ asset('img/default-cancion.png') }}";
+
+    const title = document.querySelector('#rightPlayer .song-name');
+    if (title) title.textContent = 'Selecciona una canción';
+
+    const artist = document.querySelector('#rightPlayer .song-autor');
+    if (artist) artist.textContent = 'Artista';
+
+    const queueList = document.getElementById('queueList');
+    if (queueList) queueList.innerHTML = '';
+
+    const queueEmpty = document.getElementById('queueEmpty');
+    if (queueEmpty) queueEmpty.hidden = false;
+
+    const queueCount = document.getElementById('queueCount');
+    if (queueCount) queueCount.textContent = '';
+  }
+
+  // Guardamos referencia del usuario actual
+  if (currentUser) {
+    localStorage.setItem('last_user_id', currentUser);
+  } else {
+    localStorage.removeItem('last_user_id');
+  }
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js" defer></script>
+
+
 
 <!-- Probe de duración (usado por la cola) -->
 <script>

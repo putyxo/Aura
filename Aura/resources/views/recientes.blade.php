@@ -13,9 +13,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- Vite -->
-  @vite(['resources/css/recientes.css','resources/js/recientes.js'])
+  @vite(['resources/css/recientes.css'])
+  @vite(['resources/js/app.js'])
 </head>
-<body>
+<body data-page="recientes"
+      data-user-id="{{ auth()->id() ?? 'guest' }}"
+      data-default-cover="{{ asset('img/default-cancion.png') }}">
 <div class="app">
   <div class="with-sidebar">
     @include('components.sidebar')
@@ -127,69 +130,5 @@
     @include('components.footer')
   </div>
 </div>
-
-<script>
-  // Set global variables
-  window.userId = @json(Auth::id());
-  window.defaultCover = '{{ asset('img/default-cancion.png') }}';
-</script>
-
-<!-- Guard-rails de layout: calcula márgenes seguros según sidebar/header/footer/player -->
-<script>
-(() => {
-  const root = document.querySelector('#axrcRoot.axrc');
-
-  function setVar(name, px){
-    const v = (Math.max(0, Math.round(px || 0))) + 'px';
-    document.documentElement.style.setProperty(name, v);
-    root?.style.setProperty(name, v);
-  }
-
-  function widthIfDockedLeft(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(r.left) < 2 ? r.width : 0;
-  }
-
-  function widthIfDockedRight(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(window.innerWidth - r.right) < 2 ? r.width : 0;
-  }
-
-  function heightIfDockedTop(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return r.top <= 0 ? r.height : 0;
-  }
-
-  function heightIfDockedBottom(el){
-    if(!el) return 0;
-    const r = el.getBoundingClientRect();
-    return Math.abs(window.innerHeight - r.bottom) < 2 ? r.height : 0;
-  }
-
-  function measure(){
-    const sidebar = document.querySelector('.sidebar') || document.querySelector('[class*="side"]');
-    const player  = document.querySelector('.player, .right-player') || document.querySelector('[class*="player"]');
-    const header  = document.querySelector('.header') || document.querySelector('header');
-    const footer  = document.querySelector('.footer') || document.querySelector('footer');
-
-    setVar('--safe-left',   widthIfDockedLeft(sidebar));
-    setVar('--safe-right',  widthIfDockedRight(player));
-    setVar('--safe-top',    heightIfDockedTop(header));
-    setVar('--safe-bottom', heightIfDockedBottom(footer));
-  }
-
-  const ro = new ResizeObserver(measure);
-  ['.sidebar','[class*="side"]','.player','.right-player','[class*="player"]','.header','header','.footer','footer']
-    .forEach(sel => document.querySelectorAll(sel).forEach(el => ro.observe(el)));
-
-  window.addEventListener('resize', measure);
-  window.addEventListener('orientationchange', measure);
-  document.addEventListener('DOMContentLoaded', measure);
-  measure();
-})();
-</script>
 </body>
 </html>

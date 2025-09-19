@@ -23,14 +23,14 @@ class RegistroExitoso extends Notification
                 ->subject('¡Bienvenido a Aura, Artista!')
                 ->greeting('Hola ' . $notifiable->nombre_artistico . ' 🎤')
                 ->line('Gracias por unirte a Aura como artista. Ahora puedes compartir tu música con el mundo.')
-                ->action('Sube tu música', url('/dashboard'))
+                ->action('Sube tu música', url('/'))
                 ->line('¡Estamos emocionados de tenerte con nosotros!');
         } else {
             return (new MailMessage)
                 ->subject('¡Bienvenido a Aura!')
                 ->greeting('Hola ' . $notifiable->nombre . ' 👋')
                 ->line('Gracias por registrarte en Aura. Ya puedes comenzar a explorar y disfrutar la música.')
-                ->action('Ir a Aura', url('/dashboard'))
+                ->action('Ir a Aura', url('/'))
                 ->line('¡Esperamos que disfrutes tu experiencia!');
         }
     }

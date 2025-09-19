@@ -13,7 +13,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   {{-- Importa sólo para esta vista; selectors namespaced para no chocar --}}
-  @vite(['resources/css/menu_album.css','resources/js/menu_album.js'])
+  @vite(['resources/css/menu_album.css'])
+  @vite(['resources/js/app.js'])
 </head>
 
 @php
@@ -42,7 +43,7 @@
   };
 @endphp
 
-<body>
+<body data-page="menu-album">
 <div class="page">
   <div class="with-sidebar">
     @include('components.sidebar')

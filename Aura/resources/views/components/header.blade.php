@@ -108,22 +108,6 @@
           </div>
         @endauth
 
-        @guest
-          <button class="ah-user-chip" type="button" disabled>
-            <img class="ah-chip-avatar"
-                 src="{{ asset('img/perfil_npc.png') }}"
-                 alt="Invitado">
-            <span class="ah-chip-name">Invitado</span>
-          </button>
-          <div class="ah-guest-actions">
-            <a class="ah-btn" href="{{ route('login') }}" title="Iniciar sesión" aria-label="Iniciar sesión">
-              <i class="fa-solid fa-right-to-bracket"></i>
-            </a>
-            <a class="ah-btn" href="{{ route('register') }}" title="Crear cuenta" aria-label="Crear cuenta">
-              <i class="fa-regular fa-id-card"></i>
-            </a>
-          </div>
-        @endguest
       </div>
     </div>
   </div>

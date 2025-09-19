@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\AudioStreamController;
 
 // ===== Página principal =====
-Route::get('/', fn () => view('menu'))->name('menu');
+Route::get('/', fn () => view('welcome'))->name('welcome');
 
 /*
 |--------------------------------------------------------------------------
@@ -38,14 +38,17 @@ Route::get('/', fn () => view('menu'))->name('menu');
 |--------------------------------------------------------------------------
 */
 
-// 🔎 Endpoint JSON de búsqueda (público)
-Route::get('/search', [SearchController::class, 'buscar'])->name('search.json');
 
-// Lanzamientos públicos de un perfil
-Route::get('/perfil/{userId}/lanzamientos', [PerfilController::class, 'releasesAll'])
-    ->name('perfil.releasesAll');
+
+
 
 /*
+|--------------------------------------------------------------------------
+| Rutas protegidas (requieren login)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    /*
 |--------------------------------------------------------------------------
 | Estado público de "like" por canción (consultado por el reproductor)
 |--------------------------------------------------------------------------
@@ -62,14 +65,12 @@ Route::get('/api/canciones/{cancion}/liked', [LikeApiController::class, 'liked']
 */
 Route::get('/albums/{id}', [AlbumController::class, 'show'])->name('album.show');
 Route::get('/album/{id}',  [AlbumController::class, 'show'])->name('album.show.legacy');
+// 🔎 Endpoint JSON de búsqueda (público)
+Route::get('/search', [SearchController::class, 'buscar'])->name('search.json');
 
-/*
-|--------------------------------------------------------------------------
-| Rutas protegidas (requieren login)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->group(function () {
-
+// Lanzamientos públicos de un perfil
+Route::get('/perfil/{userId}/lanzamientos', [PerfilController::class, 'releasesAll'])
+    ->name('perfil.releasesAll');
     // ===== Cuenta =====
     Route::get('/cuenta', fn () => view('cuenta'))->name('cuenta');
     Route::post('/cuenta/password', [PasswordController::class, 'update'])
@@ -271,6 +272,24 @@ Route::middleware('auth')->group(function () {
         ->name('cancion.update');
     Route::delete('/cancion/{cancion}', [CancionController::class, 'destroy'])->name('cancion.destroy');
     Route::delete('/canciones/{cancion}', [CancionController::class, 'destroy'])->name('canciones.destroy');
+
+    /*
+|--------------------------------------------------------------------------
+| Equalizador
+|--------------------------------------------------------------------------
+*/
+Route::post('/equalizer/save', [EqualizerController::class, 'save'])
+    ->name('eq.save')
+    ->middleware('auth');
+
+Route::get('/preferencias', [PreferenciasController::class, 'index'])
+    ->name('preferencias')
+    ->middleware('auth');
+
+    Route::get('/audios/{filename}', [AudioStreamController::class, 'stream'])
+    ->where('filename', '.*')
+    ->name('audios.stream');
+
 });
 
 /*
@@ -330,23 +349,6 @@ Route::get('/auth-check', function () {
         'user'      => auth()->user(),
     ];
 })->name('auth-check');
-
-/*
-|--------------------------------------------------------------------------
-| Equalizador
-|--------------------------------------------------------------------------
-*/
-Route::post('/equalizer/save', [EqualizerController::class, 'save'])
-    ->name('eq.save')
-    ->middleware('auth');
-
-Route::get('/preferencias', [PreferenciasController::class, 'index'])
-    ->name('preferencias')
-    ->middleware('auth');
-
-    Route::get('/audios/{filename}', [AudioStreamController::class, 'stream'])
-    ->where('filename', '.*')
-    ->name('audios.stream');
 
     // Soporte
 Route::post('/support/send', [SupportController::class, 'send'])

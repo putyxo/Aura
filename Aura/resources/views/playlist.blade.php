@@ -16,7 +16,7 @@
   @vite(['resources/css/playlist.css'])
   @vite(['resources/js/app.js'])
 </head>
-<body data-page="playlists">
+<body data-page="playlists" data-turbo-suppress-warning>
 <div class="app">
   <div class="with-sidebar">
     @include('components.sidebar')

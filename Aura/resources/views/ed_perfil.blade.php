@@ -78,7 +78,7 @@
   @if($preSongCover)<link rel="preload" as="image" href="{{ $preSongCover }}">@endif
   @if($preAlbumCover)<link rel="preload" as="image" href="{{ $preAlbumCover }}">@endif
 </head>
-<body data-page="perfil">
+<body data-page="perfil" data-turbo-suppress-warning>
 <div id="page-profile" data-auth="{{ $isAuth ? 1 : 0 }}" data-owner="{{ $isOwner ? 1 : 0 }}">
 
   @include('components.sidebar')

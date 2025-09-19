@@ -1,15 +1,16 @@
+export default function initMenu() {
+console.log("Inicializando scripts de menu...");
 /**
  * MENU.JS — Home PRO MAX
  * - Carruseles .x-carousel (drag + auto)
  * - Songs: paginación (5 visibles), player/cola/like/playlist
  * - Toast + modal playlists
  */
-document.addEventListener("DOMContentLoaded", () => {
+
   setupCarousels();
   setupSongsPager(5); // 5 visibles
   setupSongRows();
   setupPlaylistModal();
-});
 
 /* ============== Carruseles genéricos (.x-carousel) ============== */
 function setupCarousels(){
@@ -105,7 +106,18 @@ function setupSongsPager(pageSize){
 function setupSongRows(){
   const list = document.getElementById("latestSongs");
   if (!list) return;
-
+ list.querySelectorAll(".song-row").forEach(row=>{
+    const liked = row.dataset.liked === "1";
+    const btn = row.querySelector(".like-btn");
+    if (btn && liked) {
+      btn.classList.add("is-liked");
+      const ico = btn.querySelector("i");
+      if (ico) {
+        ico.classList.remove("fa-regular");
+        ico.classList.add("fa-solid");
+      }
+    }
+  });
   // Menú kebab
   list.addEventListener("click", (e)=>{
     const more = e.target.closest(".more-btn");
@@ -315,3 +327,4 @@ function toast(msg){
   toastTimer = setTimeout(()=> el.classList.remove("show"), 2200);
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+}

@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   @vite('resources/css/menu.css')
-  @vite('resources/js/menu.js')
+  @vite('resources/js/app.js')
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -72,7 +72,7 @@
   @endphp
 </head>
 
-<body>
+<body data-page="menu" data-turbo-suppress-warning>
 <div class="with-sidebar">
   @include('components.sidebar')
   @include('components.header')
@@ -223,6 +223,9 @@
               $dur     = $song->duration ?? $song->duracion ?? '';
               $songId  = $song->id;
               $href    = $routeSongShow ? route($routeSongShow, $songId) : '#';
+              $isLiked = $isAuth && \App\Models\Like::where('user_id', auth()->id())
+                       ->where('song_id', $song->id)
+                       ->exists();
             @endphp
             <li class="song-row cancion-item"
                 data-id="{{ $songId }}"
@@ -230,6 +233,7 @@
                 data-title="{{ $title }}"
                 data-artist="{{ $artist }}"
                 data-cover="{{ $cover }}"
+                data-liked="{{ $song->liked ? 1 : 0 }}"
                 data-duration="{{ $dur }}"
                 role="button" tabindex="0">
               <a href="{{ $href }}" class="song-cover-link" aria-label="Abrir {{ $title }}">
@@ -248,9 +252,10 @@
               <div class="song-actions">
                 @auth
                   @if($routeSongLike)
-                    <button class="icon-chip like-btn" data-like="{{ route($routeSongLike, $songId) }}" title="Me gusta">
-                      <i class="fa-regular fa-heart"></i>
-                    </button>
+                      <button class="icon-chip like-btn {{ $isLiked ? 'is-liked' : '' }}"
+            data-like="{{ route($routeSongLike, $song->id) }}">
+      <i class="fa-{{ $isLiked ? 'solid' : 'regular' }} fa-heart"></i>
+    </button>
                   @else
                     <button class="icon-chip" disabled title="Me gusta no disponible"><i class="fa-regular fa-heart"></i></button>
                   @endif

@@ -14,26 +14,10 @@
     @include('components.fondo')
     <main class="main-content">
 
-      <!-- Si no existe, define el helper de vista simple (queda por compatibilidad) -->
-      @if (!function_exists('drive_image_view'))
-        @php
-        function drive_image_view($url) {
-            if (!$url) return null;
-            if (preg_match('~/d/([^/]+)~', $url, $m)) {
-                return "https://drive.google.com/uc?export=view&id={$m[1]}";
-            }
-            if (preg_match('~[?&]id=([^&]+)~', $url, $m)) {
-                return "https://drive.google.com/uc?export=view&id={$m[1]}";
-            }
-            return $url;
-        }
-        @endphp
-      @endif
-
       @if($artistasSeguidos->isEmpty())
         <div class="empty-state">
           <div class="empty-box">
-            <h2>Aún no se ha seguido ningun artista</h2>
+            <h2>Aún no se ha seguido ningún artista</h2>
           </div>
         </div>
       @else
@@ -42,15 +26,12 @@
           <div class="artists-grid">
             @foreach($artistasSeguidos as $artista)
               @php
-                // Usa el mismo patrón que en el perfil:
-                // Banner: drive_img_url($user->banner, 1920) &v=time()
-                // Avatar: drive_img_url($user->avatar, 500) &v=time()
                 $bannerUrl = $artista->banner
-                  ? drive_img_url($artista->banner, 1920) . '&v=' . time()
+                  ? asset(\Illuminate\Support\Facades\Storage::url($artista->banner))
                   : asset('img/default-banner.jpg');
 
                 $avatarUrl = $artista->avatar
-                  ? drive_img_url($artista->avatar, 500) . '&v=' . time()
+                  ? asset(\Illuminate\Support\Facades\Storage::url($artista->avatar))
                   : asset('img/default-avatar.png');
               @endphp
 
