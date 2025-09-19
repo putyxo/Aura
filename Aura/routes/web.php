@@ -342,3 +342,8 @@ Route::post('/equalizer/save', [EqualizerController::class, 'save'])
 Route::get('/preferencias', [PreferenciasController::class, 'index'])
     ->name('preferencias')
     ->middleware('auth');
+
+
+    // Soporte
+Route::post('/support/send', [SupportController::class, 'send'])
+    ->name('support.send');
