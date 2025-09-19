@@ -235,7 +235,7 @@ Route::middleware('auth')->group(function () {
     | Dashboard (Breeze/Jetstream - requiere email verificado)
     |--------------------------------------------------------------------------
     */
-    Route::get('/dashboard', fn () => view('menu'))->middleware(['verified'])->name('menu');
+    Route::get('/dashboard', fn () => redirect()->route('menu'))->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------

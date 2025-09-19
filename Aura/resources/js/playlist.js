@@ -1,10 +1,12 @@
 // resources/js/playlist.js
-document.addEventListener('DOMContentLoaded', () => {
+export default function initPlaylists() {
+  console.log("Inicializando scripts de playlists...");
+
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   const root = $('#axplRoot');
-  if (!root) return;
+  if (!root) return; // salir si no estoy en la vista de playlists
 
   const grid            = $('#axplGrid');
   const search          = $('#axplSearch');
@@ -69,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
       selectInd?.removeAttribute('hidden');
     } else {
       selectInd?.setAttribute('hidden', '');
-      // Limpia selección
       selectedTiles().forEach(t => t.classList.remove('is-selected'));
       updateSelectionUI();
     }
@@ -99,8 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (kind === 'cantidad') {
       sorter = (a,b) => (Number(b.dataset.count||0) - Number(a.dataset.count||0));
     } else {
-      // recientes: dejamos el orden actual (DOM order), no reordenamos
-      return;
+      return; // recientes → orden DOM actual
     }
     list.sort(sorter).forEach(el => frag.appendChild(el));
     grid.appendChild(frag);
@@ -159,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pencil = $('.axpl-pencil', t);
     const play   = $('.axpl-play-btn', t);
 
-    // Toggle selección en modo select
     t.addEventListener('click', (e) => {
       const inSelect = root.classList.contains('axpl-select-mode');
       const targetIsControl = e.target.closest('.axpl-pencil, .axpl-play-btn');
@@ -169,37 +168,31 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSelectionUI();
     });
 
-    // Edición
     pencil?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const data = {
+      openModal({
         edit:true,
         id: t.dataset.id,
         nombre: pencil.dataset.nombre || '',
         descripcion: pencil.dataset.descripcion || '',
         cover: pencil.dataset.cover || ''
-      };
-      openModal(data);
+      });
     });
 
-    // Quick Play (fallback: abrir show)
     play?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const plid = t.dataset.id;
-      // Si tienes una API para reproducir playlist, llámala aquí:
       if (window.AuraQueue?.playPlaylist) {
         window.AuraQueue.playPlaylist({ id: Number(plid) });
       } else if (window.AuraPlayer?.openPlaylist) {
         window.AuraPlayer.openPlaylist({ id: Number(plid) });
       } else {
-        // fallback: ir a la vista
         window.location.href = `${SHOW_BASE_URL}/${plid}`;
       }
     });
 
-    // Evitar navegación del link cuando hay modo selección
     link?.addEventListener('click', (e) => {
       if (root.classList.contains('axpl-select-mode')) e.preventDefault();
     });
@@ -255,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (!res.ok) throw new Error('Error eliminando');
 
-      // Quitar del DOM solo si el backend confirma
       selectedTiles().forEach(t => t.remove());
       setSelectMode(false);
       showToast('Eliminadas correctamente', 'ok');
@@ -315,4 +307,4 @@ document.addEventListener('DOMContentLoaded', () => {
       nameInput.focus();
     }
   });
-});
+}

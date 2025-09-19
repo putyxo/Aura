@@ -1,8 +1,14 @@
-import './bootstrap';
-import '../css/follow_artist.css';
+import initProfile from './ed-perfil.js';
+import initPlaylists from './playlist.js';
+import initUpload from './subir.js';
 
-import Alpine from 'alpinejs';
+function boot() {
+  const page = document.body.dataset.page;
 
-window.Alpine = Alpine;
+  if (page === 'perfil') initProfile();
+  if (page === 'playlists') initPlaylists();
+  if (page === 'upload') initUpload();
+}
 
-Alpine.start();
+document.addEventListener('turbo:load', boot);
+document.addEventListener('DOMContentLoaded', boot);
