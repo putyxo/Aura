@@ -27,6 +27,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\AudioStreamController;
 
 // ===== Página principal =====
 Route::get('/', fn () => view('menu'))->name('menu');
@@ -342,3 +343,7 @@ Route::post('/equalizer/save', [EqualizerController::class, 'save'])
 Route::get('/preferencias', [PreferenciasController::class, 'index'])
     ->name('preferencias')
     ->middleware('auth');
+
+    Route::get('/audios/{filename}', [AudioStreamController::class, 'stream'])
+    ->where('filename', '.*')
+    ->name('audios.stream');

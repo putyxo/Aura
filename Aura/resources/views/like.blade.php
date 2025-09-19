@@ -84,9 +84,7 @@
               $cover    = img_url($coverRaw, 'img/default-cover.jpg');
 
               // AUDIO (local/externo)
-              $audioRaw = $song->audio_path ?? $song->ruta_audio ?? $song->file_url ?? null;
-              $audio    = $audioRaw ? audio_url($audioRaw) : '';
-
+              $audio = $song->audio_url ?? '';
               $durSec    = is_numeric($song->duration ?? $song->duracion ?? null) ? (int)($song->duration ?? $song->duracion) : 0;
               $durText   = $durSec ? gmdate('i:s', max(0, $durSec)) : '--:--';
               $searchKey = mb_strtolower(($title ?? '') . ' ' . $artist, 'UTF-8');

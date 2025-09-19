@@ -171,7 +171,7 @@ window.__AURA_PROBE_DURATION__ = (function(){
   async function instantStart(url){
     if (!url) return;
     prime(url);
-    const playURL = url.includes('#t=') ? url : `${url}#t=0.01`;
+    const playURL = url;
     audio.pause();
     setCORSCorrect(url);
     audio.src = playURL;
@@ -220,18 +220,20 @@ window.__AURA_PROBE_DURATION__ = (function(){
     volRange.style.background = `linear-gradient(to right,var(--pl-accent) 0%,var(--pl-accent2) ${p}%,#35354f ${p}%,#35354f 100%)`;
   };
 
-  function uiSync(){
-    if (audio.duration){
-      seek.max = audio.duration;
+function uiSync(){
+  if (audio.duration){
+    seek.max = audio.duration;
+    if (!seeking) {   // 👈 solo actualiza si NO estoy arrastrando
       seek.value = audio.currentTime;
       curEl.textContent = fmt(audio.currentTime);
-      totEl.textContent = fmt(audio.duration);
-      paintByTime();
-    } else {
-      curEl.textContent = '0:00';
-      totEl.textContent = '--:--';
     }
+    totEl.textContent = fmt(audio.duration);
+    paintByTime();
+  } else {
+    curEl.textContent = '0:00';
+    totEl.textContent = '--:--';
   }
+}
   function rafLoop(){ uiSync(); raf = requestAnimationFrame(rafLoop); }
   function ensureTicker(){ if (raf == null) raf = requestAnimationFrame(rafLoop); if (!ticker) ticker = setInterval(uiSync, 500); }
   ensureTicker();
@@ -249,7 +251,43 @@ window.__AURA_PROBE_DURATION__ = (function(){
   });
   nextBtn.addEventListener('click', ()=> { if (window.AuraQueue?.forwardOrNext) window.AuraQueue.forwardOrNext(); });
 
-  seek.addEventListener('input', ()=> { audio.currentTime = Number(seek.value) || 0; paintByTime(); });
+  let seeking = false;
+
+// Mientras arrastras: solo pintar, no mover audio
+seek.addEventListener('input', ()=> {
+  seeking = true;
+  paintSeek((seek.value / seek.max) * 100);
+  curEl.textContent = fmt(seek.value);
+});
+
+// Al soltar: aplicar el salto en el audio
+function applySeek() {
+  const newTime = Number(seek.value) || 0;
+  console.log("🎯 Soltaste en:", newTime, "s");
+  console.log("⏱ Antes de asignar → audio.currentTime:", audio.currentTime);
+
+  if (audio.readyState > 0) {
+    audio.currentTime = newTime;
+    console.log("✅ Asignado directamente →", audio.currentTime);
+  } else {
+    console.warn("⚠️ Metadata no cargada, esperando loadedmetadata...");
+    audio.addEventListener('loadedmetadata', () => {
+      audio.currentTime = newTime;
+      console.log("✅ Asignado tras loadedmetadata →", audio.currentTime);
+    }, { once: true });
+  }
+
+  requestAnimationFrame(() => {
+    seeking = false;
+    curEl.textContent = fmt(newTime);
+    console.log("🖌️ UI pintada en", newTime);
+  });
+}
+
+
+seek.addEventListener('change', applySeek);
+seek.addEventListener('mouseup', applySeek);
+seek.addEventListener('touchend', applySeek);
 
   volRange.addEventListener('input', ()=> {
     audio.volume = (Number(volRange.value)||0)/100;
@@ -303,14 +341,26 @@ window.__AURA_PROBE_DURATION__ = (function(){
     artistEl.textContent = s.artist || 'Artista';
     coverEl.src          = s.cover  || "{{ asset('img/default-cancion.png') }}";
 
-    instantStart(s.src).then((ok)=>{
-      audio.currentTime = s.time || 0.01;
-      uiSync();
-      if (s.playing && !ok){
-        audio.play().then(()=>{ playBtn.innerHTML='<i class="fas fa-pause"></i>'; })
-          .catch(()=>{ /* queda el botón */ });
-      }
-    });
+ console.log("📦 Restaurando canción:", s.title, "→", s.src);
+  console.log("⏱ Tiempo guardado:", s.time);
+
+  setCORSCorrect(s.src);
+audio.src = s.src;
+try { audio.load(); } catch(_){}
+
+audio.addEventListener('canplay', () => {
+  console.log("📡 canplay disparado (ya se puede reproducir)");
+  if (s.time) {
+    audio.currentTime = s.time;
+    console.log("✅ Restaurado a tiempo guardado:", s.time, "→ audio.currentTime:", audio.currentTime);
+  }
+  if (s.playing){
+    audio.play().then(()=>{ 
+      playBtn.innerHTML='<i class="fas fa-pause"></i>'; 
+      console.log("▶️ Reproducción reanudada en:", audio.currentTime);
+    }).catch(err=>{ console.error("❌ Error al reproducir:", err); });
+  }
+}, { once: true });
 
     initVolume();
     if (currentSongId) checkLikeStatus(currentSongId);
@@ -388,6 +438,12 @@ window.__AURA_PROBE_DURATION__ = (function(){
       titleEl.textContent  = title  || 'Sin título';
       artistEl.textContent = artist || 'Artista';
       coverEl.src          = cover  || "{{ asset('img/default-cancion.png') }}";
+
+       if (currentSongId) {
+      checkLikeStatus(currentSongId);
+    } else {
+      likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+    }
       if (!src) return;
 
       setCORSCorrect(src);
@@ -410,7 +466,6 @@ function loadLyrics(songId){
   if (!songId) return;
 
   jsonFetch(R.lyrics(songId)).then(d=>{
-    // Si recibimos segments (karaoke real con timestamps)
     if (d.segments && d.segments.length) {
       karaokeData = d.segments.map(seg => ({
         start: seg.start,
@@ -418,16 +473,35 @@ function loadLyrics(songId){
         text: seg.text
       }));
 
-      karaokeData.forEach(seg=>{
-        const div = document.createElement('div');
+      karaokeData.forEach((seg, idx)=>{
+        const div = document.createElement('button'); // 🔹 botón real
+        div.type = 'button';
         div.className = 'karaoke-line';
         div.textContent = seg.text;
+
+        // click → saltar al tiempo y marcar activo
+        div.addEventListener('click', ()=>{
+          if (audio.readyState > 0) {
+            audio.currentTime = seg.start;
+          } else {
+            audio.addEventListener('loadedmetadata', ()=>{
+              audio.currentTime = seg.start;
+            }, { once:true });
+          }
+          audio.play().catch(()=>{});
+
+          // 🔹 marcar activo manualmente al hacer click
+          [...karaokeLines.children].forEach(el => el.classList.remove('active'));
+          div.classList.add('active');
+          div.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+
         karaokeLines.appendChild(div);
       });
       return;
     }
 
-    // Fallback: mostrar letra completa sin sincronización
+    // fallback sin tiempos
     if (d.lyrics) {
       d.lyrics.split(/\n/).filter(Boolean).forEach(line=>{
         const div = document.createElement('div');
@@ -438,6 +512,19 @@ function loadLyrics(songId){
     }
   }).catch(console.error);
 }
+
+function syncKaraoke(){
+  if (!karaokeActive || !karaokeData.length) return;
+  const now = audio.currentTime;
+  let idx = karaokeData.findIndex(seg => now >= seg.start && now < seg.end);
+  if (idx !== -1) {
+    [...karaokeLines.children].forEach((el,i)=>{
+      el.classList.toggle('active', i === idx);
+      if (i === idx) el.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  }
+}
+
 function syncKaraoke(){
   if (!karaokeActive || !karaokeData.length) return;
   const now = audio.currentTime;

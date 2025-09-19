@@ -105,21 +105,21 @@ class Cancion extends Model
 
     /** URL pública del audio (local/storage o absoluta) */
     public function getAudioUrlAttribute(): ?string
-    {
-        $raw = trim((string)($this->audio_path ?? ''));
+{
+    $raw = trim((string)($this->audio_path ?? ''));
 
-        if ($raw === '') {
-            return null;
-        }
-
-        if (Str::startsWith($raw, ['http://', 'https://', '/storage/'])) {
-            return $raw;
-        }
-
-        $path = ltrim(preg_replace('#^/?public/#', '', $raw), '/');
-
-        return Storage::url($path);
+    if ($raw === '') {
+        return null;
     }
+
+    // Si ya es URL absoluta (Drive, S3, CDN, etc.)
+    if (Str::startsWith($raw, ['http://', 'https://'])) {
+        return $raw;
+    }
+
+    // 🔹 En lugar de devolver /storage/... → devolvemos /audios/...
+    return url('audios/' . basename($raw));
+}
 
     /** ¿El usuario dado ya dio like? */
     public function isLikedBy(?User $user): bool
